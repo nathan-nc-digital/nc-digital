@@ -15,3 +15,15 @@ test('body uses Sora font', async ({ page }) => {
   );
   expect(font.toLowerCase()).toContain('sora');
 });
+
+test('page has meta description', async ({ page }) => {
+  await page.goto('/');
+  const desc = await page.locator('meta[name="description"]').getAttribute('content');
+  expect(desc).toBeTruthy();
+});
+
+test('page has canonical link', async ({ page }) => {
+  await page.goto('/');
+  const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
+  expect(canonical).toBeTruthy();
+});
