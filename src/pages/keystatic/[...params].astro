@@ -1,3 +1,7 @@
 ---
-export const prerender = false;
+export const prerender = import.meta.env.PROD ? true : false;
+
+export function getStaticPaths() {
+  return [];
+}
 ---

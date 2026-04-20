@@ -1,6 +1,10 @@
 import type { APIContext } from 'astro';
 
-export const prerender = false;
+export const prerender = import.meta.env.PROD ? true : false;
+
+export function getStaticPaths() {
+  return [];
+}
 
 export async function ALL(context: APIContext) {
   if (import.meta.env.PROD) {
