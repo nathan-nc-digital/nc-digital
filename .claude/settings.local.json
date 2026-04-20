@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:allthingstech.ch)",
+      "WebFetch(domain:nc-digital.co.uk)",
+      "Bash(C:/Users/NathanConstanceRhysW/.claude/plugins/cache/superpowers-marketplace/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh *)",
+      "Bash(npm --version)",
+      "Bash(npm create *)",
+      "Bash(mv eminent-ellipse/* .)",
+      "Bash(mv eminent-ellipse/.gitignore .)",
+      "Bash(mv eminent-ellipse/.vscode .)",
+      "Bash(rmdir eminent-ellipse *)",
+      "Bash(npm install *)",
+      "Bash(npm view *)",
+      "Bash(python3 -c \"import sys,json; versions=[v for v in json.load\\(sys.stdin\\) if not any\\(x in v for x in ['alpha','beta','rc','experimental','next']\\)]; print\\('\\\\n'.join\\(versions[-15:]\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; versions=[v for v in json.load\\(sys.stdin\\) if not any\\(x in v for x in ['alpha','beta','rc','experimental','next']\\)]; print\\('\\\\n'.join\\(versions[-10:]\\)\\)\")",
+      "Bash(npx playwright *)",
+      "Bash(npm run *)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(curl -s http://localhost:4321)",
+      "Bash(kill 1877)",
+      "Read(//tmp/**)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
