@@ -1,0 +1,66 @@
+---
+const year = new Date().getFullYear();
+
+const services = [
+  { href: '/services', label: 'All Services' },
+  { href: '/services/web-development', label: 'Web Development' },
+  { href: '/services/local-seo-google-ranking', label: 'Local SEO' },
+  { href: '/services/website-maintenance-packages', label: 'Maintenance' },
+  { href: '/services/website-hosting-security', label: 'Hosting & Security' },
+  { href: '/services/professional-mailboxes-email-setup', label: 'Business Email' },
+];
+
+const locations = [
+  { href: '/web-design-cardiff', label: 'Web Design Cardiff' },
+  { href: '/web-design-swansea', label: 'Web Design Swansea' },
+  { href: '/web-design-merthyr-tydfil', label: 'Web Design Merthyr Tydfil' },
+  { href: '/seo-cardiff', label: 'SEO Cardiff' },
+  { href: '/seo-south-wales', label: 'SEO South Wales' },
+];
+---
+<footer style="background:var(--bg-2); border-top:1px solid var(--border); margin-top:5rem;">
+  <div class="container site-pad" style="padding-top:3.5rem; padding-bottom:3.5rem;">
+
+    <div style="display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:3rem; margin-bottom:3rem;">
+      <div>
+        <a href="/" style="font-size:1.25rem; font-weight:800; color:var(--white); display:block; margin-bottom:1rem;">
+          NC Digital
+        </a>
+        <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.7; max-width:280px;">
+          Affordable web design and local SEO for South Wales small businesses.
+          Based in Merthyr Tydfil, serving clients across Wales.
+        </p>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.75rem; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; color:var(--purple); margin-bottom:1rem;">
+          Services
+        </h4>
+        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.625rem;">
+          {services.map(({ href, label }) => (
+            <li><a href={href} style="color:var(--text-muted); font-size:0.9375rem;">{label}</a></li>
+          ))}
+        </ul>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.75rem; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; color:var(--purple); margin-bottom:1rem;">
+          Areas We Cover
+        </h4>
+        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.625rem;">
+          {locations.map(({ href, label }) => (
+            <li><a href={href} style="color:var(--text-muted); font-size:0.9375rem;">{label}</a></li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <div style="display:flex; align-items:center; justify-content:space-between; padding-top:1.5rem; flex-wrap:wrap; gap:1rem;">
+      <p style="color:var(--text-muted); font-size:0.875rem;">© {year} NC Digital. All rights reserved.</p>
+      <a href="/privacy-policy" style="color:var(--text-muted); font-size:0.875rem;">Privacy Policy</a>
+    </div>
+
+  </div>
+</footer>
