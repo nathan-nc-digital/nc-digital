@@ -76,7 +76,7 @@ const services = [
   <section style="padding:5rem 0 4rem; position:relative; overflow:hidden;">
     <div style="position:absolute; top:-100px; right:0; width:600px; height:600px; background:radial-gradient(circle, #8750f720 0%, transparent 70%); pointer-events:none;"></div>
 
-    <div class="container site-pad" style="display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center;">
+    <div class="container site-pad layout-hero">
 
       <div>
         <p data-animate="fade-up" class="eyebrow" style="margin-bottom:1rem;">Web Design · SEO · South Wales</p>
@@ -112,7 +112,7 @@ const services = [
 
   <!-- STATS BAR -->
   <section style="border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:2rem 0; background:var(--bg-2);">
-    <div class="container site-pad" style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem;">
+    <div class="container site-pad layout-stats">
       {stats.map(({ value, label }) => (
         <div style="text-align:center;">
           <div data-animate="counter" style="font-size:1.75rem; font-weight:800; color:var(--purple);">{value}</div>

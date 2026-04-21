@@ -133,3 +133,62 @@ a:hover { color: var(--purple-light); }
   border-top: 1px solid var(--border);
   margin: 0;
 }
+
+/* ── Responsive layout utilities ── */
+.layout-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.layout-halves {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+.layout-sidebar {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 4rem;
+  align-items: start;
+}
+.layout-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+.layout-footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 3rem;
+}
+.layout-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .layout-hero,
+  .layout-halves,
+  .layout-sidebar {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .layout-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .layout-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .layout-form-row {
+    grid-template-columns: 1fr;
+  }
+  /* Reduce section vertical padding on mobile */
+  section {
+    padding-top: 3rem !important;
+    padding-bottom: 3rem !important;
+  }
+}
