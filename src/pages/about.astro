@@ -1,5 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { Image } from 'astro:assets';
+import nathanImg from '../assets/nathan.webp';
 ---
 
 <BaseLayout
@@ -27,12 +29,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
 
       <div style="position:relative; display:flex; justify-content:center;">
-        <div style="position:absolute; inset:0; background:radial-gradient(circle at center, #8750f730 0%, transparent 70%); border-radius:50%;"></div>
-        <div style="width:380px; height:420px; border-radius:16px; background:var(--bg-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; position:relative;">
-          <p style="color:var(--text-muted); font-size:0.875rem; text-align:center; padding:2rem;">
-            Add photo to<br/><code>src/assets/nathan.jpg</code>
-          </p>
-        </div>
+        <div style="position:absolute; inset:0; background:radial-gradient(circle at center, #8750f730 0%, transparent 70%); border-radius:50%; pointer-events:none;"></div>
+        <Image
+          src={nathanImg}
+          alt="Nathan Constance — founder of NC Digital"
+          width={380}
+          style="border-radius:16px; border:1px solid var(--border); display:block; max-width:100%; height:auto; position:relative;"
+        />
       </div>
 
     </div>
