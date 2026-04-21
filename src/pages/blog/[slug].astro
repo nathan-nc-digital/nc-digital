@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import JsonLD from '../../components/JsonLD.astro';
 import { getCollection, render } from 'astro:content';
 
 export const prerender = true;
@@ -29,6 +30,25 @@ const formattedDate = post.data.pubDate
   title={post.data.metaTitle || `${post.data.title} | NC Digital`}
   description={post.data.metaDescription || post.data.description || ''}
 >
+
+  <JsonLD schema={{
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.data.title,
+    "description": post.data.description,
+    "datePublished": post.data.pubDate ?? undefined,
+    "author": {
+      "@type": "Person",
+      "name": "Nathan Constance",
+      "url": "https://nc-digital.co.uk/about"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "NC Digital",
+      "url": "https://nc-digital.co.uk"
+    },
+    "url": Astro.url.href
+  }} />
 
   <article>
 

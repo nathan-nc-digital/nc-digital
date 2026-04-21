@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import JsonLD from '../components/JsonLD.astro';
 import { createReader } from '@keystatic/core/reader';
 import config from '../../keystatic.config';
 
@@ -34,6 +35,26 @@ const services = [
   title="NC Digital — Web Design & SEO South Wales"
   description={settings?.heroSubtext ?? 'Affordable web design and local SEO for South Wales small businesses.'}
 >
+
+  <JsonLD schema={{
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "NC Digital",
+    "description": "Web design and local SEO for South Wales small businesses.",
+    "url": "https://nc-digital.co.uk",
+    "email": "nathan@nc-digital.co.uk",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Merthyr Tydfil",
+      "addressRegion": "South Wales",
+      "addressCountry": "GB"
+    },
+    "areaServed": {
+      "@type": "State",
+      "name": "South Wales"
+    },
+    "serviceType": ["Web Design", "Local SEO", "Website Maintenance"]
+  }} />
 
   <!-- HERO -->
   <section style="padding:5rem 0 4rem; position:relative; overflow:hidden;">

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import JsonLD from '../components/JsonLD.astro';
 import { getCollection, render } from 'astro:content';
 
 export const prerender = true;
@@ -31,6 +32,25 @@ const serviceLabel = loc.data.serviceType === 'seo'
   title={loc.data.metaTitle || `${serviceLabel} ${loc.data.town} | NC Digital`}
   description={loc.data.metaDescription || `Professional ${serviceLabel.toLowerCase()} for ${loc.data.town} businesses. NC Digital — based in South Wales.`}
 >
+
+  <JsonLD schema={{
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "NC Digital",
+    "description": `${serviceLabel} for ${loc.data.town} businesses.`,
+    "url": `https://nc-digital.co.uk/${Astro.params.location}`,
+    "email": "nathan@nc-digital.co.uk",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Merthyr Tydfil",
+      "addressRegion": "South Wales",
+      "addressCountry": "GB"
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": loc.data.town
+    }
+  }} />
 
   <section style="padding:4rem 0 3rem; position:relative; overflow:hidden;">
     <div style="position:absolute; top:0; right:0; width:400px; height:400px; background:radial-gradient(circle, #8750f720 0%, transparent 70%); pointer-events:none;"></div>
