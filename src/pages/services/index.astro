@@ -12,9 +12,9 @@ const services = await getCollection('services');
 
   <section style="padding:4rem 0 2rem;">
     <div class="container site-pad">
-      <p class="eyebrow" style="margin-bottom:0.75rem;">What we offer</p>
-      <h1 style="margin-bottom:1rem; max-width:600px;">Services built for South Wales businesses</h1>
-      <p style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
+      <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">What we offer</p>
+      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:600px;">Services built for South Wales businesses</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
         Everything your business needs to get online, get found, and grow — from a single agency in Merthyr Tydfil.
       </p>
     </div>
@@ -22,7 +22,7 @@ const services = await getCollection('services');
 
   <section style="padding:3rem 0 5rem;">
     <div class="container site-pad">
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:1.5rem;">
+      <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:1.5rem;">
         {services.map((service) => (
           <a href={`/services/${service.id.replace('/index.mdoc', '')}`} class="card" style="display:block; text-decoration:none;">
             <h2 style="font-size:1.25rem; font-weight:700; color:var(--white); margin-bottom:0.75rem;">{service.data.title}</h2>

@@ -10,12 +10,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <section style="padding:5rem 0 3rem; position:relative; overflow:hidden;">
     <div style="position:absolute; top:-100px; right:0; width:500px; height:500px; background:radial-gradient(circle, #8750f720 0%, transparent 70%); pointer-events:none;"></div>
     <div class="container site-pad" style="max-width:760px;">
-      <p class="eyebrow" style="margin-bottom:0.75rem;">No obligation · No cost</p>
-      <h1 style="margin-bottom:1.25rem;">Get your free website plan</h1>
-      <p style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:1.5rem;">
+      <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">No obligation · No cost</p>
+      <h1 data-animate="fade-up" style="margin-bottom:1.25rem;">Get your free website plan</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:1.5rem;">
         Tell me about your business and I'll put together a personalised website plan — including what pages I'd build, what it would look like, and exactly what it would cost. No strings attached.
       </p>
-      <div style="display:flex; flex-wrap:wrap; gap:1.5rem; margin-bottom:3rem;">
+      <div data-animate="fade-up" style="display:flex; flex-wrap:wrap; gap:1.5rem; margin-bottom:3rem;">
         {['Free — no obligation', 'Delivered within 48 hours', 'Includes full cost breakdown'].map(item => (
           <div style="display:flex; align-items:center; gap:0.5rem; color:var(--text-muted); font-size:0.9375rem;">
             <span style="color:var(--purple);">✓</span> {item}
@@ -27,7 +27,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   <section style="padding:0 0 5rem;">
     <div class="container site-pad" style="max-width:760px;">
-      <div class="card" style="padding:2.5rem;">
+      <div data-animate="fade-up" class="card" style="padding:2.5rem;">
         <h2 style="font-size:1.25rem; margin-bottom:1.5rem;">Tell me about your business</h2>
 
         <form action="https://api.web3forms.com/submit" method="POST" style="display:flex; flex-direction:column; gap:1.25rem;">

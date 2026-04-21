@@ -31,9 +31,9 @@ const pageDesc = 'Web design and SEO tips, guides, and news for South Wales smal
 
   <section style="padding:4rem 0 2rem;">
     <div class="container site-pad">
-      <p class="eyebrow" style="margin-bottom:0.75rem;">Insights</p>
-      <h1 style="margin-bottom:1rem;">Web design & SEO tips for South Wales businesses</h1>
-      <p style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
+      <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Insights</p>
+      <h1 data-animate="fade-up" style="margin-bottom:1rem;">Web design & SEO tips for South Wales businesses</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
         Practical advice on websites, SEO, and growing your business online.
       </p>
     </div>
@@ -41,7 +41,7 @@ const pageDesc = 'Web design and SEO tips, guides, and news for South Wales smal
 
   <section style="padding:2rem 0 4rem;">
     <div class="container site-pad">
-      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:1.5rem; margin-bottom:3rem;">
+      <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:1.5rem; margin-bottom:3rem;">
         {page.data.map((post) => (
           <a href={`/blog/${post.id.replace('/index.mdoc', '')}`} class="card" style="display:block; text-decoration:none;">
             <p style="font-size:0.75rem; color:var(--purple); font-weight:600; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.1em;">

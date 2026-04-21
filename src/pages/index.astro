@@ -79,14 +79,14 @@ const services = [
     <div class="container site-pad" style="display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center;">
 
       <div>
-        <p class="eyebrow" style="margin-bottom:1rem;">Web Design · SEO · South Wales</p>
-        <h1 style="margin-bottom:1.25rem;">
+        <p data-animate="fade-up" class="eyebrow" style="margin-bottom:1rem;">Web Design · SEO · South Wales</p>
+        <h1 data-animate="fade-up" style="margin-bottom:1.25rem;">
           {settings?.heroHeadline ?? 'Websites that rank. Businesses that grow.'}
         </h1>
-        <p style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:2rem; max-width:480px;">
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:2rem; max-width:480px;">
           {settings?.heroSubtext ?? 'Affordable web design and local SEO for South Wales small businesses.'}
         </p>
-        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+        <div data-animate="fade-up" style="display:flex; gap:1rem; flex-wrap:wrap;">
           <a href="/free-website-plan" class="btn-primary">
             {settings?.heroCTAPrimary ?? 'Get your free plan'} →
           </a>
@@ -102,6 +102,7 @@ const services = [
           src={nathanImg}
           alt="Nathan Constance — NC Digital"
           width={380}
+          data-animate="fade-in"
           style="border-radius:16px; border:1px solid var(--border); display:block; max-width:100%; height:auto; position:relative;"
         />
       </div>
@@ -114,7 +115,7 @@ const services = [
     <div class="container site-pad" style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem;">
       {stats.map(({ value, label }) => (
         <div style="text-align:center;">
-          <div style="font-size:1.75rem; font-weight:800; color:var(--purple);">{value}</div>
+          <div data-animate="counter" style="font-size:1.75rem; font-weight:800; color:var(--purple);">{value}</div>
           <div style="font-size:0.875rem; color:var(--text-muted); margin-top:0.25rem;">{label}</div>
         </div>
       ))}
@@ -125,9 +126,9 @@ const services = [
   <section id="services" style="padding:5rem 0;">
     <div class="container site-pad">
       <p class="eyebrow" style="margin-bottom:0.75rem;">What we do</p>
-      <h2 style="margin-bottom:3rem; max-width:500px;">Everything your business needs to grow online</h2>
+      <h2 data-animate="fade-up" style="margin-bottom:3rem; max-width:500px;">Everything your business needs to grow online</h2>
 
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1.25rem;">
+      <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1.25rem;">
         {services.map(({ icon, title, desc, href }) => (
           <a href={href} class="card" style="display:block; text-decoration:none;">
             <div style="font-size:1.5rem; margin-bottom:1rem; color:var(--purple);">{icon}</div>
@@ -143,7 +144,7 @@ const services = [
   <section id="work" style="padding:5rem 0; background:var(--bg-2);">
     <div class="container site-pad">
       <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:3rem;">
-        <div>
+        <div data-animate="fade-up">
           <p class="eyebrow" style="margin-bottom:0.75rem;">Our work</p>
           <h2 style="margin:0;">Recent projects</h2>
         </div>
@@ -151,7 +152,7 @@ const services = [
       </div>
 
       {portfolioEntries.length > 0 ? (
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.25rem;">
+        <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.25rem;">
           {portfolioEntries.slice(0, 3).map((project) => {
             const slug = project.id.replace('/index.mdoc', '');
             const img = getPortfolioImage(slug);
@@ -188,7 +189,7 @@ const services = [
   <section style="padding:5rem 0;">
     <div class="container site-pad">
       <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:3rem;">
-        <div>
+        <div data-animate="fade-up">
           <p class="eyebrow" style="margin-bottom:0.75rem;">Insights</p>
           <h2 style="margin:0;">Latest from the blog</h2>
         </div>
@@ -196,7 +197,7 @@ const services = [
       </div>
 
       {blogEntries.length > 0 ? (
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.25rem;">
+        <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.25rem;">
           {blogEntries.map(({ slug, entry }) => (
             <a href={`/blog/${slug}`} class="card" style="display:block; text-decoration:none;">
               <div style="background:var(--bg-3); border-radius:6px; height:160px; margin-bottom:1rem;"></div>
@@ -216,11 +217,11 @@ const services = [
   <section style="padding:5rem 0; background:var(--bg-2); border-top:1px solid var(--border);">
     <div class="container site-pad" style="text-align:center;">
       <p class="eyebrow" style="margin-bottom:1rem;">Ready to grow?</p>
-      <h2 style="margin-bottom:1rem;">Let's build your online presence</h2>
-      <p style="color:var(--text-muted); font-size:1.125rem; margin-bottom:2rem; max-width:500px; margin-left:auto; margin-right:auto;">
+      <h2 data-animate="fade-up" style="margin-bottom:1rem;">Let's build your online presence</h2>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; margin-bottom:2rem; max-width:500px; margin-left:auto; margin-right:auto;">
         Get a free website plan with no commitment. We'll show you exactly what we'd build and what it would cost.
       </p>
-      <a href="/free-website-plan" class="btn-primary" style="font-size:1rem; padding:1rem 2rem;">
+      <a data-animate="fade-up" href="/free-website-plan" class="btn-primary" style="font-size:1rem; padding:1rem 2rem;">
         Get your free plan →
       </a>
     </div>

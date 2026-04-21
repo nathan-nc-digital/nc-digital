@@ -26,9 +26,9 @@ function getProjectImage(slug: string) {
 
   <section style="padding:4rem 0 2rem;">
     <div class="container site-pad">
-      <p class="eyebrow" style="margin-bottom:0.75rem;">Our work</p>
-      <h1 style="margin-bottom:1rem; max-width:600px;">Real results for South Wales businesses</h1>
-      <p style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
+      <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Our work</p>
+      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:600px;">Real results for South Wales businesses</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
         Every project we take on is built to generate leads, rank on Google, and grow with the business.
       </p>
     </div>
@@ -36,7 +36,7 @@ function getProjectImage(slug: string) {
 
   <section style="padding:3rem 0 5rem;">
     <div class="container site-pad">
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:1.5rem;">
+      <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:1.5rem;">
         {projects.map((project) => {
           const slug = project.id.replace('/index.mdoc', '');
           const img = getProjectImage(slug);

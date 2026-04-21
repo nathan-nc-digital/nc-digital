@@ -49,12 +49,12 @@ for (const [path, mod] of Object.entries(imageFiles)) {
       <a href="/portfolio" style="color:var(--text-muted); font-size:0.875rem; display:inline-flex; align-items:center; gap:0.375rem; margin-bottom:2rem;">
         ← All case studies
       </a>
-      <p class="eyebrow" style="margin-bottom:0.75rem;">Case study</p>
-      <h1 style="margin-bottom:1rem; max-width:640px;">{project.data.title}</h1>
-      <p style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin-bottom:2rem;">
+      <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Case study</p>
+      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:640px;">{project.data.title}</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin-bottom:2rem;">
         {project.data.summary}
       </p>
-      <a href="/contact" class="btn-primary">Start your project →</a>
+      <a data-animate="fade-up" href="/contact" class="btn-primary">Start your project →</a>
     </div>
   </section>
 
@@ -75,12 +75,12 @@ for (const [path, mod] of Object.entries(imageFiles)) {
   <section style="padding:3rem 0 5rem;">
     <div class="container site-pad" style="display:grid; grid-template-columns:2fr 1fr; gap:4rem; align-items:start;">
 
-      <div style="color:var(--text); line-height:1.8; font-size:1rem;">
+      <div data-animate="fade-up" style="color:var(--text); line-height:1.8; font-size:1rem;">
         <Content />
       </div>
 
       <aside>
-        <div class="card">
+        <div data-animate="fade-in" class="card">
           <h3 style="font-size:1rem; font-weight:700; color:var(--white); margin-bottom:1rem;">Project details</h3>
           <dl style="margin:0; display:flex; flex-direction:column; gap:0.75rem;">
             <div>

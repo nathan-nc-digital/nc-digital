@@ -11,13 +11,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="container site-pad" style="display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:start;">
 
       <div>
-        <p class="eyebrow" style="margin-bottom:0.75rem;">Get in touch</p>
-        <h1 style="margin-bottom:1rem;">Let's talk about your project</h1>
-        <p style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:2rem;">
+        <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Get in touch</p>
+        <h1 data-animate="fade-up" style="margin-bottom:1rem;">Let's talk about your project</h1>
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:2rem;">
           Whether you need a new website, want to improve your Google rankings, or just have a question — I'd love to hear from you.
         </p>
 
-        <div style="display:flex; flex-direction:column; gap:1.25rem;">
+        <div data-animate="stagger" style="display:flex; flex-direction:column; gap:1.25rem;">
           <div style="display:flex; gap:1rem; align-items:center;">
             <div style="width:40px; height:40px; background:var(--bg-2); border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--purple); font-size:1.25rem; flex-shrink:0;">✉</div>
             <div>
@@ -35,7 +35,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="card" style="padding:2rem;">
+      <div data-animate="fade-up" class="card" style="padding:2rem;">
         <h2 style="font-size:1.25rem; margin-bottom:1.5rem;">Send a message</h2>
 
         <form action="https://api.web3forms.com/submit" method="POST" style="display:flex; flex-direction:column; gap:1.25rem;">
