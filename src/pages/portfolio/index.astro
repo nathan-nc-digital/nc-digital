@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const projects = await getCollection('portfolio');
+---
+
+<BaseLayout
+  title="Portfolio | NC Digital"
+  description="Case studies from NC Digital — web design and SEO projects for South Wales small businesses."
+>
+
+  <section style="padding:4rem 0 2rem;">
+    <div class="container site-pad">
+      <p class="eyebrow" style="margin-bottom:0.75rem;">Our work</p>
+      <h1 style="margin-bottom:1rem; max-width:600px;">Real results for South Wales businesses</h1>
+      <p style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
+        Every project we take on is built to generate leads, rank on Google, and grow with the business.
+      </p>
+    </div>
+  </section>
+
+  <section style="padding:3rem 0 5rem;">
+    <div class="container site-pad">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:1.5rem;">
+        {projects.map((project) => (
+          <a href={`/portfolio/${project.id.replace('/index.mdoc', '')}`} class="card" style="display:block; text-decoration:none;">
+            <h2 style="font-size:1.25rem; font-weight:700; color:var(--white); margin-bottom:0.75rem;">{project.data.title}</h2>
+            <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin-bottom:1.25rem;">{project.data.summary}</p>
+            <ul style="list-style:none; padding:0; margin:0 0 1.5rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
+              {project.data.services.map((s: string) => (
+                <li style="font-size:0.8125rem; color:var(--purple); background:var(--bg-2); border:1px solid var(--border); border-radius:4px; padding:0.2rem 0.6rem;">
+                  {s}
+                </li>
+              ))}
+            </ul>
+            <span style="color:var(--purple); font-size:0.9375rem; font-weight:600;">View case study →</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
