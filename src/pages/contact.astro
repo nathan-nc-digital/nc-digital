@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Contact NC Digital | Web Design & SEO South Wales"
+  description="Get in touch with NC Digital. Web design and local SEO for South Wales businesses. Based in Merthyr Tydfil."
+>
+
+  <section style="padding:4rem 0 5rem;">
+    <div class="container site-pad" style="display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:start;">
+
+      <div>
+        <p class="eyebrow" style="margin-bottom:0.75rem;">Get in touch</p>
+        <h1 style="margin-bottom:1rem;">Let's talk about your project</h1>
+        <p style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:2rem;">
+          Whether you need a new website, want to improve your Google rankings, or just have a question — I'd love to hear from you.
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:1.25rem;">
+          <div style="display:flex; gap:1rem; align-items:center;">
+            <div style="width:40px; height:40px; background:var(--bg-2); border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--purple); font-size:1.25rem; flex-shrink:0;">✉</div>
+            <div>
+              <p style="color:var(--text-muted); font-size:0.8125rem; margin-bottom:0.125rem;">Email</p>
+              <a href="mailto:nathan@nc-digital.co.uk" style="color:var(--white); font-weight:500;">nathan@nc-digital.co.uk</a>
+            </div>
+          </div>
+          <div style="display:flex; gap:1rem; align-items:center;">
+            <div style="width:40px; height:40px; background:var(--bg-2); border:1px solid var(--border); border-radius:8px; display:flex; align-items:center; justify-content:center; color:var(--purple); font-size:1.25rem; flex-shrink:0;">⌖</div>
+            <div>
+              <p style="color:var(--text-muted); font-size:0.8125rem; margin-bottom:0.125rem;">Based in</p>
+              <p style="color:var(--white); font-weight:500; margin:0;">Merthyr Tydfil, South Wales</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:2rem;">
+        <h2 style="font-size:1.25rem; margin-bottom:1.5rem;">Send a message</h2>
+
+        <form action="https://api.web3forms.com/submit" method="POST" style="display:flex; flex-direction:column; gap:1.25rem;">
+          <input type="hidden" name="access_key" value="YOUR_WEB3FORMS_ACCESS_KEY" />
+          <input type="hidden" name="subject" value="New enquiry from NC Digital website" />
+          <input type="hidden" name="redirect" value="https://nc-digital.co.uk/contact?success=true" />
+
+          <div>
+            <label style="display:block; font-size:0.875rem; color:var(--text-muted); margin-bottom:0.375rem;">Your name</label>
+            <input type="text" name="name" required
+              style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; color:var(--white); font-family:'Sora',sans-serif; font-size:0.9375rem; outline:none;"
+              placeholder="John Smith" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:0.875rem; color:var(--text-muted); margin-bottom:0.375rem;">Email address</label>
+            <input type="email" name="email" required
+              style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; color:var(--white); font-family:'Sora',sans-serif; font-size:0.9375rem; outline:none;"
+              placeholder="john@yourbusiness.co.uk" />
+          </div>
+
+          <div>
+            <label style="display:block; font-size:0.875rem; color:var(--text-muted); margin-bottom:0.375rem;">What do you need help with?</label>
+            <select name="service"
+              style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; color:var(--white); font-family:'Sora',sans-serif; font-size:0.9375rem; outline:none;">
+              <option value="new-website">New website</option>
+              <option value="seo">Local SEO</option>
+              <option value="maintenance">Website maintenance</option>
+              <option value="other">Something else</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="display:block; font-size:0.875rem; color:var(--text-muted); margin-bottom:0.375rem;">Message</label>
+            <textarea name="message" required rows="4"
+              style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; color:var(--white); font-family:'Sora',sans-serif; font-size:0.9375rem; outline:none; resize:vertical;"
+              placeholder="Tell me about your business and what you're looking for..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-primary" style="justify-content:center;">
+            Send message →
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+</BaseLayout>

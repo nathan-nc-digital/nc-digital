@@ -1,0 +1,62 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="About NC Digital | Web Design & SEO South Wales"
+  description="NC Digital is a web design and SEO agency based in Merthyr Tydfil, South Wales. We help local businesses grow online."
+>
+
+  <section style="padding:5rem 0 3rem; position:relative; overflow:hidden;">
+    <div style="position:absolute; top:0; right:0; width:400px; height:400px; background:radial-gradient(circle, #8750f720 0%, transparent 70%); pointer-events:none;"></div>
+    <div class="container site-pad" style="display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center;">
+
+      <div>
+        <p class="eyebrow" style="margin-bottom:0.75rem;">About</p>
+        <h1 style="margin-bottom:1.25rem;">Hi, I'm Nathan</h1>
+        <p style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:1.5rem;">
+          NC Digital is a web design and SEO agency based in Merthyr Tydfil, South Wales. I help local businesses get found online with affordable, high-quality websites.
+        </p>
+        <p style="color:var(--text-muted); font-size:1.0625rem; line-height:1.7; margin-bottom:2rem;">
+          I started NC Digital because I saw too many South Wales businesses losing customers to competitors with better websites. I wanted to change that — making professional web design and SEO accessible to businesses of all sizes.
+        </p>
+        <div style="display:flex; gap:1rem;">
+          <a href="/free-website-plan" class="btn-primary">Work with me →</a>
+          <a href="/portfolio" class="btn-outline">See my work</a>
+        </div>
+      </div>
+
+      <div style="position:relative; display:flex; justify-content:center;">
+        <div style="position:absolute; inset:0; background:radial-gradient(circle at center, #8750f730 0%, transparent 70%); border-radius:50%;"></div>
+        <div style="width:380px; height:420px; border-radius:16px; background:var(--bg-2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; position:relative;">
+          <p style="color:var(--text-muted); font-size:0.875rem; text-align:center; padding:2rem;">
+            Add photo to<br/><code>src/assets/nathan.jpg</code>
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section style="padding:4rem 0 5rem; background:var(--bg-2); border-top:1px solid var(--border);">
+    <div class="container site-pad">
+      <p class="eyebrow" style="margin-bottom:0.75rem; text-align:center;">Why NC Digital</p>
+      <h2 style="text-align:center; margin-bottom:3rem;">What makes us different</h2>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:1.5rem;">
+        {[
+          { title: 'Local knowledge', desc: 'Based in Merthyr Tydfil, we understand South Wales businesses and their customers.' },
+          { title: 'No long contracts', desc: "Monthly rolling agreements. We keep your business because our work is good, not because you're locked in." },
+          { title: 'Real results', desc: 'We measure success by leads and rankings, not just how the website looks.' },
+          { title: 'Personal service', desc: "You'll always deal directly with Nathan — no account managers, no handoffs." },
+        ].map(({ title, desc }) => (
+          <div class="card">
+            <h3 style="font-size:1rem; font-weight:700; color:var(--white); margin-bottom:0.75rem;">{title}</h3>
+            <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin:0;">{desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
