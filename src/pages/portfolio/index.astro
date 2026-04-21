@@ -1,8 +1,22 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
 
 const projects = await getCollection('portfolio');
+
+const imageFiles = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/portfolio/*.{jpg,jpeg,png,webp}',
+  { eager: true }
+);
+
+function getProjectImage(slug: string) {
+  for (const [path, mod] of Object.entries(imageFiles)) {
+    const filename = path.split('/').pop()!.replace(/\.[^.]+$/, '');
+    if (filename === slug) return mod.default;
+  }
+  return null;
+}
 ---
 
 <BaseLayout
@@ -23,20 +37,39 @@ const projects = await getCollection('portfolio');
   <section style="padding:3rem 0 5rem;">
     <div class="container site-pad">
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:1.5rem;">
-        {projects.map((project) => (
-          <a href={`/portfolio/${project.id.replace('/index.mdoc', '')}`} class="card" style="display:block; text-decoration:none;">
-            <h2 style="font-size:1.25rem; font-weight:700; color:var(--white); margin-bottom:0.75rem;">{project.data.title}</h2>
-            <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin-bottom:1.25rem;">{project.data.summary}</p>
-            <ul style="list-style:none; padding:0; margin:0 0 1.5rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
-              {project.data.services.map((s: string) => (
-                <li style="font-size:0.8125rem; color:var(--purple); background:var(--bg-2); border:1px solid var(--border); border-radius:4px; padding:0.2rem 0.6rem;">
-                  {s}
-                </li>
-              ))}
-            </ul>
-            <span style="color:var(--purple); font-size:0.9375rem; font-weight:600;">View case study →</span>
-          </a>
-        ))}
+        {projects.map((project) => {
+          const slug = project.id.replace('/index.mdoc', '');
+          const img = getProjectImage(slug);
+          return (
+            <a href={`/portfolio/${slug}`} class="card" style="display:block; text-decoration:none; padding:0; overflow:hidden;">
+              {img ? (
+                <Image
+                  src={img}
+                  alt={project.data.title}
+                  width={600}
+                  height={340}
+                  style="width:100%; height:200px; object-fit:cover; display:block;"
+                />
+              ) : (
+                <div style="width:100%; height:200px; background:var(--bg-3); display:flex; align-items:center; justify-content:center;">
+                  <span style="color:var(--text-muted); font-size:0.875rem;">{project.data.title}</span>
+                </div>
+              )}
+              <div style="padding:1.5rem;">
+                <h2 style="font-size:1.125rem; font-weight:700; color:var(--white); margin-bottom:0.5rem;">{project.data.title}</h2>
+                <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin-bottom:1rem;">{project.data.summary}</p>
+                <ul style="list-style:none; padding:0; margin:0 0 1.25rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
+                  {project.data.services.map((s: string) => (
+                    <li style="font-size:0.8125rem; color:var(--purple); background:var(--bg-2); border:1px solid var(--border); border-radius:4px; padding:0.2rem 0.6rem;">
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+                <span style="color:var(--purple); font-size:0.9375rem; font-weight:600;">View case study →</span>
+              </div>
+            </a>
+          );
+        })}
       </div>
     </div>
   </section>

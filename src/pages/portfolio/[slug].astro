@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
 
 export const prerender = true;
 
@@ -19,6 +20,22 @@ if (!project) {
 }
 
 const { Content } = await render(project);
+
+const slug = project.id.replace('/index.mdoc', '');
+
+const imageFiles = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/portfolio/*.{jpg,jpeg,png,webp}',
+  { eager: true }
+);
+
+let heroImage: ImageMetadata | null = null;
+for (const [path, mod] of Object.entries(imageFiles)) {
+  const filename = path.split('/').pop()!.replace(/\.[^.]+$/, '');
+  if (filename === slug) {
+    heroImage = mod.default;
+    break;
+  }
+}
 ---
 
 <BaseLayout
@@ -41,7 +58,21 @@ const { Content } = await render(project);
     </div>
   </section>
 
-  <section style="padding:3rem 0;">
+  {heroImage && (
+    <section style="padding:0 0 3rem;">
+      <div class="container site-pad">
+        <Image
+          src={heroImage}
+          alt={project.data.title}
+          width={1200}
+          height={600}
+          style="width:100%; height:auto; max-height:500px; object-fit:cover; border-radius:12px; border:1px solid var(--border);"
+        />
+      </div>
+    </section>
+  )}
+
+  <section style="padding:3rem 0 5rem;">
     <div class="container site-pad" style="display:grid; grid-template-columns:2fr 1fr; gap:4rem; align-items:start;">
 
       <div style="color:var(--text); line-height:1.8; font-size:1rem;">
