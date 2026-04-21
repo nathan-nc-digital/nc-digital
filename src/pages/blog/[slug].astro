@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.id.replace('/index.mdoc', '') },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+
+if (!post) {
+  return Astro.redirect('/blog');
+}
+
+const { Content } = await render(post);
+
+const formattedDate = post.data.pubDate
+  ? new Date(post.data.pubDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  : '';
+---
+
+<BaseLayout
+  title={post.data.metaTitle || `${post.data.title} | NC Digital`}
+  description={post.data.metaDescription || post.data.description || ''}
+>
+
+  <article>
+
+    <section style="padding:4rem 0 3rem;">
+      <div class="container site-pad" style="max-width:800px;">
+        <a href="/blog" style="color:var(--text-muted); font-size:0.875rem; display:inline-flex; gap:0.375rem; margin-bottom:2rem;">
+          ← All posts
+        </a>
+        <p style="font-size:0.75rem; color:var(--purple); font-weight:600; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem;">
+          {post.data.category?.replace('-', ' ')}
+        </p>
+        <h1 style="margin-bottom:1rem; line-height:1.2;">{post.data.title}</h1>
+        {formattedDate && (
+          <p style="color:var(--text-muted); font-size:0.9375rem;">{formattedDate}</p>
+        )}
+      </div>
+    </section>
+
+    <section style="padding:0 0 5rem;">
+      <div class="container site-pad" style="max-width:800px;">
+        <div style="color:var(--text); line-height:1.85; font-size:1.0625rem;">
+          <Content />
+        </div>
+      </div>
+    </section>
+
+  </article>
+
+  <section style="padding:4rem 0; background:var(--bg-2); border-top:1px solid var(--border);">
+    <div class="container site-pad" style="text-align:center;">
+      <h2 style="margin-bottom:1rem;">Ready to grow your business online?</h2>
+      <p style="color:var(--text-muted); margin-bottom:2rem;">Get a free website plan with no commitment.</p>
+      <a href="/free-website-plan" class="btn-primary">Get your free plan →</a>
+    </div>
+  </section>
+
+</BaseLayout>

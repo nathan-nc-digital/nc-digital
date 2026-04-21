@@ -1,0 +1,69 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export const prerender = true;
+
+export async function getStaticPaths({ paginate }: { paginate: Function }) {
+  const allPosts = (await getCollection('blog'))
+    .filter(post => post.data.pubDate)
+    .sort((a, b) =>
+      new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime()
+    );
+  return paginate(allPosts, { pageSize: 12 });
+}
+
+const { page } = Astro.props as {
+  page: {
+    data: Array<any>;
+    url: { prev?: string; next?: string };
+    currentPage: number;
+    lastPage: number;
+  }
+};
+
+const isFirstPage = page.currentPage === 1;
+const pageTitle = isFirstPage ? 'Blog | NC Digital' : `Blog — Page ${page.currentPage} | NC Digital`;
+const pageDesc = 'Web design and SEO tips, guides, and news for South Wales small businesses.';
+---
+
+<BaseLayout title={pageTitle} description={pageDesc}>
+
+  <section style="padding:4rem 0 2rem;">
+    <div class="container site-pad">
+      <p class="eyebrow" style="margin-bottom:0.75rem;">Insights</p>
+      <h1 style="margin-bottom:1rem;">Web design & SEO tips for South Wales businesses</h1>
+      <p style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
+        Practical advice on websites, SEO, and growing your business online.
+      </p>
+    </div>
+  </section>
+
+  <section style="padding:2rem 0 4rem;">
+    <div class="container site-pad">
+      <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:1.5rem; margin-bottom:3rem;">
+        {page.data.map((post) => (
+          <a href={`/blog/${post.id.replace('/index.mdoc', '')}`} class="card" style="display:block; text-decoration:none;">
+            <p style="font-size:0.75rem; color:var(--purple); font-weight:600; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.1em;">
+              {post.data.category?.replace('-', ' ')}
+            </p>
+            <h2 style="font-size:1rem; font-weight:600; color:var(--white); margin-bottom:0.625rem; line-height:1.4;">{post.data.title}</h2>
+            <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin:0;">{post.data.description}</p>
+          </a>
+        ))}
+      </div>
+
+      {(page.url.prev || page.url.next) && (
+        <div style="display:flex; justify-content:center; gap:1rem;">
+          {page.url.prev && (
+            <a href={page.url.prev} class="btn-outline">← Newer posts</a>
+          )}
+          {page.url.next && (
+            <a href={page.url.next} class="btn-outline">Older posts →</a>
+          )}
+        </div>
+      )}
+    </div>
+  </section>
+
+</BaseLayout>
