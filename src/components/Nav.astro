@@ -49,7 +49,7 @@ const currentPath = Astro.url.pathname;
         <li>
           <a
             href={href}
-            style={`font-size:0.9375rem; font-weight:500; color:${currentPath.startsWith(href) ? 'var(--white)' : 'var(--text-muted)'}; transition:color 0.2s;`}
+            class={`nav-link${currentPath.startsWith(href) ? ' nav-link--active' : ''}`}
           >
             {label}
           </a>
@@ -66,7 +66,7 @@ const currentPath = Astro.url.pathname;
             target="_blank"
             rel="noopener noreferrer"
             aria-label={label}
-            style="color:var(--text-muted); transition:color 0.2s; display:flex; align-items:center;"
+            class="social-link"
             set:html={icon}
           />
         ))}
@@ -78,6 +78,45 @@ const currentPath = Astro.url.pathname;
 
   </div>
 </nav>
+
+<style>
+  .nav-link {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: color 0.25s ease;
+    position: relative;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background: var(--purple);
+    transition: width 0.25s ease;
+  }
+  .nav-link:hover,
+  .nav-link--active {
+    color: var(--white);
+  }
+  .nav-link:hover::after,
+  .nav-link--active::after {
+    width: 100%;
+  }
+
+  .social-link {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    transition: color 0.25s ease, transform 0.25s ease;
+  }
+  .social-link:hover {
+    color: var(--purple);
+    transform: translateY(-2px);
+  }
+</style>
 
 <script>
   const nav = document.getElementById('site-nav');

@@ -28,6 +28,28 @@ const locations = [
   { href: '/seo-south-wales', label: 'SEO South Wales' },
 ];
 ---
+<style>
+  .footer-link {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    transition: color 0.25s ease;
+  }
+  .footer-link:hover {
+    color: var(--white);
+  }
+
+  .footer-social {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    transition: color 0.25s ease, transform 0.25s ease;
+  }
+  .footer-social:hover {
+    color: var(--purple);
+    transform: translateY(-2px);
+  }
+</style>
+
 <footer style="background:var(--bg-2); border-top:1px solid var(--border); margin-top:5rem;">
   <div class="container site-pad" style="padding-top:3.5rem; padding-bottom:3.5rem;">
 
@@ -43,7 +65,7 @@ const locations = [
         <div style="display:flex; gap:0.875rem; align-items:center;">
           {socials.map(({ href, label, icon }) => (
             <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-              style="color:var(--text-muted); transition:color 0.2s; display:flex; align-items:center;"
+              class="footer-social"
               set:html={icon} />
           ))}
         </div>
@@ -55,7 +77,7 @@ const locations = [
         </h4>
         <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.625rem;">
           {services.map(({ href, label }) => (
-            <li><a href={href} style="color:var(--text-muted); font-size:0.9375rem;">{label}</a></li>
+            <li><a href={href} class="footer-link">{label}</a></li>
           ))}
         </ul>
       </div>
@@ -66,7 +88,7 @@ const locations = [
         </h4>
         <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.625rem;">
           {locations.map(({ href, label }) => (
-            <li><a href={href} style="color:var(--text-muted); font-size:0.9375rem;">{label}</a></li>
+            <li><a href={href} class="footer-link">{label}</a></li>
           ))}
         </ul>
       </div>
