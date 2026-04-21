@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const services = await getCollection('services');
+---
+
+<BaseLayout
+  title="Our Services | NC Digital"
+  description="Web design, local SEO, website maintenance, hosting, and professional email for South Wales businesses."
+>
+
+  <section style="padding:4rem 0 2rem;">
+    <div class="container site-pad">
+      <p class="eyebrow" style="margin-bottom:0.75rem;">What we offer</p>
+      <h1 style="margin-bottom:1rem; max-width:600px;">Services built for South Wales businesses</h1>
+      <p style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
+        Everything your business needs to get online, get found, and grow — from a single agency in Merthyr Tydfil.
+      </p>
+    </div>
+  </section>
+
+  <section style="padding:3rem 0 5rem;">
+    <div class="container site-pad">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:1.5rem;">
+        {services.map((service) => (
+          <a href={`/services/${service.id.replace('/index.mdoc', '')}`} class="card" style="display:block; text-decoration:none;">
+            <h2 style="font-size:1.25rem; font-weight:700; color:var(--white); margin-bottom:0.75rem;">{service.data.title}</h2>
+            <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin-bottom:1.25rem;">{service.data.description}</p>
+            <ul style="list-style:none; padding:0; margin:0 0 1.5rem; display:flex; flex-direction:column; gap:0.375rem;">
+              {service.data.features.slice(0, 3).map((f: string) => (
+                <li style="font-size:0.875rem; color:var(--text-muted); display:flex; gap:0.5rem;">
+                  <span style="color:var(--purple);">✓</span> {f}
+                </li>
+              ))}
+            </ul>
+            <span style="color:var(--purple); font-size:0.9375rem; font-weight:600;">Learn more →</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>
