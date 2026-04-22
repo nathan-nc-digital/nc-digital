@@ -40,7 +40,11 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
 
 const folder = folderMap[slug] || '';
 const galleryImages = Object.entries(allImages)
-  .filter(([path]) => folder && path.includes(`/${folder}/`))
+  .filter(([path]) => {
+    if (!folder || !path.includes(`/${folder}/`)) return false;
+    const filename = path.split('/').pop() || '';
+    return !filename.toLowerCase().startsWith('whatsapp');
+  })
   .map(([, mod]) => mod.default)
   .slice(0, 5);
 

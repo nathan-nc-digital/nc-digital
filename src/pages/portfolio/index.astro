@@ -26,7 +26,11 @@ const folderMap: Record<string, string> = {
 function getProjectImage(slug: string) {
   const folder = folderMap[slug];
   if (!folder) return null;
-  const match = Object.entries(allImages).find(([path]) => path.includes(`/${folder}/`));
+  const match = Object.entries(allImages).find(([path]) => {
+    if (!path.includes(`/${folder}/`)) return false;
+    const filename = path.split('/').pop() || '';
+    return !filename.toLowerCase().startsWith('whatsapp');
+  });
   return match ? match[1].default : null;
 }
 
