@@ -88,8 +88,9 @@ const serviceLinks: Record<string, string> = {
           const slug = project.id.replace('/index.mdoc', '');
           const img = getProjectImage(slug);
           return (
-            <a href={`/portfolio/${slug}`} class="portfolio-card">
-              <div class="card-image">
+            <a href={`/portfolio/${slug}`} class="portfolio-card" style="display:flex; flex-direction:column;">
+              <div class="card-image" style="width:100%; height:210px; overflow:hidden; flex-shrink:0; background:var(--bg-3);">
+
                 {img ? (
                   <Image
                     src={img}
@@ -104,7 +105,7 @@ const serviceLinks: Record<string, string> = {
                   </div>
                 )}
               </div>
-              <div class="card-body">
+              <div class="card-body" style="display:flex; flex-direction:column; flex:1; padding:1.25rem;">
                 <h2 class="card-title">{project.data.title}</h2>
                 <p class="card-summary">{project.data.summary}</p>
                 <div class="card-tags">
