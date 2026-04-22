@@ -81,16 +81,15 @@ const serviceLinks: Record<string, string> = {
     </div>
   </section>
 
-  <section style="padding:3rem 0 5rem;">
+  <section style="padding:3rem 0 5rem;" id="portfolio-v3">
     <div class="container site-pad">
       <div data-animate="stagger" class="portfolio-grid">
         {projects.map((project) => {
           const slug = project.id.replace('/index.mdoc', '');
           const img = getProjectImage(slug);
           return (
-            <a href={`/portfolio/${slug}`} class="portfolio-card" style="display:flex; flex-direction:column;">
-              <div class="card-image" style="width:100%; height:210px; overflow:hidden; flex-shrink:0; background:var(--bg-3);">
-
+            <div class="portfolio-card">
+              <a href={`/portfolio/${slug}`} class="card-image">
                 {img ? (
                   <Image
                     src={img}
@@ -104,24 +103,20 @@ const serviceLinks: Record<string, string> = {
                     <span>{project.data.title}</span>
                   </div>
                 )}
-              </div>
-              <div class="card-body" style="display:flex; flex-direction:column; flex:1; padding:1.25rem;">
+              </a>
+              <div class="card-body">
                 <h2 class="card-title">{project.data.title}</h2>
                 <p class="card-summary">{project.data.summary}</p>
                 <div class="card-tags">
                   {project.data.services.map((s: string) => (
-                    <a
-                      href={serviceLinks[s] || '/services'}
-                      class="card-tag"
-                      onclick="event.stopPropagation()"
-                    >
+                    <a href={serviceLinks[s] || '/services'} class="card-tag">
                       {serviceLabels[s] || s}
                     </a>
                   ))}
                 </div>
-                <span class="card-cta">View case study →</span>
+                <a href={`/portfolio/${slug}`} class="card-cta">View case study →</a>
               </div>
-            </a>
+            </div>
           );
         })}
       </div>
@@ -142,7 +137,6 @@ const serviceLinks: Record<string, string> = {
       border: 1px solid var(--border);
       border-radius: 10px;
       overflow: hidden;
-      text-decoration: none;
       transition: border-color 0.2s, transform 0.2s;
     }
     .portfolio-card:hover {
@@ -151,11 +145,13 @@ const serviceLinks: Record<string, string> = {
     }
 
     .card-image {
+      display: block;
       width: 100%;
       height: 210px;
       overflow: hidden;
       flex-shrink: 0;
       background: var(--bg-3);
+      text-decoration: none;
     }
 
     .card-img {
@@ -226,10 +222,19 @@ const serviceLinks: Record<string, string> = {
       border-color: var(--purple);
     }
 
+    .card-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
     .card-cta {
       color: var(--purple);
       font-size: 0.875rem;
       font-weight: 600;
+      text-decoration: none;
+      margin-top: auto;
     }
 
     @media (max-width: 900px) {
