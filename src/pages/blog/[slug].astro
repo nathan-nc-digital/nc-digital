@@ -29,7 +29,7 @@ const allPosts = await getCollection('blog');
 const related = allPosts
   .filter(p => p.data.category === post.data.category && p.id !== post.id && p.data.pubDate)
   .sort((a, b) => new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime())
-  .slice(0, 4);
+  .slice(0, 2);
 ---
 
 <BaseLayout
@@ -86,22 +86,6 @@ const related = allPosts
           <!-- Sidebar -->
           <aside class="post-sidebar">
 
-            {related.length > 0 && (
-              <div class="sidebar-widget">
-                <p class="sidebar-label">Related posts</p>
-                <ul class="related-list">
-                  {related.map((p) => (
-                    <li>
-                      <a href={`/blog/${p.id.replace('/index.mdoc', '')}`}>
-                        <span class="related-cat">{p.data.category?.replace(/-/g, ' ')}</span>
-                        {p.data.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
             <div class="sidebar-widget">
               <p class="sidebar-label">Free enquiry</p>
               <p style="color:var(--text-muted); font-size:0.8125rem; line-height:1.5; margin-bottom:0.875rem;">
@@ -134,6 +118,22 @@ const related = allPosts
                 </button>
               </form>
             </div>
+
+            {related.length > 0 && (
+              <div class="sidebar-widget">
+                <p class="sidebar-label">Related posts</p>
+                <ul class="related-list">
+                  {related.map((p) => (
+                    <li>
+                      <a href={`/blog/${p.id.replace('/index.mdoc', '')}`}>
+                        <span class="related-cat">{p.data.category?.replace(/-/g, ' ')}</span>
+                        {p.data.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
           </aside>
         </div>
