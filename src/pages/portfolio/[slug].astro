@@ -15,28 +15,41 @@ export async function getStaticPaths() {
 }
 
 const { project } = Astro.props;
-
-if (!project) {
-  return Astro.redirect('/portfolio');
-}
+if (!project) return Astro.redirect('/portfolio');
 
 const { Content } = await render(project);
-
 const slug = project.id.replace('/index.mdoc', '');
 
-const imageFiles = import.meta.glob<{ default: ImageMetadata }>(
-  '../../assets/portfolio/*.{jpg,jpeg,png,webp}',
+// Map slug → subfolder name
+const folderMap: Record<string, string> = {
+  '3d-framing':                  '3D Framing',
+  'ak-promotions':               'AK Promotions',
+  'creative-redevelopments':     'Creative Redevelopment',
+  'ds-carpentry':                'DS Carpentry',
+  'davies-property-development': 'Davies Property Development',
+  'ir-energy':                   'IR Energy',
+  'k-williams-roofing':          'K Williams Roofing',
+  'lr-building-roofing':         'L&R Building and Roofing',
+  'mj-roofing':                  'M&J Roofing',
+};
+
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/portfolio/**/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG}',
   { eager: true }
 );
 
-let heroImage: ImageMetadata | null = null;
-for (const [path, mod] of Object.entries(imageFiles)) {
-  const filename = path.split('/').pop()!.replace(/\.[^.]+$/, '');
-  if (filename === slug) {
-    heroImage = mod.default;
-    break;
-  }
-}
+const folder = folderMap[slug] || '';
+const galleryImages = Object.entries(allImages)
+  .filter(([path]) => folder && path.includes(`/${folder}/`))
+  .map(([, mod]) => mod.default)
+  .slice(0, 5);
+
+const serviceLabels: Record<string, string> = {
+  'web-design':       'Web Design',
+  'web-development':  'Web Development',
+  'seo':              'Local SEO',
+  'hosting':          'Hosting',
+};
 ---
 
 <BaseLayout
@@ -44,58 +57,91 @@ for (const [path, mod] of Object.entries(imageFiles)) {
   description={project.data.metaDescription || project.data.summary}
 >
 
-  <section style="padding:4rem 0 3rem; position:relative; overflow:hidden;">
+  <!-- Hero: text left, gallery right -->
+  <section class="case-hero">
     <HeroOrbs />
     <div class="container site-pad" style="position:relative; z-index:1;">
-      <a href="/portfolio" style="color:var(--text-muted); font-size:0.875rem; display:inline-flex; align-items:center; gap:0.375rem; margin-bottom:2rem;">
-        ← All case studies
-      </a>
-      <div style="text-align:center;">
-        <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Case study</p>
-        <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:640px; margin-left:auto; margin-right:auto;">{project.data.title}</h1>
-        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin:0 auto 2rem;">
-          {project.data.summary}
-        </p>
-        <a data-animate="fade-up" href="/contact" class="btn-primary">Start your project →</a>
+      <div class="hero-grid">
+
+        <!-- Left: text -->
+        <div class="hero-text">
+          <a href="/portfolio" class="back-link">← All case studies</a>
+          <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Case study</p>
+          <h1 data-animate="fade-up" style="margin-bottom:1rem; line-height:1.15;">{project.data.title}</h1>
+          <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; line-height:1.75; margin-bottom:1.5rem;">
+            {project.data.summary}
+          </p>
+
+          <div data-animate="fade-up" style="display:flex; flex-wrap:wrap; gap:0.375rem; margin-bottom:2rem;">
+            {project.data.services.map((s: string) => (
+              <span class="service-tag">
+                {serviceLabels[s] || s}
+              </span>
+            ))}
+          </div>
+
+          <a data-animate="fade-up" href="/free-website-plan" class="btn-primary">Start your project →</a>
+        </div>
+
+        <!-- Right: gallery -->
+        {galleryImages.length > 0 && (
+          <div data-animate="fade-up" class="hero-gallery">
+            <!-- Featured image -->
+            <div class="gallery-featured">
+              <Image
+                src={galleryImages[0]}
+                alt={`${project.data.title} — screenshot 1`}
+                width={800}
+                height={500}
+                class="gallery-img"
+              />
+            </div>
+
+            <!-- Thumbnails -->
+            {galleryImages.length > 1 && (
+              <div class="gallery-thumbs">
+                {galleryImages.slice(1, 4).map((img, i) => (
+                  <div class="gallery-thumb">
+                    <Image
+                      src={img}
+                      alt={`${project.data.title} — screenshot ${i + 2}`}
+                      width={400}
+                      height={260}
+                      class="gallery-img"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
   </section>
 
-  {heroImage && (
-    <section style="padding:0 0 3rem;">
-      <div class="container site-pad">
-        <Image
-          src={heroImage}
-          alt={project.data.title}
-          width={1200}
-          height={600}
-          style="width:100%; height:auto; max-height:500px; object-fit:cover; border-radius:12px; border:1px solid var(--border);"
-        />
-      </div>
-    </section>
-  )}
-
-  <section style="padding:3rem 0 5rem;">
+  <!-- Case study content -->
+  <section style="padding:4rem 0 5rem;">
     <div class="container site-pad layout-sidebar">
 
-      <div data-animate="fade-up" style="color:var(--text); line-height:1.8; font-size:1rem;">
+      <div data-animate="fade-up" class="prose">
         <Content />
       </div>
 
       <aside>
-        <div data-animate="fade-in" class="card">
+        <div data-animate="fade-in" class="card" style="position:sticky; top:calc(72px + 2rem);">
           <h3 style="font-size:1rem; font-weight:700; color:var(--white); margin-bottom:1rem;">Project details</h3>
-          <dl style="margin:0; display:flex; flex-direction:column; gap:0.75rem;">
+          <dl style="margin:0; display:flex; flex-direction:column; gap:0.875rem;">
             <div>
-              <dt style="font-size:0.8125rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.25rem;">Client</dt>
-              <dd style="font-size:0.9375rem; color:var(--white); margin:0;">{project.data.client}</dd>
+              <dt style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.3rem;">Client</dt>
+              <dd style="font-size:0.9375rem; color:var(--white); margin:0; font-weight:500;">{project.data.client}</dd>
             </div>
             <div>
-              <dt style="font-size:0.8125rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.25rem;">Services</dt>
+              <dt style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.3rem;">Services</dt>
               <dd style="margin:0; display:flex; flex-wrap:wrap; gap:0.375rem;">
                 {project.data.services.map((s: string) => (
-                  <span style="font-size:0.8125rem; color:var(--purple); background:var(--bg-2); border:1px solid var(--border); border-radius:4px; padding:0.2rem 0.6rem;">
-                    {s}
+                  <span style="font-size:0.8125rem; color:var(--purple); background:color-mix(in srgb, var(--purple) 10%, transparent); border:1px solid color-mix(in srgb, var(--purple) 30%, transparent); border-radius:4px; padding:0.2rem 0.6rem;">
+                    {serviceLabels[s] || s}
                   </span>
                 ))}
               </dd>
@@ -109,5 +155,136 @@ for (const [path, mod] of Object.entries(imageFiles)) {
 
     </div>
   </section>
+
+  <style>
+    .case-hero {
+      padding: 3.5rem 0 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .hero-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    .service-tag {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--purple);
+      background: color-mix(in srgb, var(--purple) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--purple) 30%, transparent);
+      border-radius: 4px;
+      padding: 0.25rem 0.625rem;
+    }
+
+    /* Gallery */
+    .hero-gallery {
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+    }
+
+    .gallery-featured {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      line-height: 0;
+    }
+
+    .gallery-thumbs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.625rem;
+    }
+
+    .gallery-thumb {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      line-height: 0;
+    }
+
+    .gallery-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-featured:hover .gallery-img,
+    .gallery-thumb:hover .gallery-img {
+      transform: scale(1.02);
+    }
+
+    .gallery-featured .gallery-img {
+      max-height: 340px;
+    }
+
+    .gallery-thumb .gallery-img {
+      max-height: 120px;
+    }
+
+    /* Prose */
+    .prose {
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+    .prose :global(h2) {
+      color: var(--white);
+      font-size: 1.375rem;
+      font-weight: 700;
+      margin: 2rem 0 0.75rem;
+      letter-spacing: -0.02em;
+    }
+    .prose :global(h3) {
+      color: var(--white);
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 1.5rem 0 0.625rem;
+    }
+    .prose :global(p) { margin: 0 0 1.125rem; }
+    .prose :global(ul), .prose :global(ol) {
+      margin: 0 0 1.125rem 1.25rem;
+      padding: 0;
+    }
+    .prose :global(li) { margin-bottom: 0.4rem; }
+    .prose :global(ul li)::marker { color: var(--purple); }
+    .prose :global(strong) { color: var(--white); font-weight: 600; }
+    .prose :global(a) { color: var(--purple); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+      .gallery-thumbs {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
 
 </BaseLayout>
