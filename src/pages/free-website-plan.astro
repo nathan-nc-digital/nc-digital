@@ -4,19 +4,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <BaseLayout
   title="Free Website Plan | NC Digital"
-  description="Get a free, no-obligation website plan for your South Wales business. See exactly what we'd build and what it would cost."
+  description="Answer a few questions and get a tailored website and SEO recommendation for your South Wales business. Free, no obligation."
 >
 
   <section style="padding:5rem 0 3rem; position:relative; overflow:hidden;">
     <div style="position:absolute; top:-100px; right:0; width:500px; height:500px; background:radial-gradient(circle, #8750f720 0%, transparent 70%); pointer-events:none;"></div>
-    <div class="container site-pad" style="max-width:760px;">
+    <div class="container site-pad" style="max-width:900px;">
       <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">No obligation · No cost</p>
-      <h1 data-animate="fade-up" style="margin-bottom:1.25rem;">Get your free website plan</h1>
+      <h1 data-animate="fade-up" style="margin-bottom:1.25rem;">Find out what your business needs</h1>
       <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:1.5rem;">
-        Tell me about your business and I'll put together a personalised website plan — including what pages I'd build, what it would look like, and exactly what it would cost. No strings attached.
+        Answer a few guided questions and get a tailored recommendation based on your current position. At the end, request your free personalised plan.
       </p>
       <div data-animate="fade-up" style="display:flex; flex-wrap:wrap; gap:1.5rem; margin-bottom:3rem;">
-        {['Free — no obligation', 'Delivered within 48 hours', 'Includes full cost breakdown'].map(item => (
+        {['Free — no obligation', 'Tailored to your business', 'Response within 48 hours'].map(item => (
           <div style="display:flex; align-items:center; gap:0.5rem; color:var(--text-muted); font-size:0.9375rem;">
             <span style="color:var(--purple);">✓</span> {item}
           </div>
@@ -25,68 +25,671 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
   </section>
 
-  <section style="padding:0 0 5rem;">
-    <div class="container site-pad" style="max-width:760px;">
-      <div data-animate="fade-up" class="card" style="padding:2.5rem;">
-        <h2 style="font-size:1.25rem; margin-bottom:1.5rem;">Tell me about your business</h2>
-
-        <form action="https://api.web3forms.com/submit" method="POST" style="display:flex; flex-direction:column; gap:1.25rem;">
-          <input type="hidden" name="access_key" value="623d4393-90f3-4de8-b0c0-646e1d8ff1c3" />
-          <input type="hidden" name="subject" value="Free website plan request from NC Digital" />
-          <input type="hidden" name="redirect" value="https://nc-digital.co.uk/free-website-plan?success=true" />
-
-          <div class="layout-form-row">
-            <div>
-              <label style="display:block; font-size:0.875rem; color:var(--text-muted); margin-bottom:0.375rem;">Your name</label>
-              <input type="text" name="name" required
-                style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; color:var(--white); font-family:'Sora',sans-serif; font-size:0.9375rem; outline:none;"
-                placeholder="John Smith" />
-            </div>
-            <div>
-              <label style="display:block; font-size:0.875rem; color:var(--text-muted); margin-bottom:0.375rem;">Email address</label>
-              <input type="email" name="email" required
-                style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; color:var(--white); font-family:'Sora',sans-serif; font-size:0.9375rem; outline:none;"
-                placeholder="john@yourbusiness.co.uk" />
-            </div>
-          </div>
-
-          <div>
-            <label style="display:block; font-size:0.875rem; color:var(--text-muted); margin-bottom:0.375rem;">Business name</label>
-            <input type="text" name="business"
-              style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; color:var(--white); font-family:'Sora',sans-serif; font-size:0.9375rem; outline:none;"
-              placeholder="Your Business Ltd" />
-          </div>
-
-          <div>
-            <label style="display:block; font-size:0.875rem; color:var(--text-muted); margin-bottom:0.375rem;">What does your business do?</label>
-            <input type="text" name="business_type"
-              style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; color:var(--white); font-family:'Sora',sans-serif; font-size:0.9375rem; outline:none;"
-              placeholder="e.g. Plumber in Cardiff, Hairdresser in Swansea" />
-          </div>
-
-          <div>
-            <label style="display:block; font-size:0.875rem; color:var(--text-muted); margin-bottom:0.375rem;">Do you currently have a website?</label>
-            <select name="has_website"
-              style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; color:var(--white); font-family:'Sora',sans-serif; font-size:0.9375rem; outline:none;">
-              <option value="no">No, I need a new website</option>
-              <option value="yes-redesign">Yes, but I want to improve it</option>
-              <option value="yes-seo">Yes, I need help getting found on Google</option>
-            </select>
-          </div>
-
-          <div>
-            <label style="display:block; font-size:0.875rem; color:var(--text-muted); margin-bottom:0.375rem;">Anything else you'd like to share?</label>
-            <textarea name="message" rows="3"
-              style="width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; color:var(--white); font-family:'Sora',sans-serif; font-size:0.9375rem; outline:none; resize:vertical;"
-              placeholder="Budget, timeline, specific features..."></textarea>
-          </div>
-
-          <button type="submit" class="btn-primary" style="justify-content:center; font-size:1rem; padding:1rem 2rem;">
-            Get my free plan →
-          </button>
-        </form>
+  <section style="padding:0 0 6rem;">
+    <div class="container site-pad" style="max-width:900px;">
+      <div id="nc-wle-root">
+        <noscript>Please enable JavaScript to use this assessment.</noscript>
       </div>
     </div>
   </section>
+
+  <style>
+    .nc-wle-shell {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 36px 28px;
+      background: radial-gradient(circle at top right, rgba(255,255,255,0.12), transparent 28%),
+                  linear-gradient(180deg, #8750f7 0%, #6f3fe0 100%);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 24px;
+      box-shadow: 0 24px 50px rgba(18,8,40,0.3);
+      color: #fff;
+    }
+
+    .nc-wle-header h2 {
+      margin: 0;
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+    .nc-wle-intro {
+      max-width: 40rem;
+      margin: 12px 0 0;
+      color: rgba(255,255,255,0.8);
+      font-size: 1rem;
+      line-height: 1.65;
+    }
+
+    .nc-wle-progress { margin: 28px 0 4px; }
+    .nc-wle-progress-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.875rem;
+    }
+    .nc-wle-progress-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .nc-wle-progress-bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #fff 0%, #d8c3ff 100%);
+      transition: width 0.3s ease;
+    }
+
+    .nc-wle-card {
+      margin-top: 20px;
+      padding: 24px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 18px;
+    }
+    .nc-wle-card h3 {
+      margin: 0 0 16px;
+      font-size: 1.25rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .nc-wle-question-form { display: grid; gap: 10px; }
+
+    .nc-wle-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.08);
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      color: #fff;
+      font-size: 0.9375rem;
+    }
+    .nc-wle-option:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.45);
+      background: rgba(255,255,255,0.13);
+    }
+    .nc-wle-option input {
+      accent-color: #fff;
+      transform: scale(1.15);
+      flex-shrink: 0;
+    }
+
+    .nc-wle-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+    .nc-wle-button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 24px;
+      background: #fff;
+      color: #8750f7;
+      font: inherit;
+      font-size: 0.9375rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .nc-wle-button:hover { background: rgba(255,255,255,0.88); transform: translateY(-1px); }
+    .nc-wle-button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .nc-wle-button-secondary {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+    }
+    .nc-wle-button-secondary:hover { background: rgba(255,255,255,0.22); transform: translateY(-1px); }
+
+    .nc-wle-result-kicker {
+      margin: 0 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.65);
+      font-weight: 700;
+    }
+    .nc-wle-result h3 { color: #fff; }
+    .nc-wle-result p { color: rgba(255,255,255,0.85); line-height: 1.7; margin: 0; }
+    .nc-wle-overlay {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-left: 3px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.1);
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.9);
+      line-height: 1.6;
+    }
+
+    .nc-wle-field { display: grid; gap: 6px; margin-bottom: 14px; }
+    .nc-wle-field > span { font-size: 0.875rem; font-weight: 600; color: rgba(255,255,255,0.9); }
+    .nc-wle-field input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 12px;
+      font: inherit;
+      font-size: 0.9375rem;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .nc-wle-field input:focus { outline: none; border-color: rgba(255,255,255,0.55); }
+    .nc-wle-field input::placeholder { color: rgba(255,255,255,0.4); }
+    .nc-wle-honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+    .nc-wle-error { margin: 14px 0 0; color: #ffc3c3; font-weight: 600; font-size: 0.9rem; }
+    .nc-wle-success {
+      padding: 16px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.15);
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 640px) {
+      .nc-wle-shell { padding: 24px 16px; border-radius: 18px; }
+      .nc-wle-card { padding: 18px 16px; }
+      .nc-wle-actions { flex-direction: column; }
+      .nc-wle-progress-meta { flex-direction: column; gap: 4px; }
+    }
+  </style>
+
+  <script>
+    (function () {
+      const QUESTIONS = {
+        entry: {
+          id: 'q1', prompt: 'Do you currently have a website?', type: 'single',
+          options: [
+            { value: 'no_website', label: 'No, I do not have one' },
+            { value: 'outdated',   label: 'Yes, but it is outdated or not working well' },
+            { value: 'happy',      label: 'Yes, and I am happy with it' },
+          ],
+        },
+        branches: {
+          no_website: [
+            { id: 'q2a', prompt: 'What is the main goal of your website?', type: 'single', options: [
+              { value: 'generate_enquiries', label: 'Generate enquiries' },
+              { value: 'sell_products',      label: 'Sell products online' },
+              { value: 'showcase_services',  label: 'Showcase services' },
+              { value: 'not_sure',           label: 'Not sure' },
+            ]},
+            { id: 'q3a', prompt: 'What type of business are you?', type: 'single', options: [
+              { value: 'trades',         label: 'Trades' },
+              { value: 'local_service',  label: 'Local service' },
+              { value: 'ecommerce',      label: 'eCommerce' },
+              { value: 'other',          label: 'Other' },
+            ]},
+            { id: 'q4a', prompt: 'What features do you need?', type: 'multi', options: [
+              { value: 'contact_form',    label: 'Contact form' },
+              { value: 'click_to_call',   label: 'Click to call' },
+              { value: 'booking_system',  label: 'Booking system' },
+              { value: 'online_payments', label: 'Online payments' },
+              { value: 'gallery',         label: 'Gallery or portfolio' },
+              { value: 'blog',            label: 'Blog' },
+              { value: 'not_sure',        label: 'Not sure' },
+            ]},
+            { id: 'q5a', prompt: 'Do you have branding and content ready?', type: 'single', options: [
+              { value: 'ready',       label: 'Yes, ready to go' },
+              { value: 'some_bits',   label: 'Some bits' },
+              { value: 'nothing_yet', label: 'Nothing yet' },
+            ]},
+            { id: 'q6a', prompt: 'Do you want your website to show up on Google?', type: 'single', options: [
+              { value: 'important',    label: 'Yes, that is important' },
+              { value: 'unsure',       label: 'Not really sure' },
+              { value: 'not_priority', label: 'Not a priority right now' },
+            ]},
+          ],
+          outdated: [
+            { id: 'q2b', prompt: 'What is the main issue with your current website?', type: 'single', options: [
+              { value: 'looks_outdated',        label: 'Looks outdated' },
+              { value: 'not_getting_enquiries', label: 'Not getting enquiries' },
+              { value: 'hard_to_update',        label: 'Hard to use or update' },
+              { value: 'slow_mobile',           label: 'Slow or poor on mobile' },
+              { value: 'not_ranking',           label: 'Not ranking on Google' },
+            ]},
+            { id: 'q3b', prompt: 'How many enquiries do you get per month?', type: 'single', options: [
+              { value: '0',      label: '0' },
+              { value: '1_5',    label: '1 to 5' },
+              { value: '5_10',   label: '5 to 10' },
+              { value: '10_plus',label: '10+' },
+            ]},
+            { id: 'q4b', prompt: 'When was it last updated?', type: 'single', options: [
+              { value: '3_plus_years', label: '3+ years ago' },
+              { value: '1_3_years',   label: '1 to 3 years ago' },
+              { value: 'recently',    label: 'Recently' },
+            ]},
+            { id: 'q5b', prompt: 'Do you appear on Google for your services?', type: 'single', options: [
+              { value: 'no',         label: 'No' },
+              { value: 'page_2_plus',label: 'Page 2+' },
+              { value: 'page_1',     label: 'Page 1' },
+            ]},
+            { id: 'q6b', prompt: 'Do you have clear service pages?', type: 'single', options: [
+              { value: 'yes',  label: 'Yes' },
+              { value: 'some', label: 'Some' },
+              { value: 'no',   label: 'No' },
+            ]},
+          ],
+          happy: [
+            { id: 'q2c', prompt: 'How many enquiries do you get per month?', type: 'single', options: [
+              { value: '0_5',    label: '0 to 5' },
+              { value: '5_15',   label: '5 to 15' },
+              { value: '15_plus',label: '15+' },
+            ]},
+            { id: 'q3c', prompt: 'Where do most of your enquiries come from?', type: 'single', options: [
+              { value: 'google',        label: 'Google' },
+              { value: 'social_media',  label: 'Social media' },
+              { value: 'word_of_mouth', label: 'Word of mouth' },
+              { value: 'not_sure',      label: 'Not sure' },
+            ]},
+            { id: 'q4c', prompt: 'Do you know what keywords you rank for?', type: 'single', options: [
+              { value: 'yes', label: 'Yes' },
+              { value: 'no',  label: 'No' },
+            ]},
+            { id: 'q5c', prompt: 'Are you currently doing SEO?', type: 'single', options: [
+              { value: 'no',      label: 'No' },
+              { value: 'a_little',label: 'A little' },
+              { value: 'ongoing', label: 'Yes, ongoing' },
+            ]},
+            { id: 'q6c', prompt: 'What is your goal?', type: 'single', options: [
+              { value: 'more_enquiries', label: 'More enquiries' },
+              { value: 'expand_areas',   label: 'Expand to new areas' },
+              { value: 'rank_higher',    label: 'Rank higher than competitors' },
+            ]},
+          ],
+        },
+        leadForm: {
+          title: 'Get Your Free Personalised Website and SEO Plan',
+          fields: [
+            { id: 'name',        label: 'Name',        type: 'text',  required: true },
+            { id: 'website_url', label: 'Website URL', type: 'url',   required: false },
+            { id: 'email',       label: 'Email',       type: 'email', required: true },
+            { id: 'phone',       label: 'Phone',       type: 'tel',   required: false },
+            { id: 'company',     label: 'Company',     type: 'text',  required: false },
+          ],
+          cta: 'Get your free personalised website and SEO plan',
+        },
+      };
+
+      const RESULTS = {
+        simple_lead_website:    { title: 'Simple Lead Website',            body: 'You need a website built from scratch that is designed to generate enquiries from day one. Based on your answers, a clean, fast website with clear calls to action will give you the best return. We would also recommend setting it up with SEO in mind so it can start bringing in traffic.' },
+        ecommerce:              { title: 'eCommerce Website',              body: 'You need an eCommerce website that is built to sell, not just look good. This includes product setup, payments, and a smooth checkout process. Getting the structure right early is key to making it profitable.' },
+        full_setup:             { title: 'Complete Website Setup',         body: 'You need a complete website setup, including design, content, and SEO foundations. Done properly, this gives you a site that not only looks professional but is built to generate enquiries consistently.' },
+        website_not_performing: { title: 'Website Not Performing',         body: 'Your website is likely holding your business back. Based on your answers, it is either not generating enquiries or not being found on Google. A redesign focused on performance and lead generation would make a noticeable difference.' },
+        conversion_problem:     { title: 'Conversion Problem',             body: 'You may be getting visitors, but your website is not converting them into enquiries. Improving layout, messaging, and calls to action can significantly increase leads without needing more traffic.' },
+        seo_problem:            { title: 'SEO Problem',                    body: 'Your website is not getting enough visibility on Google. Even a good website will not generate leads if people cannot find it. SEO will help bring in consistent traffic.' },
+        hybrid:                 { title: 'Website and SEO Improvement',    body: 'Your website and visibility both need improvement. Updating the site and improving your SEO together will give you the best results and increase enquiries consistently.' },
+        seo_opportunity:        { title: 'SEO Opportunity',                body: 'Your website is in a good position, but it is not getting enough visibility. SEO can help you appear higher in Google and bring in more consistent enquiries.' },
+        growth_scaling:         { title: 'Growth and Scaling Opportunity', body: 'You are already generating enquiries, which is a strong position to be in. With the right SEO strategy, you can scale this further and increase your lead volume.' },
+        missed_opportunity:     { title: 'Missed Opportunity',             body: 'You are likely missing out on enquiries from Google. Even if you are getting leads elsewhere, ranking for your services can bring in a steady stream of new business.' },
+        overlay: 'You could be missing out on potential enquiries each month simply because your website is not being found or is not converting properly.',
+      };
+
+      const root = document.getElementById('nc-wle-root');
+      if (!root) return;
+
+      const state = {
+        answers: {},
+        branch: null,
+        stepIndex: 0,
+        result: null,
+        lead: { name: '', website_url: '', email: '', phone: '', company: '' },
+        isSubmitting: false,
+        submitted: false,
+        error: '',
+      };
+
+      render();
+
+      function render() {
+        root.innerHTML = '';
+        const shell = document.createElement('div');
+        shell.className = 'nc-wle-shell';
+
+        const header = document.createElement('div');
+        header.className = 'nc-wle-header';
+        header.innerHTML = '<h2>Find out what your business needs from its website and online presence</h2><p class="nc-wle-intro">Answer a few guided questions and get a tailored recommendation based on your current position.</p>';
+        shell.appendChild(header);
+
+        if (!state.branch) {
+          shell.appendChild(renderQuestion(QUESTIONS.entry));
+        } else if (!state.submitted) {
+          const branchQs = QUESTIONS.branches[state.branch];
+          const totalSteps = branchQs.length + 1;
+          shell.appendChild(renderProgress(totalSteps));
+          if (state.stepIndex < branchQs.length) {
+            shell.appendChild(renderQuestion(branchQs[state.stepIndex], totalSteps));
+          } else {
+            shell.appendChild(renderLeadForm());
+          }
+        } else {
+          shell.appendChild(renderResult());
+          shell.appendChild(renderSuccessCard());
+        }
+
+        if (state.error) {
+          const err = document.createElement('p');
+          err.className = 'nc-wle-error';
+          err.textContent = state.error;
+          shell.appendChild(err);
+        }
+
+        root.appendChild(shell);
+      }
+
+      function renderProgress(total) {
+        const current = state.stepIndex + 1;
+        const pct = Math.round((current / total) * 100);
+        const wrap = document.createElement('div');
+        wrap.className = 'nc-wle-progress';
+        wrap.innerHTML = `<div class="nc-wle-progress-meta"><span>Step ${current} of ${total}</span><span>${pct}% complete</span></div><div class="nc-wle-progress-bar"><span style="width:${pct}%"></span></div>`;
+        return wrap;
+      }
+
+      function renderQuestion(question) {
+        const card = document.createElement('section');
+        card.className = 'nc-wle-card';
+
+        const title = document.createElement('h3');
+        title.textContent = question.prompt;
+        card.appendChild(title);
+
+        const form = document.createElement('form');
+        form.className = 'nc-wle-question-form';
+        question.options.forEach(option => {
+          form.appendChild(question.type === 'multi' ? renderMultiOption(question, option) : renderSingleOption(question, option));
+        });
+
+        if (question.type === 'multi') {
+          const actions = document.createElement('div');
+          actions.className = 'nc-wle-actions';
+          if (state.branch) {
+            actions.appendChild(makeBackButton());
+          }
+          const next = document.createElement('button');
+          next.type = 'button';
+          next.className = 'nc-wle-button';
+          next.textContent = 'Continue';
+          next.addEventListener('click', () => {
+            const selected = Array.from(form.querySelectorAll('input[type="checkbox"]:checked')).map(i => i.value);
+            if (!selected.length) { state.error = 'Please select at least one option.'; render(); return; }
+            updateAnswer(question.id, selected);
+          });
+          actions.appendChild(next);
+          card.appendChild(form);
+          card.appendChild(actions);
+        } else {
+          if (state.branch) {
+            const actions = document.createElement('div');
+            actions.className = 'nc-wle-actions';
+            actions.appendChild(makeBackButton());
+            card.appendChild(form);
+            card.appendChild(actions);
+          } else {
+            card.appendChild(form);
+          }
+        }
+
+        return card;
+      }
+
+      function renderSingleOption(question, option) {
+        const label = document.createElement('label');
+        label.className = 'nc-wle-option';
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = question.id;
+        input.value = option.value;
+        input.checked = state.answers[question.id] === option.value;
+        input.addEventListener('change', () => updateAnswer(question.id, option.value));
+        const text = document.createElement('span');
+        text.textContent = option.label;
+        label.appendChild(input);
+        label.appendChild(text);
+        return label;
+      }
+
+      function renderMultiOption(question, option) {
+        const label = document.createElement('label');
+        label.className = 'nc-wle-option';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.name = question.id;
+        input.value = option.value;
+        input.checked = Array.isArray(state.answers[question.id]) && state.answers[question.id].includes(option.value);
+        const text = document.createElement('span');
+        text.textContent = option.label;
+        label.appendChild(input);
+        label.appendChild(text);
+        return label;
+      }
+
+      function renderLeadForm() {
+        const section = document.createElement('section');
+        section.className = 'nc-wle-card nc-wle-lead-form';
+        const title = document.createElement('h3');
+        title.textContent = QUESTIONS.leadForm.title;
+        section.appendChild(title);
+
+        const form = document.createElement('form');
+        form.addEventListener('submit', submitLead);
+
+        QUESTIONS.leadForm.fields.forEach(field => {
+          if (field.id === 'website_url' && state.answers.q1 === 'no_website') return;
+          const wrap = document.createElement('label');
+          wrap.className = 'nc-wle-field' + (field.id === 'company' ? ' nc-wle-honeypot' : '');
+          const lbl = document.createElement('span');
+          lbl.textContent = field.label;
+          const input = document.createElement('input');
+          input.type = field.type;
+          input.name = field.id;
+          input.required = Boolean(field.required);
+          input.value = state.lead[field.id] || '';
+          if (field.id === 'company') { input.tabIndex = -1; input.autocomplete = 'off'; input.setAttribute('aria-hidden', 'true'); }
+          input.addEventListener('input', e => { state.lead[field.id] = e.target.value; });
+          wrap.appendChild(lbl);
+          wrap.appendChild(input);
+          form.appendChild(wrap);
+        });
+
+        const btn = document.createElement('button');
+        btn.type = 'submit';
+        btn.className = 'nc-wle-button';
+        btn.disabled = state.isSubmitting;
+        btn.textContent = state.isSubmitting ? 'Submitting…' : QUESTIONS.leadForm.cta;
+        form.appendChild(btn);
+        section.appendChild(form);
+
+        const actions = document.createElement('div');
+        actions.className = 'nc-wle-actions';
+        actions.style.marginTop = '12px';
+        actions.appendChild(makeBackButton());
+        section.appendChild(actions);
+
+        return section;
+      }
+
+      function renderResult() {
+        const section = document.createElement('section');
+        section.className = 'nc-wle-card nc-wle-result';
+        const kicker = document.createElement('p');
+        kicker.className = 'nc-wle-result-kicker';
+        kicker.textContent = 'Recommended next step';
+        const title = document.createElement('h3');
+        title.textContent = state.result.content.title;
+        const body = document.createElement('p');
+        body.textContent = state.result.content.body;
+        section.appendChild(kicker);
+        section.appendChild(title);
+        section.appendChild(body);
+        if (state.result.overlay) {
+          const overlay = document.createElement('p');
+          overlay.className = 'nc-wle-overlay';
+          overlay.textContent = RESULTS.overlay;
+          section.appendChild(overlay);
+        }
+        return section;
+      }
+
+      function renderSuccessCard() {
+        const section = document.createElement('section');
+        section.className = 'nc-wle-card nc-wle-lead-form';
+        const msg = document.createElement('p');
+        msg.className = 'nc-wle-success';
+        msg.textContent = 'Thank you. Your personalised website and SEO plan request has been received. We will be in touch shortly.';
+        section.appendChild(msg);
+        return section;
+      }
+
+      function makeBackButton() {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'nc-wle-button nc-wle-button-secondary';
+        btn.textContent = '← Back';
+        btn.addEventListener('click', handleBack);
+        return btn;
+      }
+
+      function updateAnswer(questionId, value) {
+        state.error = '';
+        state.answers[questionId] = value;
+        if (questionId === 'q1') {
+          state.branch = value;
+          state.stepIndex = 0;
+        } else {
+          state.stepIndex += 1;
+        }
+        render();
+      }
+
+      function handleBack() {
+        state.error = '';
+        if (state.stepIndex > 0) {
+          state.stepIndex -= 1;
+        } else {
+          state.branch = null;
+        }
+        render();
+      }
+
+      async function submitLead(event) {
+        event.preventDefault();
+        if (!state.lead.name || !state.lead.email) {
+          state.error = 'Please enter your name and email address.';
+          render();
+          return;
+        }
+        if (state.lead.company) return; // honeypot
+
+        state.error = '';
+        state.isSubmitting = true;
+        render();
+
+        const result = evaluateAnswers(state.answers);
+        const answerLines = formatAnswers(state.answers);
+        const message = [
+          `Recommendation: ${result.content.title}`,
+          '',
+          result.content.body,
+          '',
+          '--- Assessment Answers ---',
+          ...answerLines,
+          '',
+          state.lead.phone    ? `Phone: ${state.lead.phone}`       : '',
+          state.lead.website_url ? `Website: ${state.lead.website_url}` : '',
+        ].filter(l => l !== undefined).join('\n');
+
+        try {
+          const formData = new FormData();
+          formData.append('access_key', '623d4393-90f3-4de8-b0c0-646e1d8ff1c3');
+          formData.append('subject', `New Assessment Lead: ${result.content.title}`);
+          formData.append('name', state.lead.name);
+          formData.append('email', state.lead.email);
+          formData.append('message', message);
+          formData.append('from_page', window.location.pathname);
+
+          const res = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: formData });
+          const data = await res.json();
+
+          if (!res.ok || !data.success) throw new Error(data.message || 'Submission failed.');
+
+          state.result = result;
+          state.submitted = true;
+        } catch (err) {
+          state.error = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+        } finally {
+          state.isSubmitting = false;
+          render();
+        }
+      }
+
+      function evaluateAnswers(answers) {
+        const branch = answers.q1;
+        let key = 'simple_lead_website';
+
+        if (branch === 'no_website') {
+          if (answers.q2a === 'sell_products') key = 'ecommerce';
+          else if (answers.q5a === 'nothing_yet' && answers.q6a === 'important') key = 'full_setup';
+        }
+
+        if (branch === 'outdated') {
+          const seoIssue        = answers.q5b === 'no' || answers.q5b === 'page_2_plus' || answers.q2b === 'not_ranking';
+          const designIssue     = ['looks_outdated','hard_to_update','slow_mobile'].includes(answers.q2b);
+          const conversionIssue = ['5_10','10_plus'].includes(answers.q3b) && answers.q5b === 'page_1';
+          const seriousIssue    = answers.q3b === '0' || answers.q2b === 'not_getting_enquiries' || answers.q6b === 'no';
+
+          if (seoIssue && (designIssue || seriousIssue)) key = 'hybrid';
+          else if (conversionIssue) key = 'conversion_problem';
+          else if (seoIssue) key = 'seo_problem';
+          else key = 'website_not_performing';
+        }
+
+        if (branch === 'happy') {
+          const scalingPosition = answers.q2c === '15_plus' || (answers.q5c === 'ongoing' && ['expand_areas','rank_higher'].includes(answers.q6c));
+          const missedGoogle    = answers.q3c !== 'google';
+          const seoOpportunity  = answers.q2c === '0_5' && answers.q5c === 'no';
+
+          if (scalingPosition) key = 'growth_scaling';
+          else if (missedGoogle) key = 'missed_opportunity';
+          else if (seoOpportunity || answers.q6c === 'more_enquiries') key = 'seo_opportunity';
+          else key = 'growth_scaling';
+        }
+
+        return {
+          key,
+          content: RESULTS[key],
+          overlay: answers.q3b === '0' || answers.q5b === 'no',
+        };
+      }
+
+      function formatAnswers(answers) {
+        const allQuestions = [
+          QUESTIONS.entry,
+          ...QUESTIONS.branches.no_website,
+          ...QUESTIONS.branches.outdated,
+          ...QUESTIONS.branches.happy,
+        ];
+        const lines = [];
+        for (const q of allQuestions) {
+          if (!(q.id in answers)) continue;
+          const val = answers[q.id];
+          const optMap = Object.fromEntries(q.options.map(o => [o.value, o.label]));
+          const display = Array.isArray(val)
+            ? val.map(v => optMap[v] || v).join(', ')
+            : (optMap[val] || val);
+          lines.push(`${q.prompt}: ${display}`);
+        }
+        return lines;
+      }
+    })();
+  </script>
 
 </BaseLayout>
