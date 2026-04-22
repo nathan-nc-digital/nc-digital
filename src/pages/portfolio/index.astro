@@ -6,18 +6,43 @@ import { Image } from 'astro:assets';
 
 const projects = await getCollection('portfolio');
 
-const imageFiles = import.meta.glob<{ default: ImageMetadata }>(
-  '../../assets/portfolio/*.{jpg,jpeg,png,webp}',
+const allImages = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/portfolio/**/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG}',
   { eager: true }
 );
 
+const folderMap: Record<string, string> = {
+  '3d-framing':                  '3D Framing',
+  'ak-promotions':               'AK Promotions',
+  'creative-redevelopments':     'Creative Redevelopment',
+  'ds-carpentry':                'DS Carpentry',
+  'davies-property-development': 'Davies Property Development',
+  'ir-energy':                   'IR Energy',
+  'k-williams-roofing':          'K Williams Roofing',
+  'lr-building-roofing':         'L&R Building and Roofing',
+  'mj-roofing':                  'M&J Roofing',
+};
+
 function getProjectImage(slug: string) {
-  for (const [path, mod] of Object.entries(imageFiles)) {
-    const filename = path.split('/').pop()!.replace(/\.[^.]+$/, '');
-    if (filename === slug) return mod.default;
-  }
-  return null;
+  const folder = folderMap[slug];
+  if (!folder) return null;
+  const match = Object.entries(allImages).find(([path]) => path.includes(`/${folder}/`));
+  return match ? match[1].default : null;
 }
+
+const serviceLabels: Record<string, string> = {
+  'web-design':      'Web Design',
+  'web-development': 'Web Development',
+  'seo':             'Local SEO',
+  'hosting':         'Hosting',
+};
+
+const serviceLinks: Record<string, string> = {
+  'web-design':      '/services/web-development',
+  'web-development': '/services/web-development',
+  'seo':             '/services/local-seo-google-ranking',
+  'hosting':         '/services/website-hosting-security',
+};
 ---
 
 <BaseLayout
@@ -62,8 +87,12 @@ function getProjectImage(slug: string) {
                 <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin-bottom:1rem;">{project.data.summary}</p>
                 <ul style="list-style:none; padding:0; margin:0 0 1.25rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
                   {project.data.services.map((s: string) => (
-                    <li style="font-size:0.8125rem; color:var(--purple); background:var(--bg-2); border:1px solid var(--border); border-radius:4px; padding:0.2rem 0.6rem;">
-                      {s}
+                    <li>
+                      <a href={serviceLinks[s] || '/services'} onclick="event.stopPropagation()"
+                        style="font-size:0.8125rem; color:var(--purple); background:var(--bg-2); border:1px solid var(--border); border-radius:4px; padding:0.2rem 0.6rem; text-decoration:none; transition:border-color 0.2s;"
+                        onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
+                        {serviceLabels[s] || s}
+                      </a>
                     </li>
                   ))}
                 </ul>

@@ -50,6 +50,13 @@ const serviceLabels: Record<string, string> = {
   'seo':              'Local SEO',
   'hosting':          'Hosting',
 };
+
+const serviceLinks: Record<string, string> = {
+  'web-design':       '/services/web-development',
+  'web-development':  '/services/web-development',
+  'seo':              '/services/local-seo-google-ranking',
+  'hosting':          '/services/website-hosting-security',
+};
 ---
 
 <BaseLayout
@@ -74,9 +81,9 @@ const serviceLabels: Record<string, string> = {
 
           <div data-animate="fade-up" style="display:flex; flex-wrap:wrap; gap:0.375rem; margin-bottom:2rem;">
             {project.data.services.map((s: string) => (
-              <span class="service-tag">
+              <a href={serviceLinks[s] || '/services'} class="service-tag">
                 {serviceLabels[s] || s}
-              </span>
+              </a>
             ))}
           </div>
 
@@ -140,9 +147,9 @@ const serviceLabels: Record<string, string> = {
               <dt style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.3rem;">Services</dt>
               <dd style="margin:0; display:flex; flex-wrap:wrap; gap:0.375rem;">
                 {project.data.services.map((s: string) => (
-                  <span style="font-size:0.8125rem; color:var(--purple); background:color-mix(in srgb, var(--purple) 10%, transparent); border:1px solid color-mix(in srgb, var(--purple) 30%, transparent); border-radius:4px; padding:0.2rem 0.6rem;">
+                  <a href={serviceLinks[s] || '/services'} style="font-size:0.8125rem; color:var(--purple); background:color-mix(in srgb, var(--purple) 10%, transparent); border:1px solid color-mix(in srgb, var(--purple) 30%, transparent); border-radius:4px; padding:0.2rem 0.6rem; text-decoration:none; transition:border-color 0.2s;">
                     {serviceLabels[s] || s}
-                  </span>
+                  </a>
                 ))}
               </dd>
             </div>
@@ -196,6 +203,13 @@ const serviceLabels: Record<string, string> = {
       border: 1px solid color-mix(in srgb, var(--purple) 30%, transparent);
       border-radius: 4px;
       padding: 0.25rem 0.625rem;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .service-tag:hover {
+      background: color-mix(in srgb, var(--purple) 20%, transparent);
+      border-color: var(--purple);
+      color: var(--purple-light);
     }
 
     /* Gallery */
