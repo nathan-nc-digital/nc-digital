@@ -6,8 +6,13 @@ import { Image } from 'astro:assets';
 
 const projects = await getCollection('portfolio');
 
-const allImages = import.meta.glob<{ default: ImageMetadata }>(
+const subfolderImages = import.meta.glob<{ default: ImageMetadata }>(
   '../../assets/portfolio/**/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG}',
+  { eager: true }
+);
+
+const fallbackImages = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/portfolio/*.{jpg,jpeg,png,webp}',
   { eager: true }
 );
 
@@ -25,13 +30,24 @@ const folderMap: Record<string, string> = {
 
 function getProjectImage(slug: string) {
   const folder = folderMap[slug];
-  if (!folder) return null;
-  const match = Object.entries(allImages).find(([path]) => {
-    if (!path.includes(`/${folder}/`)) return false;
-    const filename = path.split('/').pop() || '';
-    return !filename.toLowerCase().startsWith('whatsapp');
-  });
-  return match ? match[1].default : null;
+
+  // Try subfolder first (excluding WhatsApp images)
+  if (folder) {
+    const match = Object.entries(subfolderImages).find(([path]) => {
+      if (!path.includes(`/${folder}/`)) return false;
+      const filename = path.split('/').pop() || '';
+      return !filename.toLowerCase().startsWith('whatsapp');
+    });
+    if (match) return match[1].default;
+  }
+
+  // Fall back to root-level flat image
+  for (const [path, mod] of Object.entries(fallbackImages)) {
+    const filename = path.split('/').pop()!.replace(/\.[^.]+$/, '');
+    if (filename === slug) return mod.default;
+  }
+
+  return null;
 }
 
 const serviceLabels: Record<string, string> = {
@@ -67,40 +83,42 @@ const serviceLinks: Record<string, string> = {
 
   <section style="padding:3rem 0 5rem;">
     <div class="container site-pad">
-      <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:1.5rem;">
+      <div data-animate="stagger" class="portfolio-grid">
         {projects.map((project) => {
           const slug = project.id.replace('/index.mdoc', '');
           const img = getProjectImage(slug);
           return (
-            <a href={`/portfolio/${slug}`} class="card" style="display:block; text-decoration:none; padding:0; overflow:hidden;">
-              {img ? (
-                <Image
-                  src={img}
-                  alt={project.data.title}
-                  width={600}
-                  height={340}
-                  style="width:100%; height:200px; object-fit:cover; display:block;"
-                />
-              ) : (
-                <div style="width:100%; height:200px; background:var(--bg-3); display:flex; align-items:center; justify-content:center;">
-                  <span style="color:var(--text-muted); font-size:0.875rem;">{project.data.title}</span>
-                </div>
-              )}
-              <div style="padding:1.5rem;">
-                <h2 style="font-size:1.125rem; font-weight:700; color:var(--white); margin-bottom:0.5rem;">{project.data.title}</h2>
-                <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin-bottom:1rem;">{project.data.summary}</p>
-                <ul style="list-style:none; padding:0; margin:0 0 1.25rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
+            <a href={`/portfolio/${slug}`} class="portfolio-card">
+              <div class="card-image">
+                {img ? (
+                  <Image
+                    src={img}
+                    alt={project.data.title}
+                    width={600}
+                    height={360}
+                    class="card-img"
+                  />
+                ) : (
+                  <div class="card-img-placeholder">
+                    <span>{project.data.title}</span>
+                  </div>
+                )}
+              </div>
+              <div class="card-body">
+                <h2 class="card-title">{project.data.title}</h2>
+                <p class="card-summary">{project.data.summary}</p>
+                <div class="card-tags">
                   {project.data.services.map((s: string) => (
-                    <li>
-                      <a href={serviceLinks[s] || '/services'} onclick="event.stopPropagation()"
-                        style="font-size:0.8125rem; color:var(--purple); background:var(--bg-2); border:1px solid var(--border); border-radius:4px; padding:0.2rem 0.6rem; text-decoration:none; transition:border-color 0.2s;"
-                        onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
-                        {serviceLabels[s] || s}
-                      </a>
-                    </li>
+                    <a
+                      href={serviceLinks[s] || '/services'}
+                      class="card-tag"
+                      onclick="event.stopPropagation()"
+                    >
+                      {serviceLabels[s] || s}
+                    </a>
                   ))}
-                </ul>
-                <span style="color:var(--purple); font-size:0.9375rem; font-weight:600;">View case study →</span>
+                </div>
+                <span class="card-cta">View case study →</span>
               </div>
             </a>
           );
@@ -108,5 +126,117 @@ const serviceLinks: Record<string, string> = {
       </div>
     </div>
   </section>
+
+  <style>
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .portfolio-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .portfolio-card:hover {
+      border-color: var(--purple);
+      transform: translateY(-2px);
+    }
+
+    .card-image {
+      width: 100%;
+      height: 210px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: var(--bg-3);
+    }
+
+    .card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+    .portfolio-card:hover .card-img {
+      transform: scale(1.03);
+    }
+
+    .card-img-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-img-placeholder span {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .card-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .card-title {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+
+    .card-summary {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      flex: 1;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-tag {
+      font-size: 0.75rem;
+      color: var(--purple);
+      background: color-mix(in srgb, var(--purple) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--purple) 30%, transparent);
+      border-radius: 4px;
+      padding: 0.2rem 0.5rem;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .card-tag:hover {
+      background: color-mix(in srgb, var(--purple) 20%, transparent);
+      border-color: var(--purple);
+    }
+
+    .card-cta {
+      color: var(--purple);
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    @media (max-width: 900px) {
+      .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .portfolio-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 
 </BaseLayout>
