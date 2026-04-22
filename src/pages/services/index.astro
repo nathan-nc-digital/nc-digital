@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import HeroOrbs from '../../components/HeroOrbs.astro';
 import { getCollection } from 'astro:content';
 
 const services = await getCollection('services');
@@ -10,11 +11,12 @@ const services = await getCollection('services');
   description="Web design, local SEO, website maintenance, hosting, and professional email for South Wales businesses."
 >
 
-  <section style="padding:4rem 0 2rem;">
-    <div class="container site-pad">
+  <section style="padding:5rem 0 3rem; position:relative; overflow:hidden;">
+    <HeroOrbs />
+    <div class="container site-pad" style="text-align:center; position:relative; z-index:1;">
       <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">What we offer</p>
-      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:600px;">Services built for South Wales businesses</h1>
-      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
+      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:620px; margin-left:auto; margin-right:auto;">Services built for South Wales businesses</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin:0 auto;">
         Everything your business needs to get online, get found, and grow — from a single agency in Merthyr Tydfil.
       </p>
     </div>

@@ -32,18 +32,48 @@ const blogEntries = (await reader.collections.blog.all())
   .slice(0, 3);
 
 const stats = [
-  { value: '50+', label: 'Sites Built' },
-  { value: '100', label: 'Lighthouse Score' },
-  { value: '5★', label: 'Google Reviews' },
-  { value: 'Wales', label: 'Locally Based' },
+  { value: '10+', label: 'Years of Experience' },
+  { value: '50+', label: 'Websites Built' },
+  { value: '100%', label: 'Custom Built' },
+  { value: '5★', label: 'Google Rating' },
 ];
 
 const services = [
-  { icon: '⬡', title: 'Web Development', desc: 'Fast, custom-built sites', href: '/services/web-development' },
-  { icon: '◈', title: 'Local SEO', desc: 'Rank in your area', href: '/services/local-seo-google-ranking' },
-  { icon: '◉', title: 'Maintenance', desc: 'Always online, always updated', href: '/services/website-maintenance-packages' },
-  { icon: '◎', title: 'Hosting & Security', desc: 'Fast, secure, managed', href: '/services/website-hosting-security' },
-  { icon: '✉', title: 'Business Email', desc: 'Professional mailboxes', href: '/services/professional-mailboxes-email-setup' },
+  {
+    num: '01',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`,
+    title: 'Website Design & Build',
+    desc: 'Custom, mobile-optimised websites crafted to help your business stand out, convert visitors, and grow online.',
+    href: '/services/web-development',
+  },
+  {
+    num: '02',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    title: 'Website Hosting & Security',
+    desc: 'Fast, UK-based web hosting with free SSL certificates, daily backups, and security monitoring — keeping your site safe and running.',
+    href: '/services/website-hosting-security',
+  },
+  {
+    num: '03',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>`,
+    title: 'Website Maintenance Packages',
+    desc: 'Ongoing support to keep your site updated, secure, and growing — including regular updates, backups, and small edits.',
+    href: '/services/website-maintenance-packages',
+  },
+  {
+    num: '04',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
+    title: 'Local SEO & Google Ranking',
+    desc: 'SEO foundations built into your site, plus targeted strategies to help you appear higher in local search results and maps.',
+    href: '/services/local-seo-google-ranking',
+  },
+  {
+    num: '05',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/></svg>`,
+    title: 'Professional Mailboxes & Email Setup',
+    desc: 'Reliable business email using your own domain, so you look professional and stay organised. We\'ll set everything up, keep it secure, and help manage accounts as your team grows.',
+    href: '/services/professional-mailboxes-email-setup',
+  },
 ];
 ---
 
@@ -103,6 +133,7 @@ const services = [
           alt="Nathan Constance — NC Digital"
           width={380}
           data-animate="fade-in"
+          class="nathan-photo"
           style="border-radius:16px; border:1px solid var(--border); display:block; max-width:100%; height:auto; position:relative;"
         />
       </div>
@@ -125,15 +156,30 @@ const services = [
   <!-- SERVICES -->
   <section id="services" style="padding:5rem 0;">
     <div class="container site-pad">
-      <p class="eyebrow" style="margin-bottom:0.75rem;">What we do</p>
-      <h2 data-animate="fade-up" style="margin-bottom:3rem; max-width:500px;">Everything your business needs to grow online</h2>
+      <div style="text-align:center; margin-bottom:3.5rem;">
+        <p class="eyebrow" style="margin-bottom:0.75rem;">What we do</p>
+        <h2 data-animate="fade-up" style="max-width:520px; margin:0 auto 1rem;">Everything your business needs to grow online</h2>
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; max-width:480px; margin:0 auto; line-height:1.7;">
+          One agency, every service. No juggling multiple suppliers.
+        </p>
+      </div>
 
-      <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1.25rem;">
-        {services.map(({ icon, title, desc, href }) => (
-          <a href={href} class="card" style="display:block; text-decoration:none;">
-            <div style="font-size:1.5rem; margin-bottom:1rem; color:var(--purple);">{icon}</div>
-            <h3 style="font-size:1rem; font-weight:600; color:var(--white); margin-bottom:0.5rem;">{title}</h3>
-            <p style="font-size:0.875rem; color:var(--text-muted); margin:0;">{desc}</p>
+      <div data-animate="stagger" class="services-list">
+        {services.map(({ num, icon, title, desc, href }) => (
+          <a href={href} class="svc-row">
+            <div class="svc-left">
+              <span class="svc-num">{num}</span>
+              <div class="svc-icon" set:html={icon} />
+              <div>
+                <h3 class="svc-title">{title}</h3>
+                <p class="svc-desc">{desc}</p>
+              </div>
+            </div>
+            <div class="svc-arrow">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </div>
           </a>
         ))}
       </div>
@@ -226,5 +272,128 @@ const services = [
       </a>
     </div>
   </section>
+
+<style>
+  /* Nathan photo hover */
+  .nathan-photo {
+    transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+    cursor: default;
+  }
+  .nathan-photo:hover {
+    transform: rotate(2deg) scale(1.02);
+    border-color: var(--purple) !important;
+    box-shadow: 0 0 32px rgba(135, 80, 247, 0.35), 0 0 8px rgba(135, 80, 247, 0.2);
+  }
+
+  /* Services list */
+  .services-list {
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .svc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1.75rem 2rem;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .svc-row:last-child { border-bottom: none; }
+
+  /* animated gradient layer */
+  .svc-row::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, rgba(135, 80, 247, 0.13) 0%, rgba(135, 80, 247, 0.04) 55%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+  }
+  .svc-row:first-child::before { opacity: 1; }
+  .services-list:hover .svc-row:first-child:not(:hover)::before { opacity: 0; }
+  .svc-row:hover::before { opacity: 1; }
+
+  /* icon box */
+  .svc-left {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+  .svc-num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--purple);
+    opacity: 0.5;
+    flex-shrink: 0;
+    width: 1.75rem;
+    transition: opacity 0.3s ease;
+  }
+  .svc-row:first-child .svc-num,
+  .svc-row:hover .svc-num { opacity: 1; }
+  .services-list:hover .svc-row:first-child:not(:hover) .svc-num { opacity: 0.5; }
+  .svc-icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(135, 80, 247, 0.08);
+    border: 1px solid rgba(135, 80, 247, 0.18);
+    border-radius: 12px;
+    color: var(--purple);
+    transition: background 0.35s ease, border-color 0.35s ease, transform 0.35s ease;
+  }
+  .svc-row:first-child .svc-icon,
+  .svc-row:hover .svc-icon {
+    background: rgba(135, 80, 247, 0.16);
+    border-color: rgba(135, 80, 247, 0.4);
+  }
+  .services-list:hover .svc-row:first-child:not(:hover) .svc-icon {
+    background: rgba(135, 80, 247, 0.08);
+    border-color: rgba(135, 80, 247, 0.18);
+  }
+  .svc-row:hover .svc-icon { transform: scale(1.08); }
+
+  .svc-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--white);
+    margin: 0 0 0.3rem;
+    transition: color 0.25s ease;
+  }
+  .svc-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 680px;
+  }
+
+  /* arrow */
+  .svc-arrow {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    color: var(--purple);
+    opacity: 0.35;
+    transition: transform 0.28s ease, opacity 0.28s ease;
+  }
+  .svc-row:first-child .svc-arrow { opacity: 0.75; }
+  .services-list:hover .svc-row:first-child:not(:hover) .svc-arrow { opacity: 0.35; }
+  .svc-row:hover .svc-arrow {
+    transform: translateX(7px);
+    opacity: 1;
+  }
+</style>
 
 </BaseLayout>

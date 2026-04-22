@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import HeroOrbs from '../../components/HeroOrbs.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 
@@ -24,11 +25,12 @@ function getProjectImage(slug: string) {
   description="Case studies from NC Digital — web design and SEO projects for South Wales small businesses."
 >
 
-  <section style="padding:4rem 0 2rem;">
-    <div class="container site-pad">
+  <section style="padding:5rem 0 3rem; position:relative; overflow:hidden;">
+    <HeroOrbs />
+    <div class="container site-pad" style="text-align:center; position:relative; z-index:1;">
       <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Our work</p>
-      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:600px;">Real results for South Wales businesses</h1>
-      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7;">
+      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:620px; margin-left:auto; margin-right:auto;">Real results for South Wales businesses</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin:0 auto;">
         Every project we take on is built to generate leads, rank on Google, and grow with the business.
       </p>
     </div>

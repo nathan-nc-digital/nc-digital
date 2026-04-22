@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import JsonLD from '../components/JsonLD.astro';
+import HeroOrbs from '../components/HeroOrbs.astro';
 import { getCollection, render } from 'astro:content';
 
 export const prerender = true;
@@ -53,14 +54,14 @@ const serviceLabel = loc.data.serviceType === 'seo'
   }} />
 
   <section style="padding:4rem 0 3rem; position:relative; overflow:hidden;">
-    <div style="position:absolute; top:0; right:0; width:400px; height:400px; background:radial-gradient(circle, #8750f720 0%, transparent 70%); pointer-events:none;"></div>
-    <div class="container site-pad">
+    <HeroOrbs />
+    <div class="container site-pad" style="text-align:center; position:relative; z-index:1;">
       <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">{serviceLabel} · {loc.data.town}</p>
-      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:640px;">{loc.data.headline}</h1>
-      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin-bottom:2rem;">
+      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:640px; margin-left:auto; margin-right:auto;">{loc.data.headline}</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin:0 auto 2rem;">
         {loc.data.metaDescription}
       </p>
-      <div data-animate="fade-up" style="display:flex; gap:1rem; flex-wrap:wrap;">
+      <div data-animate="fade-up" style="display:flex; gap:1rem; flex-wrap:wrap; justify-content:center;">
         <a href="/free-website-plan" class="btn-primary">Get your free plan →</a>
         <a href="/portfolio" class="btn-outline">See our work</a>
       </div>

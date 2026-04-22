@@ -24,6 +24,12 @@ const { Content } = await render(post);
 const formattedDate = post.data.pubDate
   ? new Date(post.data.pubDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
   : '';
+
+const allPosts = await getCollection('blog');
+const related = allPosts
+  .filter(p => p.data.category === post.data.category && p.id !== post.id && p.data.pubDate)
+  .sort((a, b) => new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime())
+  .slice(0, 4);
 ---
 
 <BaseLayout
@@ -50,27 +56,86 @@ const formattedDate = post.data.pubDate
     "url": Astro.url.href
   }} />
 
+  <!-- Scroll progress bar -->
+  <div id="scroll-progress" aria-hidden="true"></div>
+
   <article>
 
-    <section style="padding:4rem 0 3rem;">
-      <div class="container site-pad" style="max-width:800px;">
-        <a href="/blog" style="color:var(--text-muted); font-size:0.875rem; display:inline-flex; gap:0.375rem; margin-bottom:2rem;">
-          ← All posts
-        </a>
-        <p data-animate="fade-up" style="font-size:0.75rem; color:var(--purple); font-weight:600; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.75rem;">
-          {post.data.category?.replace('-', ' ')}
+    <section class="post-header">
+      <div class="container site-pad">
+        <a href="/blog" class="back-link">← All posts</a>
+        <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">
+          {post.data.category?.replace(/-/g, ' ')}
         </p>
-        <h1 data-animate="fade-up" style="margin-bottom:1rem; line-height:1.2;">{post.data.title}</h1>
+        <h1 data-animate="fade-up" style="margin-bottom:1rem; line-height:1.2; max-width:780px;">{post.data.title}</h1>
         {formattedDate && (
-          <p style="color:var(--text-muted); font-size:0.9375rem;">{formattedDate}</p>
+          <p data-animate="fade-up" style="color:var(--text-muted); font-size:0.9375rem;">{formattedDate}</p>
         )}
       </div>
     </section>
 
-    <section style="padding:0 0 5rem;">
-      <div class="container site-pad" style="max-width:800px;">
-        <div data-animate="fade-up" style="color:var(--text); line-height:1.85; font-size:1.0625rem;">
-          <Content />
+    <section class="post-body">
+      <div class="container site-pad">
+        <div class="post-grid">
+
+          <!-- Main content -->
+          <div class="prose" data-animate="fade-up">
+            <Content />
+          </div>
+
+          <!-- Sidebar -->
+          <aside class="post-sidebar">
+
+            {related.length > 0 && (
+              <div class="sidebar-widget">
+                <p class="sidebar-label">Related posts</p>
+                <ul class="related-list">
+                  {related.map((p) => (
+                    <li>
+                      <a href={`/blog/${p.id.replace('/index.mdoc', '')}`}>
+                        <span class="related-cat">{p.data.category?.replace(/-/g, ' ')}</span>
+                        {p.data.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div class="sidebar-widget">
+              <p class="sidebar-label">Free enquiry</p>
+              <p style="color:var(--text-muted); font-size:0.875rem; line-height:1.6; margin-bottom:1.25rem;">
+                Need a website or better Google rankings? Drop your details and we'll get back to you.
+              </p>
+              <form
+                class="sidebar-form"
+                action="https://api.web3forms.com/submit"
+                method="POST"
+              >
+                <input type="hidden" name="access_key" value="623d4393-90f3-4de8-b0c0-646e1d8ff1c3" />
+                <input type="hidden" name="subject" value="Blog sidebar enquiry" />
+                <input type="hidden" name="redirect" value="https://nc-digital.co.uk/contact?success=true" />
+                <input type="hidden" name="from_page" value={Astro.url.pathname} />
+
+                <div>
+                  <label class="field-label">Name</label>
+                  <input type="text" name="name" placeholder="Your name" required />
+                </div>
+                <div>
+                  <label class="field-label">Email</label>
+                  <input type="email" name="email" placeholder="you@example.com" required />
+                </div>
+                <div>
+                  <label class="field-label">Message</label>
+                  <textarea name="message" rows="3" placeholder="Tell us about your project..."></textarea>
+                </div>
+                <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
+                  Send message
+                </button>
+              </form>
+            </div>
+
+          </aside>
         </div>
       </div>
     </section>
@@ -84,5 +149,257 @@ const formattedDate = post.data.pubDate
       <a data-animate="fade-up" href="/free-website-plan" class="btn-primary">Get your free plan →</a>
     </div>
   </section>
+
+  <script>
+    const bar = document.getElementById('scroll-progress');
+    function updateProgress() {
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      const pct = scrollTop / (scrollHeight - clientHeight);
+      if (bar) bar.style.width = Math.min(pct * 100, 100) + '%';
+    }
+    window.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+  </script>
+
+  <style>
+    /* ── Scroll progress bar ───────────────────────────────── */
+    #scroll-progress {
+      position: fixed;
+      top: 72px; /* nav height */
+      left: 0;
+      height: 2px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--purple), var(--purple-light));
+      z-index: 99;
+      transition: width 0.06s linear;
+      pointer-events: none;
+    }
+
+    /* ── Post header ───────────────────────────────────────── */
+    .post-header {
+      padding: 3.5rem 0 2.5rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 2rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--text); }
+
+    /* ── Two-column layout ─────────────────────────────────── */
+    .post-body {
+      padding: 0 0 5rem;
+    }
+
+    .post-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 3.5rem;
+      align-items: start;
+    }
+
+    /* ── Sidebar ───────────────────────────────────────────── */
+    .post-sidebar {
+      position: sticky;
+      top: calc(72px + 2rem); /* nav + breathing room */
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .sidebar-widget {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.375rem;
+    }
+
+    .sidebar-label {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--purple);
+      margin-bottom: 1rem;
+    }
+
+    /* Related posts */
+    .related-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .related-list li { border-bottom: 1px solid var(--border); }
+    .related-list li:last-child { border-bottom: none; }
+
+    .related-list a {
+      display: block;
+      padding: 0.625rem 0;
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.45;
+      transition: color 0.2s;
+      text-decoration: none;
+    }
+    .related-list a:hover { color: var(--purple-light); }
+
+    .related-cat {
+      display: block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    /* Sidebar form */
+    .sidebar-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
+
+    .sidebar-form input,
+    .sidebar-form textarea {
+      width: 100%;
+      background: var(--bg-3);
+      border: 1px solid var(--border-2);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      color: var(--white);
+      font-family: 'Sora', sans-serif;
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+
+    .sidebar-form input:focus,
+    .sidebar-form textarea:focus {
+      outline: none;
+      border-color: var(--purple);
+    }
+
+    .sidebar-form textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
+
+    /* ── Prose content ─────────────────────────────────────── */
+    .prose {
+      color: var(--text);
+      font-size: 1.0625rem;
+      line-height: 1.85;
+    }
+
+    .prose :global(h2) {
+      color: var(--white);
+      font-size: clamp(1.4rem, 2.5vw, 1.875rem);
+      font-weight: 700;
+      margin: 2.5rem 0 1rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .prose :global(h3) {
+      color: var(--white);
+      font-size: clamp(1.15rem, 2vw, 1.5rem);
+      font-weight: 600;
+      margin: 2rem 0 0.875rem;
+      letter-spacing: -0.02em;
+    }
+    .prose :global(h4),
+    .prose :global(h5),
+    .prose :global(h6) {
+      color: var(--white);
+      font-size: 1.0625rem;
+      font-weight: 600;
+      margin: 1.75rem 0 0.625rem;
+    }
+
+    .prose :global(p) { margin: 0 0 1.25rem; }
+
+    .prose :global(a) {
+      color: var(--purple);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      text-decoration-color: color-mix(in srgb, var(--purple) 40%, transparent);
+      transition: color 0.2s, text-decoration-color 0.2s;
+    }
+    .prose :global(a:hover) {
+      color: var(--purple-light);
+      text-decoration-color: var(--purple-light);
+    }
+
+    .prose :global(ul),
+    .prose :global(ol) {
+      margin: 0 0 1.25rem 1.25rem;
+      padding: 0;
+    }
+    .prose :global(li) { margin-bottom: 0.5rem; }
+
+    .prose :global(ul li)::marker { color: var(--purple); }
+
+    .prose :global(blockquote) {
+      border-left: 3px solid var(--purple);
+      margin: 1.75rem 0;
+      padding: 0.875rem 1.25rem;
+      background: var(--bg-2);
+      border-radius: 0 8px 8px 0;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .prose :global(blockquote p) { margin: 0; }
+
+    .prose :global(strong),
+    .prose :global(b) { color: var(--white); font-weight: 600; }
+
+    .prose :global(code) {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.125rem 0.375rem;
+      font-size: 0.875em;
+    }
+
+    .prose :global(hr) {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2.5rem 0;
+    }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 960px) {
+      .post-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .post-sidebar {
+        position: static;
+        /* Sidebar moves below content on mobile */
+      }
+
+      /* On mobile, progress bar sits above nav since sticky can't work */
+      #scroll-progress {
+        top: 0;
+        height: 3px;
+      }
+    }
+  </style>
 
 </BaseLayout>
