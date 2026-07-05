@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
   const nav = document.querySelector('nav');
   const firstSection = document.querySelector('main > section');
   let heroDelay = 0;
@@ -62,5 +63,10 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     }
   });
 
-  document.fonts.ready.then(() => ScrollTrigger.refresh());
+  // Guard: headless crawlers can tear the document down before fonts.ready
+  // resolves, leaving document.body null when ScrollTrigger.refresh() measures it
+  document.fonts.ready.then(() => {
+    if (document.body) ScrollTrigger.refresh();
+  });
+  })); // end requestAnimationFrame
 }
