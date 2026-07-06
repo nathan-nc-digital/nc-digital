@@ -13,6 +13,10 @@ Sentry.init({
     // catch it). Its sendDataToNative/sendPageHideMessage throw on pagehide
     // when the WKWebView bridge is already gone. We never use window.webkit.
     /window\.webkit\.messageHandlers/,
+    // Android equivalent: the Facebook/Instagram in-app WebView's injected
+    // bridge (e.g. enableButtonsClickedMetaDataLogging) throws once its
+    // addJavascriptInterface object is garbage-collected. We have no Java bridge.
+    /Java object is gone/,
   ],
   denyUrls: [
     /embed\.tawk\.to/i,
