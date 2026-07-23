@@ -14,3 +14,8 @@ test('footer shows South Wales', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('footer')).toContainText('South Wales');
 });
+
+test('footer has website cost calculator link', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('footer a[href="/website-cost-calculator/"]')).toBeVisible();
+});
