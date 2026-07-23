@@ -108,3 +108,20 @@ test('shows an inline error if submission fails', async ({ page }) => {
   await page.getByRole('button', { name: 'Send me this quote' }).click();
   await expect(page.locator('.qcc-error')).toBeVisible();
 });
+
+test('error banner clears after navigating back from a failed submission', async ({ page }) => {
+  await page.route('https://api.web3forms.com/submit', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: false, message: 'Bad request' }) });
+  });
+  await page.goto('/website-cost-calculator');
+  await page.getByText('1 page — from £200').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByLabel('Name').fill('Test User');
+  await page.getByLabel('Email').fill('test@example.com');
+  await page.getByRole('button', { name: 'Send me this quote' }).click();
+  await expect(page.locator('.qcc-error')).toBeVisible();
+
+  await page.getByRole('button', { name: '← Back' }).click();
+  await expect(page.getByText('Anything else you need?')).toBeVisible();
+  await expect(page.locator('.qcc-error')).toHaveCount(0);
+});

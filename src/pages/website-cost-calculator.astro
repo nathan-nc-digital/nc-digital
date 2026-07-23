@@ -216,6 +216,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           input.value = tier.key;
           input.checked = state.answers.pages === tier.key;
           input.addEventListener('change', function () {
+            state.error = '';
             state.answers.pages = tier.key;
             state.answers.homepage = null;
             state.stepIndex += 1;
@@ -253,6 +254,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           input.value = opt.value;
           input.checked = state.answers.homepage === opt.value;
           input.addEventListener('change', function () {
+            state.error = '';
             state.answers.homepage = opt.value;
             state.stepIndex += 1;
             render();
@@ -313,6 +315,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         next.className = 'qcc-button';
         next.textContent = 'Continue';
         next.addEventListener('click', function () {
+          state.error = '';
           state.stepIndex += 1;
           render();
         });
@@ -420,6 +423,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       async function submitLead(event, breakdown) {
         event.preventDefault();
+        if (state.isSubmitting) return;
         if (state.lead.company) return; // honeypot
         if (!state.lead.name || !state.lead.email) {
           state.error = 'Please fill in your name and email.';
@@ -441,7 +445,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           messageLines.join('\n'),
           '',
           state.lead.phone ? 'Phone: ' + state.lead.phone : '',
-        ].filter(function (l) { return l !== undefined && l !== ''; }).join('\n');
+        ].filter(function (l) { return l !== undefined; }).join('\n');
 
         try {
           const formData = new FormData();
@@ -473,6 +477,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         btn.className = 'qcc-button qcc-button-secondary';
         btn.textContent = '← Back';
         btn.addEventListener('click', function () {
+          state.error = '';
           state.stepIndex = Math.max(0, state.stepIndex - 1);
           render();
         });
