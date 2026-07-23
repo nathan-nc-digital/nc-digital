@@ -125,3 +125,37 @@ test('error banner clears after navigating back from a failed submission', async
   await expect(page.getByText('Anything else you need?')).toBeVisible();
   await expect(page.locator('.qcc-error')).toHaveCount(0);
 });
+
+test('selecting the 11–20 page tier shows £699, and no custom homepage reduces it to £599', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('11–20 pages — from £699').click();
+  await expect(page.locator('#qcc-total-value')).toHaveText('£699 inc. VAT');
+
+  await expect(page.getByText('Want a custom-designed homepage?')).toBeVisible();
+  await page.getByText('No thanks — save £100').click();
+  await expect(page.locator('#qcc-total-value')).toHaveText('£599 inc. VAT');
+});
+
+test('selecting the 20+ page tier shows £899, and no custom homepage reduces it to £799', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('20+ pages — from £899').click();
+  await expect(page.locator('#qcc-total-value')).toHaveText('£899 inc. VAT');
+
+  await expect(page.getByText('Want a custom-designed homepage?')).toBeVisible();
+  await page.getByText('No thanks — save £100').click();
+  await expect(page.locator('#qcc-total-value')).toHaveText('£799 inc. VAT');
+});
+
+test('selecting the logo/branding add-on increases the total by £200', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('1 page — from £200').click();
+  await page.getByText('New logo / branding (+£200)').click();
+  await expect(page.locator('#qcc-total-value')).toHaveText('£400 inc. VAT');
+
+  await page.getByRole('button', { name: 'Continue' }).click();
+  const logoLine = page.locator('.qcc-breakdown li', { hasText: 'New logo / branding' });
+  await expect(logoLine).toContainText('£200');
+
+  const totalLine = page.locator('.qcc-breakdown-total');
+  await expect(totalLine).toContainText('£400 inc. VAT');
+});
