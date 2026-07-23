@@ -50,6 +50,15 @@ test('continuing from add-ons goes to the hosting step, then to the result scree
   await expect(page.getByText('Your estimate')).toBeVisible();
 });
 
+test('result screen shows the deposit and hosting payment terms', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('1 page — from £200').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText("No thanks — I'll sort my own hosting & domain").click();
+  await expect(page.getByText('50% deposit to start the website build')).toBeVisible();
+  await expect(page.getByText('Hosting & domain (if selected) is paid before going live too.')).toBeVisible();
+});
+
 test('result screen shows an itemised breakdown and total, with no hosting section when hosting is declined', async ({ page }) => {
   await page.goto('/website-cost-calculator');
   await page.getByText('5–10 pages — from £599').click();
@@ -67,7 +76,7 @@ test('result screen shows an itemised breakdown and total, with no hosting secti
   await expect(page.locator('.qcc-breakdown-total')).toHaveCount(1);
   const totalLine = page.locator('.qcc-breakdown-total');
   await expect(totalLine).toContainText('£799 inc. VAT');
-  await expect(page.getByText('Hosting & Domain')).toHaveCount(0);
+  await expect(page.locator('.qcc-hosting-block')).toHaveCount(0);
 });
 
 test('selecting annual hosting shows a separate hosting total, without changing the website build total', async ({ page }) => {

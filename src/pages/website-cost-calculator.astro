@@ -515,6 +515,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         disclaimer.textContent = 'This is an instant estimate. Your final price will be confirmed once we understand your project fully — no obligation.';
         card.appendChild(disclaimer);
 
+        const paymentTerms = document.createElement('p');
+        paymentTerms.className = 'qcc-disclaimer';
+        paymentTerms.textContent = 'Payment: 50% deposit to start the website build, then the remaining 50% before it goes live. Hosting & domain (if selected) is paid before going live too.';
+        card.appendChild(paymentTerms);
+
         card.appendChild(renderLeadForm(breakdown, hosting));
 
         const actions = document.createElement('div');
