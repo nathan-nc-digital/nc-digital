@@ -46,6 +46,35 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     .qcc-card { margin: 0; padding: 0; background: none; border: none; border-radius: 0; }
     .qcc-card h3 { margin: 0 0 1rem; font-size: 0.875rem; font-weight: 600; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.05em; }
+    .qcc-title-row { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 1rem; }
+    .qcc-title-row h3 { margin: 0; }
+
+    .qcc-info-btn {
+      position: relative;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; flex-shrink: 0; padding: 0;
+      border-radius: 50%; border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.2); color: #fff;
+      font-size: 0.6875rem; font-weight: 700; font-style: italic; line-height: 1;
+      text-transform: none; cursor: pointer;
+    }
+    .qcc-info-btn:hover, .qcc-info-btn:focus { background: rgba(255,255,255,0.32); outline: none; }
+
+    .qcc-tooltip {
+      display: none;
+      position: absolute; z-index: 5; top: calc(100% + 8px); left: 0;
+      width: 240px; max-width: 70vw;
+      background: var(--bg-2); color: rgba(255,255,255,0.9);
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+      padding: 0.75rem 0.875rem; font-size: 0.8125rem; font-weight: 400;
+      text-transform: none; letter-spacing: normal; line-height: 1.5;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
+    .qcc-info-btn:hover .qcc-tooltip,
+    .qcc-info-btn:focus .qcc-tooltip,
+    .qcc-info-btn.is-open .qcc-tooltip {
+      display: block;
+    }
 
     .qcc-question-form { display: flex; flex-direction: column; gap: 0.5rem; }
     .qcc-option {
@@ -150,7 +179,35 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         error: '',
       };
 
+      document.addEventListener('click', function (e) {
+        document.querySelectorAll('.qcc-info-btn.is-open').forEach(function (btn) {
+          if (!btn.contains(e.target)) btn.classList.remove('is-open');
+        });
+      });
+
       render();
+
+      function createInfoIcon(tooltipText) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'qcc-info-btn';
+        btn.setAttribute('aria-label', 'More information');
+        btn.textContent = 'i';
+
+        const tooltip = document.createElement('span');
+        tooltip.className = 'qcc-tooltip';
+        tooltip.setAttribute('role', 'tooltip');
+        tooltip.textContent = tooltipText;
+        btn.appendChild(tooltip);
+
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          btn.classList.toggle('is-open');
+        });
+
+        return btn;
+      }
 
       function render() {
         root.innerHTML = '';
@@ -235,9 +292,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       function renderHomepageStep() {
         const card = document.createElement('section');
         card.className = 'qcc-card';
+        const titleRow = document.createElement('div');
+        titleRow.className = 'qcc-title-row';
         const title = document.createElement('h3');
         title.textContent = 'Want a custom-designed homepage?';
-        card.appendChild(title);
+        titleRow.appendChild(title);
+        titleRow.appendChild(createInfoIcon(
+          'A custom homepage is designed from scratch around your business — its own layout, imagery and messaging. Skip it and we\'ll use a simpler, ready-made layout instead (still on-brand) to save £100.'
+        ));
+        card.appendChild(titleRow);
 
         const form = document.createElement('div');
         form.className = 'qcc-question-form';

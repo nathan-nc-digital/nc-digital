@@ -159,3 +159,31 @@ test('selecting the logo/branding add-on increases the total by £200', async ({
   const totalLine = page.locator('.qcc-breakdown-total');
   await expect(totalLine).toContainText('£400 inc. VAT');
 });
+
+test('homepage step info icon reveals an explanation on click and hides on outside click', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('5–10 pages — from £599').click();
+
+  const infoBtn = page.getByRole('button', { name: 'More information' });
+  const tooltip = infoBtn.locator('.qcc-tooltip');
+  await expect(tooltip).toBeHidden();
+
+  await infoBtn.click();
+  await expect(tooltip).toBeVisible();
+  await expect(tooltip).toContainText('custom homepage is designed from scratch');
+
+  await page.locator('.qcc-intro').click();
+  await expect(tooltip).toBeHidden();
+});
+
+test('homepage step info icon reveals an explanation on hover', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('5–10 pages — from £599').click();
+
+  const infoBtn = page.getByRole('button', { name: 'More information' });
+  const tooltip = infoBtn.locator('.qcc-tooltip');
+  await expect(tooltip).toBeHidden();
+
+  await infoBtn.hover();
+  await expect(tooltip).toBeVisible();
+});
