@@ -73,3 +73,38 @@ test('back button returns to the previous step with the answer preserved', async
   await expect(page.getByText('Want a custom-designed homepage?')).toBeVisible();
   await expect(page.getByLabel('No thanks — save £100')).toBeChecked();
 });
+
+test('result screen has a lead capture form', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('1 page — from £200').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.locator('form.qcc-lead-form')).toBeVisible();
+  await expect(page.getByLabel('Name')).toBeVisible();
+  await expect(page.getByLabel('Email')).toBeVisible();
+});
+
+test('submitting the lead form redirects to the thank-you page', async ({ page }) => {
+  await page.route('https://api.web3forms.com/submit', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
+  });
+  await page.goto('/website-cost-calculator');
+  await page.getByText('1 page — from £200').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByLabel('Name').fill('Test User');
+  await page.getByLabel('Email').fill('test@example.com');
+  await page.getByRole('button', { name: 'Send me this quote' }).click();
+  await expect(page).toHaveURL(/\/thank-you\/?$/);
+});
+
+test('shows an inline error if submission fails', async ({ page }) => {
+  await page.route('https://api.web3forms.com/submit', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: false, message: 'Bad request' }) });
+  });
+  await page.goto('/website-cost-calculator');
+  await page.getByText('1 page — from £200').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByLabel('Name').fill('Test User');
+  await page.getByLabel('Email').fill('test@example.com');
+  await page.getByRole('button', { name: 'Send me this quote' }).click();
+  await expect(page.locator('.qcc-error')).toBeVisible();
+});

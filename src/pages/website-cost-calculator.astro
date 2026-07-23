@@ -74,6 +74,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     .qcc-disclaimer { color: rgba(255,255,255,0.65); font-size: 0.8125rem; line-height: 1.6; margin: 0 0 1.5rem; }
 
+    .qcc-field { display: grid; gap: 0.375rem; margin-bottom: 1rem; }
+    .qcc-field > span { font-size: 0.875rem; color: rgba(255,255,255,0.8); }
+    .qcc-field input {
+      width: 100%; padding: 0.75rem 1rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;
+      font: inherit; font-size: 0.9375rem; background: rgba(255,255,255,0.15); color: #fff;
+      transition: border-color 0.2s, background 0.2s; box-sizing: border-box;
+    }
+    .qcc-field input:focus { outline: none; border-color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.2); }
+    .qcc-field input::placeholder { color: rgba(255,255,255,0.5); }
+    .qcc-honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+    .qcc-error { margin: 1rem 0 0; color: #fca5a5; font-size: 0.875rem; font-weight: 500; }
+
     @media (max-width: 640px) {
       .qcc-shell { padding: 1.5rem; }
       .qcc-header { flex-direction: column; align-items: flex-start; }
@@ -132,6 +145,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       const state = {
         stepIndex: 0,
         answers: { pages: null, homepage: null, addons: [] },
+        lead: { name: '', email: '', phone: '', company: '' },
+        isSubmitting: false,
+        error: '',
       };
 
       render();
@@ -146,6 +162,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         const steps = stepsForAnswers(state.answers);
         const stepKey = steps[state.stepIndex];
         shell.appendChild(renderStep(stepKey));
+
+        if (state.error) {
+          const err = document.createElement('p');
+          err.className = 'qcc-error';
+          err.textContent = state.error;
+          shell.appendChild(err);
+        }
 
         root.appendChild(shell);
       }
@@ -336,12 +359,112 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         disclaimer.textContent = 'This is an instant estimate. Your final price will be confirmed once we understand your project fully — no obligation.';
         card.appendChild(disclaimer);
 
+        card.appendChild(renderLeadForm(breakdown));
+
         const actions = document.createElement('div');
         actions.className = 'qcc-actions';
+        actions.style.marginTop = '12px';
         actions.appendChild(makeBackButton());
         card.appendChild(actions);
 
         return card;
+      }
+
+      function renderLeadForm(breakdown) {
+        const form = document.createElement('form');
+        form.className = 'qcc-lead-form';
+        form.addEventListener('submit', function (e) { submitLead(e, breakdown); });
+
+        const fields = [
+          { id: 'name',  label: 'Name',  type: 'text',  required: true },
+          { id: 'email', label: 'Email', type: 'email', required: true },
+          { id: 'phone', label: 'Phone number', type: 'tel', required: false },
+        ];
+        fields.forEach(function (field) {
+          const wrap = document.createElement('label');
+          wrap.className = 'qcc-field';
+          const lbl = document.createElement('span');
+          lbl.textContent = field.label;
+          const input = document.createElement('input');
+          input.type = field.type;
+          input.name = field.id;
+          input.required = field.required;
+          input.value = state.lead[field.id];
+          input.addEventListener('input', function (e) { state.lead[field.id] = e.target.value; });
+          wrap.appendChild(lbl);
+          wrap.appendChild(input);
+          form.appendChild(wrap);
+        });
+
+        const honeypot = document.createElement('label');
+        honeypot.className = 'qcc-field qcc-honeypot';
+        const hpInput = document.createElement('input');
+        hpInput.type = 'text';
+        hpInput.name = 'company';
+        hpInput.tabIndex = -1;
+        hpInput.autocomplete = 'off';
+        hpInput.setAttribute('aria-hidden', 'true');
+        hpInput.addEventListener('input', function (e) { state.lead.company = e.target.value; });
+        honeypot.appendChild(hpInput);
+        form.appendChild(honeypot);
+
+        const btn = document.createElement('button');
+        btn.type = 'submit';
+        btn.className = 'qcc-button';
+        btn.disabled = state.isSubmitting;
+        btn.textContent = state.isSubmitting ? 'Sending…' : 'Send me this quote';
+        form.appendChild(btn);
+
+        return form;
+      }
+
+      async function submitLead(event, breakdown) {
+        event.preventDefault();
+        if (state.lead.company) return; // honeypot
+        if (!state.lead.name || !state.lead.email) {
+          state.error = 'Please fill in your name and email.';
+          render();
+          return;
+        }
+
+        state.error = '';
+        state.isSubmitting = true;
+        render();
+
+        const messageLines = breakdown.lines.map(function (line) {
+          return line.label + ': £' + line.price;
+        });
+        const message = [
+          'Total estimate: £' + breakdown.total + ' inc. VAT',
+          '',
+          '--- Breakdown ---',
+          messageLines.join('\n'),
+          '',
+          state.lead.phone ? 'Phone: ' + state.lead.phone : '',
+        ].filter(function (l) { return l !== undefined && l !== ''; }).join('\n');
+
+        try {
+          const formData = new FormData();
+          formData.append('access_key', '623d4393-90f3-4de8-b0c0-646e1d8ff1c3');
+          formData.append('subject', 'New Quote Calculator Lead — £' + breakdown.total + ' estimate');
+          formData.append('name', state.lead.name);
+          formData.append('email', state.lead.email);
+          formData.append('message', message);
+          formData.append('from_page', window.location.pathname);
+
+          const res = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: formData });
+          const data = await res.json();
+
+          if (!res.ok || !data.success) throw new Error(data.message || 'Submission failed.');
+
+          window.location.href = '/thank-you/';
+          return;
+        } catch (err) {
+          state.error = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+        } finally {
+          state.isSubmitting = false;
+          render();
+        }
       }
 
       function makeBackButton() {
