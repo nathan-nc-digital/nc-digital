@@ -292,6 +292,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             state.error = '';
             state.answers.pages = tier.key;
             state.answers.homepage = null;
+            if (tier.key === '1') {
+              state.answers.addons = state.answers.addons.filter(function (k) { return k !== 'shop'; });
+            }
             state.stepIndex += 1;
             render();
           });
@@ -362,7 +365,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
         const form = document.createElement('div');
         form.className = 'qcc-question-form';
-        PRICING.addons.forEach(function (addon) {
+        const availableAddons = state.answers.pages === '1'
+          ? PRICING.addons.filter(function (a) { return a.key !== 'shop'; })
+          : PRICING.addons;
+        availableAddons.forEach(function (addon) {
           const label = document.createElement('label');
           label.className = 'qcc-option';
           const input = document.createElement('input');

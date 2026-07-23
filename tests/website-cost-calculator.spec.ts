@@ -34,11 +34,41 @@ test('1-page tier skips the homepage question and goes straight to add-ons', asy
 
 test('selecting add-ons increases the total, and unchecking removes it', async ({ page }) => {
   await page.goto('/website-cost-calculator');
+  await page.getByText('5–10 pages — from £599').click();
+  await page.getByText('No thanks — save £100').click();
+  await page.getByText('Online shop (+£500)').click();
+  await expect(page.locator('#qcc-total-value')).toHaveText('£999 inc. VAT');
+  await page.getByText('Online shop (+£500)').click();
+  await expect(page.locator('#qcc-total-value')).toHaveText('£499 inc. VAT');
+});
+
+test('1-page tier does not offer the online shop add-on', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
   await page.getByText('1 page — from £200').click();
+  await expect(page.getByText('Online shop (+£500)')).toHaveCount(0);
+  await expect(page.getByText('Booking system (+£300)')).toBeVisible();
+  await expect(page.getByText('New logo / branding (+£200)')).toBeVisible();
+});
+
+test('online shop add-on is available for multi-page tiers', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('5–10 pages — from £599').click();
+  await page.getByText('No thanks — save £100').click();
+  await expect(page.getByText('Online shop (+£500)')).toBeVisible();
+});
+
+test('switching from a multi-page tier down to 1 page clears a previously selected online shop add-on', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('5–10 pages — from £599').click();
+  await page.getByText('No thanks — save £100').click();
   await page.getByText('Online shop (+£500)').click();
-  await expect(page.locator('#qcc-total-value')).toHaveText('£700 inc. VAT');
-  await page.getByText('Online shop (+£500)').click();
+  await expect(page.locator('#qcc-total-value')).toHaveText('£999 inc. VAT');
+
+  await page.getByRole('button', { name: '← Back' }).click();
+  await page.getByRole('button', { name: '← Back' }).click();
+  await page.getByText('1 page — from £200').click();
   await expect(page.locator('#qcc-total-value')).toHaveText('£200 inc. VAT');
+  await expect(page.getByText('Online shop (+£500)')).toHaveCount(0);
 });
 
 test('continuing from add-ons goes to the hosting step, then to the result screen', async ({ page }) => {
