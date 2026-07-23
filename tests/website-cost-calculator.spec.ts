@@ -41,19 +41,22 @@ test('selecting add-ons increases the total, and unchecking removes it', async (
   await expect(page.locator('#qcc-total-value')).toHaveText('£200 inc. VAT');
 });
 
-test('continuing from add-ons with nothing selected shows the result screen', async ({ page }) => {
+test('continuing from add-ons goes to the hosting step, then to the result screen', async ({ page }) => {
   await page.goto('/website-cost-calculator');
   await page.getByText('1 page — from £200').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByText('Do you need hosting & domain too?')).toBeVisible();
+  await page.getByText("No thanks — I'll sort my own hosting & domain").click();
   await expect(page.getByText('Your estimate')).toBeVisible();
 });
 
-test('result screen shows an itemised breakdown and total', async ({ page }) => {
+test('result screen shows an itemised breakdown and total, with no hosting section when hosting is declined', async ({ page }) => {
   await page.goto('/website-cost-calculator');
   await page.getByText('5–10 pages — from £599').click();
   await page.getByText('No thanks — save £100').click();
   await page.getByText('Booking system (+£300)').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText("No thanks — I'll sort my own hosting & domain").click();
 
   const homepageLine = page.locator('.qcc-breakdown li', { hasText: '5–10 pages (no custom homepage)' });
   await expect(homepageLine).toContainText('£499');
@@ -61,8 +64,47 @@ test('result screen shows an itemised breakdown and total', async ({ page }) => 
   const bookingLine = page.locator('.qcc-breakdown li', { hasText: 'Booking system' });
   await expect(bookingLine).toContainText('£300');
 
+  await expect(page.locator('.qcc-breakdown-total')).toHaveCount(1);
   const totalLine = page.locator('.qcc-breakdown-total');
   await expect(totalLine).toContainText('£799 inc. VAT');
+  await expect(page.getByText('Hosting & Domain')).toHaveCount(0);
+});
+
+test('selecting annual hosting shows a separate hosting total, without changing the website build total', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('1 page — from £200').click();
+  await expect(page.locator('#qcc-total-value')).toHaveText('£200 inc. VAT');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText('Annual hosting & domain — £240/year').click();
+
+  // Website build total is unaffected by hosting.
+  const buildTotal = page.locator('.qcc-breakdown-total').first();
+  await expect(buildTotal).toContainText('£200 inc. VAT');
+
+  // Hosting is shown as its own separate section/total.
+  await expect(page.locator('.qcc-hosting-block .qcc-subheading')).toHaveText('Hosting & Domain');
+  const hostingTotal = page.locator('.qcc-hosting-block .qcc-breakdown-total');
+  await expect(hostingTotal).toContainText('£240/year inc. VAT');
+});
+
+test('selecting monthly hosting shows the correct separate monthly total', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('1 page — from £200').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText('Monthly hosting & domain — £25/month').click();
+
+  const hostingTotal = page.locator('.qcc-hosting-block .qcc-breakdown-total');
+  await expect(hostingTotal).toContainText('£25/month inc. VAT');
+});
+
+test('back button from the result screen returns to the hosting step with the answer preserved', async ({ page }) => {
+  await page.goto('/website-cost-calculator');
+  await page.getByText('1 page — from £200').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText('Annual hosting & domain — £240/year').click();
+  await page.getByRole('button', { name: '← Back' }).click();
+  await expect(page.getByText('Do you need hosting & domain too?')).toBeVisible();
+  await expect(page.getByLabel('Annual hosting & domain — £240/year')).toBeChecked();
 });
 
 test('back button returns to the previous step with the answer preserved', async ({ page }) => {
@@ -78,6 +120,7 @@ test('result screen has a lead capture form', async ({ page }) => {
   await page.goto('/website-cost-calculator');
   await page.getByText('1 page — from £200').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText("No thanks — I'll sort my own hosting & domain").click();
   await expect(page.locator('form.qcc-lead-form')).toBeVisible();
   await expect(page.getByLabel('Name')).toBeVisible();
   await expect(page.getByLabel('Email')).toBeVisible();
@@ -90,10 +133,30 @@ test('submitting the lead form redirects to the thank-you page', async ({ page }
   await page.goto('/website-cost-calculator');
   await page.getByText('1 page — from £200').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText("No thanks — I'll sort my own hosting & domain").click();
   await page.getByLabel('Name').fill('Test User');
   await page.getByLabel('Email').fill('test@example.com');
   await page.getByRole('button', { name: 'Send me this quote' }).click();
   await expect(page).toHaveURL(/\/thank-you\/?$/);
+});
+
+test('submitting with hosting selected includes it in the Web3Forms request', async ({ page }) => {
+  let capturedBody = '';
+  await page.route('https://api.web3forms.com/submit', async (route) => {
+    capturedBody = route.request().postData() || '';
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true }) });
+  });
+  await page.goto('/website-cost-calculator');
+  await page.getByText('1 page — from £200').click();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText('Annual hosting & domain — £240/year').click();
+  await page.getByLabel('Name').fill('Test User');
+  await page.getByLabel('Email').fill('test@example.com');
+  await page.getByRole('button', { name: 'Send me this quote' }).click();
+  await expect(page).toHaveURL(/\/thank-you\/?$/);
+
+  expect(capturedBody).toContain('Annual hosting & domain');
+  expect(capturedBody).toContain('£240/year');
 });
 
 test('shows an inline error if submission fails', async ({ page }) => {
@@ -103,6 +166,7 @@ test('shows an inline error if submission fails', async ({ page }) => {
   await page.goto('/website-cost-calculator');
   await page.getByText('1 page — from £200').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText("No thanks — I'll sort my own hosting & domain").click();
   await page.getByLabel('Name').fill('Test User');
   await page.getByLabel('Email').fill('test@example.com');
   await page.getByRole('button', { name: 'Send me this quote' }).click();
@@ -116,13 +180,14 @@ test('error banner clears after navigating back from a failed submission', async
   await page.goto('/website-cost-calculator');
   await page.getByText('1 page — from £200').click();
   await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText("No thanks — I'll sort my own hosting & domain").click();
   await page.getByLabel('Name').fill('Test User');
   await page.getByLabel('Email').fill('test@example.com');
   await page.getByRole('button', { name: 'Send me this quote' }).click();
   await expect(page.locator('.qcc-error')).toBeVisible();
 
   await page.getByRole('button', { name: '← Back' }).click();
-  await expect(page.getByText('Anything else you need?')).toBeVisible();
+  await expect(page.getByText('Do you need hosting & domain too?')).toBeVisible();
   await expect(page.locator('.qcc-error')).toHaveCount(0);
 });
 
@@ -153,6 +218,7 @@ test('selecting the logo/branding add-on increases the total by £200', async ({
   await expect(page.locator('#qcc-total-value')).toHaveText('£400 inc. VAT');
 
   await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText("No thanks — I'll sort my own hosting & domain").click();
   const logoLine = page.locator('.qcc-breakdown li', { hasText: 'New logo / branding' });
   await expect(logoLine).toContainText('£200');
 

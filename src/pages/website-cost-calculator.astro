@@ -101,6 +101,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     .qcc-breakdown li { display: flex; justify-content: space-between; gap: 1rem; color: rgba(255,255,255,0.85); font-size: 0.9375rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.15); }
     .qcc-breakdown-total { color: #fff !important; font-weight: 800; font-size: 1.0625rem; border-bottom: none !important; }
 
+    .qcc-subheading { margin: 0 0 0.5rem; font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.05em; }
+    .qcc-hosting-block { margin-top: 1.25rem; }
+
     .qcc-disclaimer { color: rgba(255,255,255,0.65); font-size: 0.8125rem; line-height: 1.6; margin: 0 0 1.5rem; }
 
     .qcc-field { display: grid; gap: 0.375rem; margin-bottom: 1rem; }
@@ -137,7 +140,18 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           { key: 'booking', label: 'Booking system',      price: 300 },
           { key: 'logo',    label: 'New logo / branding', price: 200 },
         ],
+        hosting: {
+          annual:  { label: 'Annual hosting & domain',  price: 240, period: 'year' },
+          monthly: { label: 'Monthly hosting & domain', price: 25,  period: 'month' },
+        },
       };
+
+      function getHostingSelection(answers) {
+        if (answers.hosting === 'annual' || answers.hosting === 'monthly') {
+          return PRICING.hosting[answers.hosting];
+        }
+        return null;
+      }
 
       function getTier(key) {
         return PRICING.tiers.find(function (t) { return t.key === key; });
@@ -165,7 +179,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       function stepsForAnswers(answers) {
         if (!answers.pages) return ['pages'];
-        return answers.pages === '1' ? ['pages', 'addons', 'result'] : ['pages', 'homepage', 'addons', 'result'];
+        const base = answers.pages === '1' ? ['pages'] : ['pages', 'homepage'];
+        return base.concat(['addons', 'hosting', 'result']);
       }
 
       const root = document.getElementById('qcc-root');
@@ -173,7 +188,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       const state = {
         stepIndex: 0,
-        answers: { pages: null, homepage: null, addons: [] },
+        answers: { pages: null, homepage: null, addons: [], hosting: null },
         lead: { name: '', email: '', phone: '', company: '' },
         isSubmitting: false,
         error: '',
@@ -252,6 +267,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         if (stepKey === 'pages') return renderPagesStep();
         if (stepKey === 'homepage') return renderHomepageStep();
         if (stepKey === 'addons') return renderAddonsStep();
+        if (stepKey === 'hosting') return renderHostingStep();
         return renderResultStep();
       }
 
@@ -387,15 +403,64 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return card;
       }
 
+      function renderHostingStep() {
+        const card = document.createElement('section');
+        card.className = 'qcc-card';
+        const title = document.createElement('h3');
+        title.textContent = 'Do you need hosting & domain too?';
+        card.appendChild(title);
+
+        const form = document.createElement('div');
+        form.className = 'qcc-question-form';
+        const options = [
+          { value: 'annual',  label: 'Annual hosting & domain — £240/year' },
+          { value: 'monthly', label: 'Monthly hosting & domain — £25/month' },
+          { value: 'none',    label: "No thanks — I'll sort my own hosting & domain" },
+        ];
+        options.forEach(function (opt) {
+          const label = document.createElement('label');
+          label.className = 'qcc-option';
+          const input = document.createElement('input');
+          input.type = 'radio';
+          input.name = 'hosting';
+          input.value = opt.value;
+          input.checked = state.answers.hosting === opt.value;
+          input.addEventListener('change', function () {
+            state.error = '';
+            state.answers.hosting = opt.value;
+            state.stepIndex += 1;
+            render();
+          });
+          const text = document.createElement('span');
+          text.textContent = opt.label;
+          label.appendChild(input);
+          label.appendChild(text);
+          form.appendChild(label);
+        });
+        card.appendChild(form);
+
+        const actions = document.createElement('div');
+        actions.className = 'qcc-actions';
+        actions.appendChild(makeBackButton());
+        card.appendChild(actions);
+        return card;
+      }
+
       function renderResultStep() {
         const card = document.createElement('section');
         card.className = 'qcc-card';
 
         const breakdown = computeBreakdown(state.answers);
+        const hosting = getHostingSelection(state.answers);
 
         const title = document.createElement('h3');
         title.textContent = 'Your estimate';
         card.appendChild(title);
+
+        const buildLabel = document.createElement('p');
+        buildLabel.className = 'qcc-subheading';
+        buildLabel.textContent = 'Website build';
+        card.appendChild(buildLabel);
 
         const list = document.createElement('ul');
         list.className = 'qcc-breakdown';
@@ -420,12 +485,37 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         list.appendChild(totalLi);
         card.appendChild(list);
 
+        if (hosting) {
+          const hostingBlock = document.createElement('div');
+          hostingBlock.className = 'qcc-hosting-block';
+
+          const hostingLabel = document.createElement('p');
+          hostingLabel.className = 'qcc-subheading';
+          hostingLabel.textContent = 'Hosting & Domain';
+          hostingBlock.appendChild(hostingLabel);
+
+          const hostingList = document.createElement('ul');
+          hostingList.className = 'qcc-breakdown';
+          const hostingLi = document.createElement('li');
+          hostingLi.className = 'qcc-breakdown-total';
+          const hostingLiLabel = document.createElement('span');
+          hostingLiLabel.textContent = hosting.label;
+          const hostingLiPrice = document.createElement('span');
+          hostingLiPrice.textContent = '£' + hosting.price + '/' + hosting.period + ' inc. VAT';
+          hostingLi.appendChild(hostingLiLabel);
+          hostingLi.appendChild(hostingLiPrice);
+          hostingList.appendChild(hostingLi);
+          hostingBlock.appendChild(hostingList);
+
+          card.appendChild(hostingBlock);
+        }
+
         const disclaimer = document.createElement('p');
         disclaimer.className = 'qcc-disclaimer';
         disclaimer.textContent = 'This is an instant estimate. Your final price will be confirmed once we understand your project fully — no obligation.';
         card.appendChild(disclaimer);
 
-        card.appendChild(renderLeadForm(breakdown));
+        card.appendChild(renderLeadForm(breakdown, hosting));
 
         const actions = document.createElement('div');
         actions.className = 'qcc-actions';
@@ -436,10 +526,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return card;
       }
 
-      function renderLeadForm(breakdown) {
+      function renderLeadForm(breakdown, hosting) {
         const form = document.createElement('form');
         form.className = 'qcc-lead-form';
-        form.addEventListener('submit', function (e) { submitLead(e, breakdown); });
+        form.addEventListener('submit', function (e) { submitLead(e, breakdown, hosting); });
 
         const fields = [
           { id: 'name',  label: 'Name',  type: 'text',  required: true },
@@ -484,7 +574,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         return form;
       }
 
-      async function submitLead(event, breakdown) {
+      async function submitLead(event, breakdown, hosting) {
         event.preventDefault();
         if (state.isSubmitting) return;
         if (state.lead.company) return; // honeypot
@@ -501,11 +591,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         const messageLines = breakdown.lines.map(function (line) {
           return line.label + ': £' + line.price;
         });
+        const hostingLine = hosting
+          ? hosting.label + ': £' + hosting.price + '/' + hosting.period + ' inc. VAT'
+          : 'Hosting & Domain: not selected';
         const message = [
-          'Total estimate: £' + breakdown.total + ' inc. VAT',
+          'Website build total: £' + breakdown.total + ' inc. VAT',
           '',
           '--- Breakdown ---',
           messageLines.join('\n'),
+          '',
+          hostingLine,
           '',
           state.lead.phone ? 'Phone: ' + state.lead.phone : '',
         ].filter(function (l) { return l !== undefined; }).join('\n');
@@ -513,7 +608,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         try {
           const formData = new FormData();
           formData.append('access_key', '623d4393-90f3-4de8-b0c0-646e1d8ff1c3');
-          formData.append('subject', 'New Quote Calculator Lead — £' + breakdown.total + ' estimate');
+          formData.append('subject', 'New Quote Calculator Lead — £' + breakdown.total + ' website build' + (hosting ? ' + hosting' : '') + ' estimate');
           formData.append('name', state.lead.name);
           formData.append('email', state.lead.email);
           formData.append('message', message);
