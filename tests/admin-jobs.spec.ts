@@ -27,6 +27,26 @@ test('nathan sees the Add job button and every job, including assignee tags', as
   await expect(page.locator('.jb-card-assignee').first()).toBeVisible();
 });
 
+test('nathan can filter the board to just his jobs, just Ben\'s, or both', async ({ page }) => {
+  await mockWhoamiAndList(page, 'nathan', NATHAN_JOBS);
+  await page.goto('/admin/jobs');
+
+  await page.getByRole('button', { name: 'Mine' }).click();
+  await expect(page.getByText('Davies Electrical')).toBeVisible();
+  await expect(page.getByText('Smith Plumbing')).toHaveCount(0);
+  await expect(page.getByText('Evans Landscaping')).toHaveCount(0);
+
+  await page.getByRole('button', { name: "Ben's" }).click();
+  await expect(page.getByText('Davies Electrical')).toHaveCount(0);
+  await expect(page.getByText('Smith Plumbing')).toBeVisible();
+  await expect(page.getByText('Evans Landscaping')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Both' }).click();
+  await expect(page.getByText('Davies Electrical')).toBeVisible();
+  await expect(page.getByText('Smith Plumbing')).toBeVisible();
+  await expect(page.getByText('Evans Landscaping')).toBeVisible();
+});
+
 test('ben sees the Add job button but no assignee tags or delete, and only sees his own jobs', async ({ page }) => {
   await mockWhoamiAndList(page, 'ben', BEN_JOBS);
   await page.goto('/admin/jobs');
@@ -34,6 +54,7 @@ test('ben sees the Add job button but no assignee tags or delete, and only sees 
   await expect(page.getByText('Smith Plumbing')).toBeVisible();
   await expect(page.locator('.jb-card-assignee')).toHaveCount(0);
   await expect(page.locator('.jb-card-delete')).toHaveCount(0);
+  await expect(page.locator('.jb-filter')).toHaveCount(0);
 });
 
 test('ben can add a job for himself with no assigned-to field shown', async ({ page }) => {
