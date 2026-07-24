@@ -96,8 +96,9 @@ export async function listJobs(env, role) {
 }
 
 export async function createJob(env, role, body) {
-  if (role !== 'nathan') return { error: 'Forbidden', status: 403 };
-  const { client_name, notes, eta, assigned_to } = body;
+  if (role !== 'nathan' && role !== 'ben') return { error: 'Forbidden', status: 403 };
+  const { client_name, notes, eta } = body;
+  const assigned_to = role === 'ben' ? 'ben' : body.assigned_to;
   if (!client_name || !assigned_to) return { error: 'client_name and assigned_to are required', status: 400 };
   if (!VALID_ASSIGNEES.includes(assigned_to)) return { error: 'Invalid assigned_to', status: 400 };
   const now = new Date().toISOString();

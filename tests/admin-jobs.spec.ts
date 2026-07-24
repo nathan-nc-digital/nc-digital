@@ -27,13 +27,39 @@ test('nathan sees the Add job button and every job, including assignee tags', as
   await expect(page.locator('.jb-card-assignee').first()).toBeVisible();
 });
 
-test('ben does not see the Add job button, assignee tags, or delete, and only sees his own jobs', async ({ page }) => {
+test('ben sees the Add job button but no assignee tags or delete, and only sees his own jobs', async ({ page }) => {
   await mockWhoamiAndList(page, 'ben', BEN_JOBS);
   await page.goto('/admin/jobs');
-  await expect(page.getByRole('button', { name: '+ Add job' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '+ Add job' })).toBeVisible();
   await expect(page.getByText('Smith Plumbing')).toBeVisible();
   await expect(page.locator('.jb-card-assignee')).toHaveCount(0);
   await expect(page.locator('.jb-card-delete')).toHaveCount(0);
+});
+
+test('ben can add a job for himself with no assigned-to field shown', async ({ page }) => {
+  await mockWhoamiAndList(page, 'ben', []);
+
+  let createBody = null;
+  await page.route('/admin/jobs/api/create', async route => {
+    createBody = route.request().postDataJSON();
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ ok: true }) });
+  });
+
+  await page.goto('/admin/jobs');
+  await page.getByRole('button', { name: '+ Add job' }).click();
+  await expect(page.locator('#addAssignedToRow')).toBeHidden();
+
+  await page.locator('#addClientName').fill('Jones Roofing');
+
+  await page.route('/admin/jobs/api/list', route => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({ jobs: [{ id: 4, client_name: 'Jones Roofing', notes: '', status: 'not_started', eta: null, assigned_to: 'ben' }] }),
+  }));
+
+  await page.getByRole('button', { name: 'Save job' }).click();
+
+  expect(createBody).toMatchObject({ client_name: 'Jones Roofing' });
+  await expect(page.getByText('Jones Roofing')).toBeVisible();
 });
 
 test('clicking Start moves a not-started job to Doing', async ({ page }) => {

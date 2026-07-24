@@ -112,11 +112,21 @@ describe('createJob', () => {
     assert.equal(jobs[0].status, 'not_started');
   });
 
-  test('ben cannot create a job', async () => {
+  test('ben can create a job, always assigned to himself', async () => {
     const env = { JOBS_DB: makeFakeDb() };
-    const result = await createJob(env, 'ben', { client_name: 'Jones Roofing', assigned_to: 'ben' });
-    assert.equal(result.status, 403);
-    assert.equal((await listJobs(env, 'nathan')).length, 0);
+    const result = await createJob(env, 'ben', { client_name: 'Jones Roofing', notes: 'Brief here' });
+    assert.equal(result.status, 201);
+    const jobs = await listJobs(env, 'nathan');
+    assert.equal(jobs.length, 1);
+    assert.equal(jobs[0].assigned_to, 'ben');
+  });
+
+  test('ben cannot allocate a job to nathan even if he tries', async () => {
+    const env = { JOBS_DB: makeFakeDb() };
+    const result = await createJob(env, 'ben', { client_name: 'Jones Roofing', assigned_to: 'nathan' });
+    assert.equal(result.status, 201);
+    const jobs = await listJobs(env, 'nathan');
+    assert.equal(jobs[0].assigned_to, 'ben');
   });
 
   test('rejects missing client_name', async () => {
