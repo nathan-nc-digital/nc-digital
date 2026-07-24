@@ -25,13 +25,18 @@ export default {
     if (url.pathname.startsWith('/admin')) {
       const role = resolveRole(url.pathname, request.headers.get('Authorization'));
       if (!role) return unauthorizedResponse();
-      // Bypass cache for admin pages so auth always runs
-      const res = await env.ASSETS.fetch(request);
+      // Bypass cache for admin pages so auth always runs.
+      // Cloudflare-CDN-Cache-Control controls the *edge* cache specifically and
+      // overrides any zone-level default caching — plain Cache-Control alone
+      // was observed being ignored by the edge (CF-Cache-Status: HIT) even
+      // though it's respected by browsers.
+      const res = await env.ASSETS.fetch(request, { cf: { cacheTtl: 0, cacheEverything: false } });
       return new Response(res.body, {
         status: res.status,
         headers: {
           ...Object.fromEntries(res.headers),
           'Cache-Control': 'no-store, no-cache, private',
+          'Cloudflare-CDN-Cache-Control': 'no-store',
         },
       });
     }
@@ -46,6 +51,7 @@ function unauthorizedResponse() {
     headers: {
       'WWW-Authenticate': 'Basic realm="NC Digital Admin", charset="UTF-8"',
       'Cache-Control': 'no-store, no-cache, private',
+      'Cloudflare-CDN-Cache-Control': 'no-store',
     },
   });
 }
@@ -73,7 +79,11 @@ export function resolveRole(pathname, authHeader) {
 function jsonResponse(body, status) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store, no-cache, private' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store, no-cache, private',
+      'Cloudflare-CDN-Cache-Control': 'no-store',
+    },
   });
 }
 
