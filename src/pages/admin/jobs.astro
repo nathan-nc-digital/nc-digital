@@ -50,6 +50,12 @@
     }
     .jb-modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.5rem; }
     .jb-modal-cancel { background: transparent; border: 1px solid #3a3a52; color: #b0b8c8; border-radius: 6px; padding: 0.55rem 1.1rem; font-size: 0.9375rem; cursor: pointer; }
+
+    @media (max-width: 720px) {
+      .jb-board { grid-template-columns: 1fr; padding: 1rem; gap: 1rem; }
+      .topbar { padding: 0.85rem 1rem; }
+      .jb-error { margin: 1rem; }
+    }
   </style>
 </head>
 <body>
