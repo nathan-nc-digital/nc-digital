@@ -1,5 +1,18 @@
 name = "nc-digital"
 compatibility_date = "2026-04-21"
+main = "src/worker.js"
+
+# Routes (nc-digital.co.uk/* and www.nc-digital.co.uk/*) are managed in the
+# Cloudflare dashboard. Kept out of this file because the deploy API token
+# lacks the "Zone > Workers Routes > Edit" permission, which made
+# `wrangler deploy` exit 1 on route sync even after a successful upload.
 
 [assets]
 directory = "./dist"
+binding = "ASSETS"
+run_worker_first = true
+
+[[d1_databases]]
+binding = "JOBS_DB"
+database_name = "nc-digital-jobs"
+database_id = "8a6427e5-41b2-4453-9f75-4f765e9d8bfa"
