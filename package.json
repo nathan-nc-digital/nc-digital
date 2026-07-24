@@ -9,7 +9,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "ahrefs:backlinks": "node scripts/ahrefs-fetch.mjs",
+    "ahrefs:keywords": "node scripts/ahrefs-keywords.mjs",
+    "gsc:indexing": "node scripts/gsc-indexing.mjs",
+    "test:unit": "node --test tests/unit/**/*.test.js"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.13",
@@ -20,17 +24,20 @@
     "@fontsource/sora": "^5.2.8",
     "@keystatic/astro": "^5.0.6",
     "@keystatic/core": "^0.5.50",
+    "@sentry/astro": "^10.55.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "astro": "^5.18.1",
     "gsap": "^3.15.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "tailwindcss": "^3.4.19"
+    "tailwindcss": "^3.4.19",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
     "@playwright/test": "^1.59.1",
+    "googleapis": "^171.4.0",
     "typescript": "^5.9.3"
   }
 }
