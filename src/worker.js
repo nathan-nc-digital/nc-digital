@@ -66,7 +66,7 @@ export function resolveRole(pathname, authHeader) {
   const creds = decodeBasicAuth(authHeader);
   if (!creds) return null;
   if (creds.user === ADMIN_USER && creds.pass === ADMIN_PASS) return 'nathan';
-  if (creds.user === BEN_USER && creds.pass === BEN_PASS && pathname.startsWith('/admin/jobs')) return 'ben';
+  if (creds.user === BEN_USER && creds.pass === BEN_PASS && (pathname === '/admin/jobs' || pathname.startsWith('/admin/jobs/'))) return 'ben';
   return null;
 }
 
@@ -115,11 +115,11 @@ export async function updateJob(env, role, body) {
 
   const now = new Date().toISOString();
   const next = {
-    client_name: client_name ?? job.client_name,
-    notes: notes ?? job.notes,
-    status: status ?? job.status,
-    eta: eta ?? job.eta,
-    assigned_to: assigned_to ?? job.assigned_to,
+    client_name: 'client_name' in body ? client_name : job.client_name,
+    notes: 'notes' in body ? notes : job.notes,
+    status: 'status' in body ? status : job.status,
+    eta: 'eta' in body ? eta : job.eta,
+    assigned_to: 'assigned_to' in body ? assigned_to : job.assigned_to,
   };
   await env.JOBS_DB.prepare(
     'UPDATE jobs SET client_name=?, notes=?, status=?, eta=?, assigned_to=?, updated_at=? WHERE id=?'

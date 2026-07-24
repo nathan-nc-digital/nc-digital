@@ -74,6 +74,12 @@ describe('resolveRole', () => {
     assert.equal(resolveRole('/admin/jobs', null), null);
     assert.equal(resolveRole('/admin/jobs', 'Bearer sometoken'), null);
   });
+
+  test('ben is rejected on paths that merely share the /admin/jobs prefix', () => {
+    const header = basicAuthHeader('ben', 'B1E2N3!');
+    assert.equal(resolveRole('/admin/jobsecrets', header), null);
+    assert.equal(resolveRole('/admin/jobs-report', header), null);
+  });
 });
 
 describe('listJobs', () => {
@@ -110,6 +116,7 @@ describe('createJob', () => {
     const env = { JOBS_DB: makeFakeDb() };
     const result = await createJob(env, 'ben', { client_name: 'Jones Roofing', assigned_to: 'ben' });
     assert.equal(result.status, 403);
+    assert.equal((await listJobs(env, 'nathan')).length, 0);
   });
 
   test('rejects missing client_name', async () => {
@@ -151,12 +158,38 @@ describe('updateJob', () => {
     const env = seededEnv();
     const result = await updateJob(env, 'ben', { id: 2, status: 'done' });
     assert.equal(result.status, 403);
+    const jobs = await listJobs(env, 'nathan');
+    const job2 = jobs.find(j => j.id === 2);
+    assert.equal(job2.status, 'doing');
   });
 
   test('ben cannot change client_name, notes, or assigned_to', async () => {
     const env = seededEnv();
     const result = await updateJob(env, 'ben', { id: 1, client_name: 'New Name' });
     assert.equal(result.status, 403);
+    const jobs = await listJobs(env, 'nathan');
+    const job1 = jobs.find(j => j.id === 1);
+    assert.equal(job1.client_name, 'Smith Plumbing');
+  });
+
+  test('explicit null clears eta instead of falling back to the old value', async () => {
+    const env = { JOBS_DB: makeFakeDb([
+      { id: 1, client_name: 'Smith Plumbing', notes: '', status: 'not_started', eta: '2026-08-01', assigned_to: 'ben', created_at: '2026-01-01', updated_at: '2026-01-01' },
+    ]) };
+    const result = await updateJob(env, 'nathan', { id: 1, eta: null });
+    assert.equal(result.status, 200);
+    const [job] = await listJobs(env, 'nathan');
+    assert.equal(job.eta, null);
+  });
+
+  test('ben can explicitly clear eta on his own job', async () => {
+    const env = { JOBS_DB: makeFakeDb([
+      { id: 1, client_name: 'Smith Plumbing', notes: '', status: 'not_started', eta: '2026-08-01', assigned_to: 'ben', created_at: '2026-01-01', updated_at: '2026-01-01' },
+    ]) };
+    const result = await updateJob(env, 'ben', { id: 1, eta: null });
+    assert.equal(result.status, 200);
+    const [job] = await listJobs(env, 'ben');
+    assert.equal(job.eta, null);
   });
 
   test('nathan can update any field on any job', async () => {
