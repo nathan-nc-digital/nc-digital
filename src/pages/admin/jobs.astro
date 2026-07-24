@@ -24,7 +24,7 @@
     .jb-card { background: #18182a; border: 1px solid #2a2a3e; border-radius: 8px; padding: 0.875rem; display: flex; flex-direction: column; gap: 0.5rem; }
     .jb-card-title { font-size: 0.9375rem; font-weight: 600; color: #f1f5f9; }
     .jb-card-notes { font-size: 0.8125rem; color: #94a3b8; }
-    .jb-card-meta { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: #94a3b8; flex-wrap: wrap; }
+    .jb-card-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 0.375rem; font-size: 0.75rem; color: #94a3b8; }
     .jb-card-assignee { padding: 0.15rem 0.5rem; border-radius: 4px; background: #7c3aed22; color: #c4b5fd; font-weight: 600; font-size: 0.6875rem; text-transform: uppercase; }
     .jb-card-eta { display: flex; align-items: center; gap: 0.375rem; }
     .jb-card-eta input { background: #0d0d14; border: 1px solid #2a2a3e; color: #e2e8f0; border-radius: 4px; padding: 0.2rem 0.4rem; font-size: 0.75rem; }
@@ -77,13 +77,11 @@
   <form class="jb-modal" id="addForm">
     <h2>Add job</h2>
     <label>Client / business name
-      <input type="text" id="addClientName" required />
+      <input type="text" id="addClientName" list="clientNamesList" required />
+      <datalist id="clientNamesList"></datalist>
     </label>
     <label>Notes
       <textarea id="addNotes" rows="3"></textarea>
-    </label>
-    <label>ETA
-      <input type="date" id="addEta" />
     </label>
     <label>Assigned to
       <select id="addAssignedTo">
@@ -158,6 +156,19 @@
       }
       jobs.forEach(job => col.appendChild(renderCard(job)));
     });
+
+    renderClientNamesList();
+  }
+
+  function renderClientNamesList() {
+    const list = document.getElementById('clientNamesList');
+    list.innerHTML = '';
+    const names = [...new Set(state.jobs.map(j => j.client_name))].sort();
+    names.forEach(name => {
+      const option = document.createElement('option');
+      option.value = name;
+      list.appendChild(option);
+    });
   }
 
   function renderCard(job) {
@@ -186,18 +197,21 @@
       meta.appendChild(assignee);
     }
 
-    const etaWrap = document.createElement('label');
-    etaWrap.className = 'jb-card-eta';
-    etaWrap.append('ETA: ');
-    const etaInput = document.createElement('input');
-    etaInput.type = 'date';
-    etaInput.value = job.eta || '';
-    etaInput.addEventListener('change', async () => {
-      await updateJob(job.id, { eta: etaInput.value || null });
-    });
-    etaWrap.appendChild(etaInput);
-    meta.appendChild(etaWrap);
-    card.appendChild(meta);
+    if (job.status !== 'not_started') {
+      const etaWrap = document.createElement('label');
+      etaWrap.className = 'jb-card-eta';
+      etaWrap.append('ETA: ');
+      const etaInput = document.createElement('input');
+      etaInput.type = 'date';
+      etaInput.value = job.eta || '';
+      etaInput.addEventListener('change', async () => {
+        await updateJob(job.id, { eta: etaInput.value || null });
+      });
+      etaWrap.appendChild(etaInput);
+      meta.appendChild(etaWrap);
+    }
+
+    if (meta.childNodes.length) card.appendChild(meta);
 
     const actions = document.createElement('div');
     actions.className = 'jb-card-actions';
@@ -273,7 +287,6 @@
         body: JSON.stringify({
           client_name: document.getElementById('addClientName').value,
           notes: document.getElementById('addNotes').value,
-          eta: document.getElementById('addEta').value || null,
           assigned_to: document.getElementById('addAssignedTo').value,
         }),
       });

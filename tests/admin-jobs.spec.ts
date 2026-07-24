@@ -115,6 +115,34 @@ test('nathan can open the add-job modal and submit a new job', async ({ page }) 
   await expect(page.getByText('Jones Roofing')).toBeVisible();
 });
 
+test('a not-started job card has no ETA field', async ({ page }) => {
+  await mockWhoamiAndList(page, 'ben', BEN_JOBS);
+  await page.goto('/admin/jobs');
+  await expect(page.locator('#col-not_started .jb-card-eta')).toHaveCount(0);
+});
+
+test('a doing job card has an editable ETA field', async ({ page }) => {
+  const doingJob = [{ id: 2, client_name: 'Davies Electrical', notes: '', status: 'doing', eta: '2026-08-01', assigned_to: 'nathan' }];
+  await mockWhoamiAndList(page, 'nathan', doingJob);
+  await page.goto('/admin/jobs');
+  await expect(page.locator('#col-doing .jb-card-eta input')).toHaveValue('2026-08-01');
+});
+
+test('the add-job modal has no ETA field', async ({ page }) => {
+  await mockWhoamiAndList(page, 'nathan', []);
+  await page.goto('/admin/jobs');
+  await page.getByRole('button', { name: '+ Add job' }).click();
+  await expect(page.locator('#addEta')).toHaveCount(0);
+});
+
+test('the client name field offers previously used names', async ({ page }) => {
+  await mockWhoamiAndList(page, 'nathan', NATHAN_JOBS);
+  await page.goto('/admin/jobs');
+  await page.getByRole('button', { name: '+ Add job' }).click();
+  const options = await page.locator('#clientNamesList option').evaluateAll(els => els.map(el => el.getAttribute('value')));
+  expect(options.sort()).toEqual(['Davies Electrical', 'Evans Landscaping', 'Smith Plumbing']);
+});
+
 test('shows an error banner if the board fails to load', async ({ page }) => {
   await page.route('/admin/jobs/api/whoami', route =>
     route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: 'Unauthorised' }) }));
