@@ -1,3 +1,4 @@
+-- Applied manually via `wrangler d1 execute --file=`, not `wrangler d1 migrations apply` (no migrations_dir configured).
 CREATE TABLE IF NOT EXISTS jobs (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   client_name TEXT NOT NULL,
