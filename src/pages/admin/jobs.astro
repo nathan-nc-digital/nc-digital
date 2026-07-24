@@ -9,46 +9,45 @@
   <title>Jobs Board — NC Digital</title>
   <style is:global>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d14; color: #e2e8f0; font-size: 15px; line-height: 1.6; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d14; color: #e2e8f0; font-size: 17px; line-height: 1.6; }
 
     .topbar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid #1e1e30; background: #0d0d14; position: sticky; top: 0; z-index: 50; }
-    .topbar h1 { font-size: 1rem; font-weight: 700; color: #f1f5f9; }
+    .topbar h1 { font-size: 1.125rem; font-weight: 700; color: #f1f5f9; }
 
-    .jb-add-btn { background: #7c3aed; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1rem; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+    .jb-add-btn { background: #7c3aed; color: #fff; border: none; border-radius: 6px; padding: 0.55rem 1.1rem; font-size: 0.9375rem; font-weight: 600; cursor: pointer; }
     .jb-add-btn:hover { opacity: 0.9; }
 
     .jb-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1.5rem; align-items: start; }
-    .jb-column { background: #13131f; border: 1px solid #1e1e30; border-radius: 10px; padding: 0.5rem 0.75rem; display: flex; flex-direction: column; min-height: 200px; }
-    .jb-column-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; margin: 0.5rem 0.25rem 0.25rem; }
+    .jb-column { background: #1c1c2b; border: 1px solid #34344c; border-radius: 10px; padding: 0.85rem; display: flex; flex-direction: column; gap: 0.7rem; min-height: 200px; }
+    .jb-column-title { font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #b0b8c8; margin: 0.15rem 0.15rem 0; }
 
-    .jb-card { padding: 0.9rem 0.25rem; display: flex; flex-direction: column; gap: 0.45rem; }
-    .jb-card + .jb-card { border-top: 1px solid #1e1e30; }
+    .jb-card { background: #262640; border-radius: 8px; border-left: 3px solid #9f75f5; padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.55rem; }
     .jb-card-title-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-    .jb-card-title { font-size: 0.9375rem; font-weight: 600; color: #f1f5f9; }
-    .jb-card-notes { font-size: 0.8125rem; color: #94a3b8; }
-    .jb-card-assignee { font-size: 0.625rem; font-weight: 700; color: #a78bfa; text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; }
+    .jb-card-title { font-size: 1.0625rem; font-weight: 700; color: #f8fafc; }
+    .jb-card-notes { font-size: 0.9375rem; color: #b4bcc9; }
+    .jb-card-assignee { font-size: 0.75rem; font-weight: 700; color: #d8c4ff; background: #7c3aed3d; padding: 0.2rem 0.55rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
     .jb-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.1rem; flex-wrap: wrap; }
-    .jb-card-eta { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: #94a3b8; }
-    .jb-card-eta input { background: #0d0d14; border: 1px solid #2a2a3e; color: #e2e8f0; border-radius: 4px; padding: 0.2rem 0.4rem; font-size: 0.75rem; }
+    .jb-card-eta { display: flex; align-items: center; gap: 0.375rem; font-size: 0.875rem; color: #b0b8c8; }
+    .jb-card-eta input { background: #0d0d14; border: 1px solid #3a3a52; color: #e2e8f0; border-radius: 4px; padding: 0.25rem 0.5rem; font-size: 0.875rem; }
     .jb-card-actions { display: flex; gap: 0.5rem; margin-left: auto; }
-    .jb-card-btn { background: transparent; color: #c4b5fd; border: 1px solid #7c3aed66; border-radius: 6px; padding: 0.35rem 0.7rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
-    .jb-card-btn:hover { background: #7c3aed18; }
-    .jb-card-delete { background: transparent; border: 1px solid #ef444455; color: #ef4444; border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.75rem; cursor: pointer; }
+    .jb-card-btn { background: #7c3aed; color: #fff; border: none; border-radius: 6px; padding: 0.45rem 0.85rem; font-size: 0.875rem; font-weight: 700; cursor: pointer; }
+    .jb-card-btn:hover { opacity: 0.9; }
+    .jb-card-delete { background: transparent; border: 1px solid #ef4444; color: #f87171; border-radius: 6px; padding: 0.45rem 0.7rem; font-size: 0.875rem; cursor: pointer; }
     .jb-card-delete:hover { background: #ef444422; }
-    .jb-empty { font-size: 0.8125rem; color: #4b5563; font-style: italic; padding: 0.75rem 0.25rem; }
+    .jb-empty { font-size: 0.9375rem; color: #6b7280; font-style: italic; padding: 0.5rem 0.25rem; }
 
-    .jb-error { margin: 1rem 1.5rem; padding: 0.75rem 1rem; background: #ef444422; border: 1px solid #ef444455; border-radius: 8px; color: #fca5a5; font-size: 0.875rem; }
+    .jb-error { margin: 1rem 1.5rem; padding: 0.75rem 1rem; background: #ef444422; border: 1px solid #ef444455; border-radius: 8px; color: #fca5a5; font-size: 0.9375rem; }
 
     .jb-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 100; }
     .jb-modal-overlay.open { display: flex; }
-    .jb-modal { background: #13131f; border: 1px solid #1e1e30; border-radius: 10px; padding: 1.5rem; width: 400px; max-width: 90vw; display: flex; flex-direction: column; gap: 0.75rem; }
-    .jb-modal h2 { font-size: 1rem; margin-bottom: 0.25rem; }
-    .jb-modal label { font-size: 0.8125rem; color: #94a3b8; display: flex; flex-direction: column; gap: 0.25rem; }
+    .jb-modal { background: #1c1c2b; border: 1px solid #34344c; border-radius: 10px; padding: 1.5rem; width: 420px; max-width: 90vw; display: flex; flex-direction: column; gap: 0.75rem; }
+    .jb-modal h2 { font-size: 1.125rem; margin-bottom: 0.25rem; }
+    .jb-modal label { font-size: 0.9375rem; color: #b0b8c8; display: flex; flex-direction: column; gap: 0.25rem; }
     .jb-modal input, .jb-modal textarea, .jb-modal select {
-      background: #0d0d14; border: 1px solid #2a2a3e; color: #e2e8f0; border-radius: 6px; padding: 0.5rem 0.625rem; font: inherit; font-size: 0.875rem;
+      background: #0d0d14; border: 1px solid #3a3a52; color: #e2e8f0; border-radius: 6px; padding: 0.55rem 0.7rem; font: inherit; font-size: 0.9375rem;
     }
     .jb-modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.5rem; }
-    .jb-modal-cancel { background: transparent; border: 1px solid #2a2a3e; color: #94a3b8; border-radius: 6px; padding: 0.5rem 1rem; font-size: 0.8125rem; cursor: pointer; }
+    .jb-modal-cancel { background: transparent; border: 1px solid #3a3a52; color: #b0b8c8; border-radius: 6px; padding: 0.55rem 1.1rem; font-size: 0.9375rem; cursor: pointer; }
   </style>
 </head>
 <body>
