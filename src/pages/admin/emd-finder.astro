@@ -18,10 +18,40 @@ interface EmdCache {
   combos?: ComboRow[];
 }
 
+interface CompetitorEntry {
+  position: number | null;
+  domain: string;
+  isDirectory: boolean;
+  referringDomains: number | null;
+}
+
+interface CompetitorCheck {
+  trade: string;
+  town: string;
+  directoryRatio: number;
+  floor: number | null;
+  verdict: string;
+  competitors: CompetitorEntry[];
+}
+
+interface CompetitorCheckCache {
+  fetchedAt?: string;
+  checks?: CompetitorCheck[];
+}
+
 const CACHE_PATH = join(process.cwd(), 'scripts/emd-finder-cache.json');
 const cache: EmdCache = existsSync(CACHE_PATH)
   ? JSON.parse(readFileSync(CACHE_PATH, 'utf8'))
   : {};
+
+const COMPETITOR_CACHE_PATH = join(process.cwd(), 'scripts/emd-competitor-check-cache.json');
+const competitorCache: CompetitorCheckCache = existsSync(COMPETITOR_CACHE_PATH)
+  ? JSON.parse(readFileSync(COMPETITOR_CACHE_PATH, 'utf8'))
+  : {};
+
+const competitorChecksByKey = new Map(
+  (competitorCache.checks ?? []).map((check) => [`${check.trade}|${check.town}`, check])
+);
 
 const combos = cache.combos ?? [];
 const hasData = Boolean(cache.fetchedAt);
@@ -233,6 +263,28 @@ function availabilityClass(value: boolean | null) {
         padding: 2rem;
         color: var(--muted);
       }
+      details.competitor-details { margin-top: 0.4rem; }
+      details.competitor-details summary {
+        cursor: pointer;
+        color: var(--purple);
+        font-size: 0.72rem;
+        font-weight: 800;
+        list-style: none;
+      }
+      details.competitor-details summary::-webkit-details-marker { display: none; }
+      .competitor-summary { margin: 0.4rem 0; font-size: 0.72rem; }
+      .competitor-table { width: 100%; border-collapse: collapse; margin-top: 0.3rem; }
+      .competitor-table th, .competitor-table td {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.72rem;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+      }
+      .pill.soft { color: var(--green); border-color: rgba(45, 215, 124, 0.35); }
+      .pill.moderate { color: var(--amber); border-color: rgba(246, 200, 95, 0.35); }
+      .pill.defended { color: var(--red); border-color: rgba(255, 92, 122, 0.35); }
+      .pill.business { color: var(--green); border-color: rgba(45, 215, 124, 0.35); }
+      .pill.directory { color: var(--muted); }
       code { color: var(--text); }
       @media (max-width: 960px) {
         .topbar { align-items: flex-start; padding: 0.75rem; }
@@ -354,26 +406,54 @@ function availabilityClass(value: boolean | null) {
                   </tr>
                 </thead>
                 <tbody>
-                  {combos.map((row) => (
-                    <tr
-                      class={row.available === true && row.volume !== null && row.volume > 0 ? 'opportunity' : ''}
-                      data-search={`${row.trade} ${row.town.replace(/-/g, ' ')} ${row.domain}`.toLowerCase()}
-                      data-available={row.available === true ? 'true' : row.available === false ? 'false' : 'unknown'}
-                      data-volume={row.volume ?? ''}
-                      data-cpc={row.cpc ?? ''}
-                      data-difficulty={row.difficulty ?? ''}
-                      data-avg-job-cost={row.avgJobCost ?? ''}
-                    >
-                      <td data-label="Domain"><span class="domain">{row.domain}</span></td>
-                      <td data-label="Trade">{row.trade}</td>
-                      <td data-label="Town">{row.town.replace(/-/g, ' ')}</td>
-                      <td data-label="Availability"><span class={`pill ${availabilityClass(row.available)}`}>{availabilityLabel(row.available)}</span></td>
-                      <td data-label="Volume">{fmtNumber(row.volume)}</td>
-                      <td data-label="CPC">{fmtCpc(row.cpc)}</td>
-                      <td data-label="Difficulty">{fmtNumber(row.difficulty)}</td>
-                      <td data-label="Avg Job Cost">{fmtCost(row.avgJobCost)}</td>
-                    </tr>
-                  ))}
+                  {combos.map((row) => {
+                    const competitorCheck = competitorChecksByKey.get(`${row.trade}|${row.town}`) ?? null;
+                    return (
+                      <tr
+                        class={row.available === true && row.volume !== null && row.volume > 0 ? 'opportunity' : ''}
+                        data-search={`${row.trade} ${row.town.replace(/-/g, ' ')} ${row.domain}`.toLowerCase()}
+                        data-available={row.available === true ? 'true' : row.available === false ? 'false' : 'unknown'}
+                        data-volume={row.volume ?? ''}
+                        data-cpc={row.cpc ?? ''}
+                        data-difficulty={row.difficulty ?? ''}
+                        data-avg-job-cost={row.avgJobCost ?? ''}
+                      >
+                        <td data-label="Domain">
+                          <span class="domain">{row.domain}</span>
+                          {competitorCheck && competitorCheck.competitors.length > 0 && (
+                            <details class="competitor-details">
+                              <summary>Check competitors — {competitorCheck.verdict}</summary>
+                              <p class="competitor-summary muted">
+                                Directory ratio: {Math.round(competitorCheck.directoryRatio * 100)}%
+                                {' · '}
+                                Floor: {competitorCheck.floor === null ? 'No real competitors' : `${competitorCheck.floor} referring domains`}
+                              </p>
+                              <table class="competitor-table">
+                                <thead><tr><th>#</th><th>Domain</th><th>Type</th><th>Referring Domains</th></tr></thead>
+                                <tbody>
+                                  {competitorCheck.competitors.map((c) => (
+                                    <tr>
+                                      <td>{fmtNumber(c.position)}</td>
+                                      <td>{c.domain}</td>
+                                      <td><span class={`pill ${c.isDirectory ? 'directory' : 'business'}`}>{c.isDirectory ? 'Directory' : 'Business'}</span></td>
+                                      <td>{fmtNumber(c.referringDomains)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </details>
+                          )}
+                        </td>
+                        <td data-label="Trade">{row.trade}</td>
+                        <td data-label="Town">{row.town.replace(/-/g, ' ')}</td>
+                        <td data-label="Availability"><span class={`pill ${availabilityClass(row.available)}`}>{availabilityLabel(row.available)}</span></td>
+                        <td data-label="Volume">{fmtNumber(row.volume)}</td>
+                        <td data-label="CPC">{fmtCpc(row.cpc)}</td>
+                        <td data-label="Difficulty">{fmtNumber(row.difficulty)}</td>
+                        <td data-label="Avg Job Cost">{fmtCost(row.avgJobCost)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
