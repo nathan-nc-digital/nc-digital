@@ -134,42 +134,8 @@ async function fetchReferringDomains(authHeader, domain) {
   }
 }
 
-async function main() {
-  const opportunities = loadOpportunities();
-  const directoryList = loadDirectoryList();
-  const { login, password } = loadConfig();
-  const authHeader = buildAuthHeader(login, password);
-
-  console.log(`Running competitor check for ${opportunities.length} opportunity combo(s)...`);
-
-  const serpByComboKey = new Map();
-  for (const combo of opportunities) {
-    const key = `${combo.trade}|${combo.town}`;
-    const phrase = `${combo.trade} ${combo.town.replace(/-/g, ' ')}`;
-    const serp = await fetchSerp(authHeader, phrase);
-    serpByComboKey.set(key, serp);
-    await sleep(REQUEST_DELAY_MS);
-  }
-
-  const uniqueBusinessDomains = new Set();
-  for (const serp of serpByComboKey.values()) {
-    for (const result of serp) {
-      if (!isDirectoryDomain(result.domain, directoryList)) {
-        uniqueBusinessDomains.add(result.domain);
-      }
-    }
-  }
-
-  console.log(`Looking up referring domains for ${uniqueBusinessDomains.size} unique real-business domain(s)...`);
-
-  const referringDomainsByDomain = new Map();
-  for (const domain of uniqueBusinessDomains) {
-    const count = await fetchReferringDomains(authHeader, domain);
-    referringDomainsByDomain.set(domain, count);
-    await sleep(REQUEST_DELAY_MS);
-  }
-
-  const checks = opportunities.map((combo) => {
+function buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList) {
+  return opportunities.map((combo) => {
     const key = `${combo.trade}|${combo.town}`;
     const serp = serpByComboKey.get(key) ?? [];
     const competitors = serp.map((result) => {
@@ -184,22 +150,70 @@ async function main() {
     const directoryRatio = computeDirectoryRatio(competitors);
     const floor = computeFloor(competitors);
     const verdict = computeVerdict(directoryRatio, floor);
-    return {
-      trade: combo.trade,
-      town: combo.town,
-      directoryRatio,
-      floor,
-      verdict,
-      competitors,
-    };
+    return { trade: combo.trade, town: combo.town, directoryRatio, floor, verdict, competitors };
   });
+}
 
-  const cache = {
-    fetchedAt: new Date().toISOString(),
-    checks,
-  };
-
+function writeCache(checks) {
+  const cache = { fetchedAt: new Date().toISOString(), checks };
   fs.writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2), 'utf8');
+}
+
+const PROGRESS_INTERVAL = 25;
+
+async function main() {
+  const opportunities = loadOpportunities();
+  const directoryList = loadDirectoryList();
+  const { login, password } = loadConfig();
+  const authHeader = buildAuthHeader(login, password);
+
+  console.log(`Running competitor check for ${opportunities.length} opportunity combo(s)...`);
+
+  const serpByComboKey = new Map();
+  const referringDomainsByDomain = new Map();
+
+  for (let i = 0; i < opportunities.length; i++) {
+    const combo = opportunities[i];
+    const key = `${combo.trade}|${combo.town}`;
+    const phrase = `${combo.trade} ${combo.town.replace(/-/g, ' ')}`;
+    const serp = await fetchSerp(authHeader, phrase);
+    serpByComboKey.set(key, serp);
+    await sleep(REQUEST_DELAY_MS);
+    if ((i + 1) % PROGRESS_INTERVAL === 0 || i + 1 === opportunities.length) {
+      console.log(`SERP fetch: ${i + 1}/${opportunities.length}`);
+      writeCache(buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList));
+    }
+  }
+
+  const uniqueBusinessDomains = new Set();
+  for (const serp of serpByComboKey.values()) {
+    for (const result of serp) {
+      if (!isDirectoryDomain(result.domain, directoryList)) {
+        uniqueBusinessDomains.add(result.domain);
+      }
+    }
+  }
+
+  if (opportunities.length > 0 && uniqueBusinessDomains.size === 0) {
+    console.warn('No real-business competitor domains found across any opportunity\'s SERP. This usually means the SERP fetch is failing broadly (e.g. an outage or auth issue), not that every top-10 result is genuinely a directory.');
+  }
+
+  console.log(`Looking up referring domains for ${uniqueBusinessDomains.size} unique real-business domain(s)...`);
+
+  const domainList = [...uniqueBusinessDomains];
+  for (let i = 0; i < domainList.length; i++) {
+    const domain = domainList[i];
+    const count = await fetchReferringDomains(authHeader, domain);
+    referringDomainsByDomain.set(domain, count);
+    await sleep(REQUEST_DELAY_MS);
+    if ((i + 1) % PROGRESS_INTERVAL === 0 || i + 1 === domainList.length) {
+      console.log(`Backlinks lookup: ${i + 1}/${domainList.length}`);
+      writeCache(buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList));
+    }
+  }
+
+  const checks = buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList);
+  writeCache(checks);
 
   const verdictCounts = checks.reduce((acc, c) => {
     acc[c.verdict] = (acc[c.verdict] ?? 0) + 1;
