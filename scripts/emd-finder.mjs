@@ -75,7 +75,7 @@ function sleep(ms) {
 
 async function checkAvailability(domain) {
   try {
-    const res = await fetch(`https://rdap.nominet.uk/uk/domain/${domain}`);
+    const res = await fetch(`https://rdap.nominet.uk/uk/domain/${domain}`, { signal: AbortSignal.timeout(5000) });
     return interpretRdapStatus(res.status);
   } catch (err) {
     console.warn(`RDAP check failed for "${domain}": ${err.message}`);
@@ -122,7 +122,13 @@ async function main() {
     await sleep(RDAP_DELAY_MS);
   }
 
-  const overviewItems = await fetchKeywordOverview(authHeader, combos.map((c) => c.phrase));
+  let overviewItems = [];
+  try {
+    overviewItems = await fetchKeywordOverview(authHeader, combos.map((c) => c.phrase));
+  } catch (err) {
+    console.warn(`DataForSEO keyword overview failed: ${err.message}. Saving domain availability results without search volume data — re-run to pick up volume/CPC/difficulty once the issue is resolved.`);
+  }
+
   const overviewByPhrase = new Map(overviewItems.map((item) => [item.keyword.trim().toLowerCase(), item]));
 
   if (overviewItems.length > 0 && overviewItems.every((item) => item.volume === null)) {
