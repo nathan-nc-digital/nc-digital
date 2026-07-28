@@ -1,0 +1,727 @@
+---
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+interface GscRow {
+  keys?: string[];
+  query?: string;
+  page?: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+interface GscMover {
+  query: string;
+  pos: number;
+  prev: number;
+  delta: number;
+  clicks: number;
+}
+
+interface GscReport {
+  generatedAt?: string;
+  period?: {
+    startDate?: string;
+    endDate?: string;
+    previousStartDate?: string;
+    previousEndDate?: string;
+  };
+  overview?: {
+    current?: GscRow;
+    previous?: GscRow;
+    change?: {
+      clicks?: string;
+      impressions?: string;
+      ctr?: string;
+    };
+  };
+  topQueries?: GscRow[];
+  topPages?: GscRow[];
+  opportunities?: GscRow[];
+  queryPages?: GscRow[];
+  gained?: GscMover[];
+  lost?: GscMover[];
+}
+
+const REPORT_PATH = join(process.cwd(), 'scripts/gsc-report.json');
+const report: GscReport = existsSync(REPORT_PATH)
+  ? JSON.parse(readFileSync(REPORT_PATH, 'utf8'))
+  : {};
+
+const current = report.overview?.current ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+const previous = report.overview?.previous ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+const topQueries = report.topQueries ?? [];
+const topPages = report.topPages ?? [];
+const opportunities = report.opportunities ?? [];
+const queryPages = report.queryPages ?? [];
+const gained = report.gained ?? [];
+const lost = report.lost ?? [];
+const hasData = Boolean(report.generatedAt);
+
+const priorityActions = [
+  ...lost.slice(0, 6).map((row) => ({
+    type: 'Ranking drop',
+    title: row.query,
+    detail: `Position moved from ${fmtPos(row.prev)} to ${fmtPos(row.pos)}.`,
+    action: 'Check the ranking page, compare the current SERP, and add internal links from relevant pages.',
+    score: 100 - row.delta,
+    tone: 'page-two-plus',
+  })),
+  ...opportunities.slice(0, 12).map((row) => ({
+    type: issueType(row) === 'low-ctr' ? 'Low CTR' : 'Quick win',
+    title: row.query,
+    detail: `${fmtNumber(row.impressions)} impressions, ${fmtPct(row.ctr)} CTR, position ${fmtPos(row.position)}.`,
+    action: recommendedAction(row),
+    score: (row.impressions ?? 0) + (30 - (row.position ?? 30)) * 10,
+    tone: issueType(row),
+  })),
+]
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 10);
+
+function fmtDate(value?: string | null) {
+  if (!value) return 'Not refreshed yet';
+  return new Date(value).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function fmtNumber(value?: number | null) {
+  return value === null || value === undefined ? '-' : Math.round(value).toLocaleString();
+}
+
+function fmtPct(value?: number | null) {
+  if (value === null || value === undefined) return '-';
+  return `${(value * 100).toFixed(value * 100 < 1 ? 2 : 1)}%`;
+}
+
+function fmtPos(value?: number | null) {
+  if (value === null || value === undefined) return '-';
+  return value.toFixed(1);
+}
+
+function pagePath(value?: string) {
+  if (!value) return '-';
+  return value.replace('https://nc-digital.co.uk', '') || '/';
+}
+
+function queryIntent(query = '') {
+  const q = query.toLowerCase();
+  if (/\b(price|cost|cheap|affordable|quote|packages?)\b/.test(q)) return 'commercial';
+  if (/\b(near me|cardiff|newport|swansea|wales|merthyr|aberdare|bridgend|llanelli|pontypridd|caerphilly)\b/.test(q)) return 'local';
+  if (/\b(how|what|why|guide|best|compare|vs)\b/.test(q)) return 'informational';
+  return 'mixed';
+}
+
+function recommendedAction(row: GscRow) {
+  const ctr = row.ctr ?? 0;
+  const pos = row.position ?? 0;
+  const impressions = row.impressions ?? 0;
+  if (impressions >= 50 && ctr < 0.01 && pos <= 20) return 'Rewrite title/meta to make the result more clickable.';
+  if (pos >= 4 && pos <= 10) return 'Add stronger internal links and improve the matching section on the target page.';
+  if (pos > 10 && pos <= 30) return 'Expand the page around this query and add supporting FAQ copy.';
+  if (impressions >= 100 && ctr < 0.02) return 'Check search intent and make the snippet more specific.';
+  if ((row.clicks ?? 0) > 0) return 'Keep monitoring and protect the ranking with internal links.';
+  return 'Review whether this query needs a better target page.';
+}
+
+function issueType(row: GscRow) {
+  if ((row.position ?? 0) >= 4 && (row.position ?? 0) <= 20 && (row.ctr ?? 0) < 0.05) return 'quick-win';
+  if ((row.impressions ?? 0) >= 100 && (row.ctr ?? 0) < 0.01) return 'low-ctr';
+  if ((row.position ?? 0) > 20) return 'page-two-plus';
+  return 'monitor';
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GSC Insights | NC Digital Admin</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #090911;
+        --panel: #11111c;
+        --border: #25253a;
+        --text: #f7f7fb;
+        --muted: #a6a6bb;
+        --purple: #8750f7;
+        --green: #2dd77c;
+        --red: #ff5c7a;
+        --amber: #f6c85f;
+        --blue: #60a5fa;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Sora, Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+      }
+      a { color: inherit; }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        background: rgba(9, 9, 17, 0.94);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+      }
+      .brand { font-weight: 800; }
+      .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+      .nav a {
+        text-decoration: none;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.55rem 0.8rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+      .nav a.active { color: var(--text); background: var(--purple); border-color: var(--purple); }
+      main { max-width: 1400px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+      .hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
+      h1 { margin: 0 0 0.5rem; font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -0.04em; }
+      .sub { color: var(--muted); line-height: 1.6; margin: 0; max-width: 790px; }
+      .cmd {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.85rem 1rem;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+      }
+      .stat {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem;
+      }
+      button.stat {
+        width: 100%;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      button.stat:hover, button.stat:focus-visible {
+        border-color: var(--purple);
+        background: #171728;
+        outline: none;
+      }
+      .label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; }
+      .value { font-size: 1.7rem; font-weight: 900; margin-top: 0.4rem; letter-spacing: -0.03em; }
+      .delta { margin-top: 0.3rem; color: var(--muted); font-size: 0.76rem; }
+      .panel {
+        margin: 1rem 0 1.5rem;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .panel-title { font-weight: 900; }
+      .panel-note { color: var(--muted); font-size: 0.82rem; }
+      .filters {
+        display: flex;
+        gap: 0.75rem;
+        margin: 1.25rem 0;
+        flex-wrap: wrap;
+      }
+      .filters input, .filters select, .filters button {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0.75rem 0.9rem;
+        font: inherit;
+      }
+      .filters input { min-width: min(360px, 100%); flex: 1; }
+      .filters button { cursor: pointer; font-weight: 800; }
+      .filters button:hover, .filters button:focus-visible { border-color: var(--purple); outline: none; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td {
+        padding: 0.8rem 0.9rem;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+        font-size: 0.88rem;
+      }
+      tr:last-child td { border-bottom: 0; }
+      th {
+        background: #0d0d16;
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .sort-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-weight: inherit;
+        text-transform: inherit;
+        letter-spacing: inherit;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .sort-button::after { content: '↕'; color: #66667d; }
+      .sort-button[data-direction="asc"]::after { content: '↑'; color: var(--purple); }
+      .sort-button[data-direction="desc"]::after { content: '↓'; color: var(--purple); }
+      .query { font-weight: 850; color: var(--text); }
+      .url {
+        display: block;
+        color: var(--muted);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+        max-width: 440px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 0.25rem 0.55rem;
+        font-size: 0.72rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .pill.quick-win { color: var(--green); border-color: rgba(45, 215, 124, 0.35); }
+      .pill.low-ctr { color: var(--amber); border-color: rgba(246, 200, 95, 0.35); }
+      .pill.page-two-plus { color: var(--red); border-color: rgba(255, 92, 122, 0.35); }
+      .pill.local { color: var(--blue); border-color: rgba(96, 165, 250, 0.35); }
+      .pill.commercial { color: #c4b5fd; border-color: rgba(196, 181, 253, 0.35); }
+      .pill.informational { color: var(--green); border-color: rgba(45, 215, 124, 0.35); }
+      .num { font-variant-numeric: tabular-nums; font-weight: 800; }
+      .muted { color: var(--muted); }
+      .up { color: var(--green); }
+      .down { color: var(--red); }
+      .empty {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        color: var(--muted);
+      }
+      @media (max-width: 960px) {
+        .topbar { align-items: flex-start; padding: 0.75rem; }
+        .brand { display: none; }
+        .nav { width: 100%; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.35rem; }
+        .nav a { padding: 0.5rem 0.25rem; text-align: center; font-size: 0.62rem; }
+        main { padding: 1.25rem 0.75rem 3rem; }
+        .hero { display: block; }
+        h1 { font-size: 1.8rem; }
+        .sub { font-size: 0.85rem; }
+        .cmd { display: none; }
+        .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+        .stat { padding: 0.75rem; }
+        .label { font-size: 0.62rem; }
+        .value { font-size: 1.35rem; }
+        .filters { gap: 0.5rem; margin: 1rem 0; }
+        .filters input, .filters select, .filters button { width: 100%; min-width: 0; padding: 0.7rem; font-size: 0.82rem; }
+        .panel-head { display: block; }
+        table, tbody, tr, td { display: block; width: 100%; }
+        table { border: 0; background: transparent; }
+        thead { display: none; }
+        tbody { display: grid; gap: 0.6rem; padding: 0.75rem; }
+        tr {
+          display: grid;
+          gap: 0.45rem;
+          padding: 0.75rem;
+          background: #0d0d16;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+        }
+        td {
+          display: grid;
+          grid-template-columns: 5.5rem minmax(0, 1fr);
+          gap: 0.5rem;
+          align-items: start;
+          min-width: 0;
+          padding: 0.15rem 0;
+          border: 0;
+          font-size: 0.76rem;
+        }
+        td::before {
+          content: attr(data-label);
+          color: var(--muted);
+          font-size: 0.58rem;
+          font-weight: 800;
+          text-transform: uppercase;
+        }
+        td:first-child { display: block; padding: 0; }
+        td:first-child::before { display: none; }
+        .url { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">NC Digital Admin</div>
+      <nav class="nav">
+        <a href="/admin/links/">Internal Links</a>
+        <a href="/admin/backlinks/">Backlinks</a>
+        <a href="/admin/keywords/">Keywords</a>
+        <a href="/admin/keyword-research/">Keyword Research</a>
+        <a href="/admin/indexing/">Indexing</a>
+        <a href="/admin/gsc/" class="active">GSC</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>GSC Insights</h1>
+          <p class="sub">
+            Google Search Console clicks, impressions, CTR, position, query/page pairings, and suggested next actions. Refresh it whenever you want current GSC data rebuilt into the admin page.
+          </p>
+        </div>
+        <div class="cmd">node scripts/gsc-report.mjs && npm run build && npx wrangler deploy</div>
+      </section>
+
+      {!hasData ? (
+        <div class="empty">
+          No GSC JSON report found yet. Run <code>node scripts/gsc-report.mjs</code>, then <code>npm run build && npx wrangler deploy</code>.
+        </div>
+      ) : (
+        <>
+          <section class="stats">
+            <div class="stat">
+              <div class="label">Last Refresh</div>
+              <div class="value" style="font-size:1rem;">{fmtDate(report.generatedAt)}</div>
+            </div>
+            <div class="stat">
+              <div class="label">Clicks</div>
+              <div class="value">{fmtNumber(current.clicks)}</div>
+              <div class="delta">Prior: {fmtNumber(previous.clicks)} · {report.overview?.change?.clicks ?? '-'}</div>
+            </div>
+            <div class="stat">
+              <div class="label">Impressions</div>
+              <div class="value">{fmtNumber(current.impressions)}</div>
+              <div class="delta">Prior: {fmtNumber(previous.impressions)} · {report.overview?.change?.impressions ?? '-'}</div>
+            </div>
+            <div class="stat">
+              <div class="label">Avg CTR / Position</div>
+              <div class="value">{fmtPct(current.ctr)} / {fmtPos(current.position)}</div>
+              <div class="delta">{report.period?.startDate} to {report.period?.endDate}</div>
+            </div>
+          </section>
+
+          <section class="stats">
+            <button class="stat" type="button" data-jump="opportunities">
+              <div class="label">Quick Wins</div>
+              <div class="value">{opportunities.length}</div>
+            </button>
+            <button class="stat" type="button" data-jump="lost">
+              <div class="label">Position Losers</div>
+              <div class="value">{lost.length}</div>
+            </button>
+            <button class="stat" type="button" data-jump="gained">
+              <div class="label">Position Gainers</div>
+              <div class="value">{gained.length}</div>
+            </button>
+            <button class="stat" type="button" data-jump="query-pages">
+              <div class="label">Query/Page Pairs</div>
+              <div class="value">{queryPages.length}</div>
+            </button>
+          </section>
+
+          <section class="panel" id="priority-actions">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Priority Actions</div>
+                <div class="panel-note">A short list of the clearest things to work on next from GSC data.</div>
+              </div>
+              <span class="pill quick-win">{priorityActions.length} actions</span>
+            </div>
+            <table>
+              <thead><tr><th>Issue</th><th>Query</th><th>Why it matters</th><th>Next move</th></tr></thead>
+              <tbody>
+                {priorityActions.map((item) => (
+                  <tr>
+                    <td data-label="Issue"><span class={`pill ${item.tone}`}>{item.type}</span></td>
+                    <td data-label="Query"><span class="query">{item.title}</span></td>
+                    <td data-label="Why"><span class="muted">{item.detail}</span></td>
+                    <td data-label="Next move"><span class="muted">{item.action}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <div class="filters">
+            <input id="search" type="search" placeholder="Search query, page, intent, or action" />
+            <select id="issue">
+              <option value="">All issue types</option>
+              <option value="quick-win">Quick wins</option>
+              <option value="low-ctr">High impressions / low CTR</option>
+              <option value="page-two-plus">Page 2+</option>
+              <option value="monitor">Monitor</option>
+            </select>
+            <select id="intent">
+              <option value="">All intents</option>
+              <option value="local">Local</option>
+              <option value="commercial">Commercial</option>
+              <option value="informational">Informational</option>
+              <option value="mixed">Mixed</option>
+            </select>
+            <button id="reset-filters" type="button">Reset filters</button>
+          </div>
+
+          <section class="panel" id="opportunities">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Suggested Next Actions</div>
+                <div class="panel-note">Queries with impressions but weak click-through or positions close enough to push.</div>
+              </div>
+              <span class="pill quick-win">{opportunities.length} opportunities</span>
+            </div>
+            <table id="insights">
+              <thead>
+                <tr>
+                  <th>Query</th>
+                  <th><button class="sort-button" type="button" data-sort="clicks" data-type="number">Clicks</button></th>
+                  <th><button class="sort-button" type="button" data-sort="impressions" data-type="number">Impressions</button></th>
+                  <th><button class="sort-button" type="button" data-sort="ctr" data-type="number">CTR</button></th>
+                  <th><button class="sort-button" type="button" data-sort="position" data-type="number">Position</button></th>
+                  <th>Intent</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {opportunities.map((row) => (
+                  <tr
+                    data-search={`${row.query} ${queryIntent(row.query)} ${recommendedAction(row)}`.toLowerCase()}
+                    data-issue={issueType(row)}
+                    data-intent={queryIntent(row.query)}
+                    data-clicks={row.clicks}
+                    data-impressions={row.impressions}
+                    data-ctr={row.ctr}
+                    data-position={row.position}
+                  >
+                    <td data-label="Query"><span class="query">{row.query}</span><span class={`pill ${issueType(row)}`}>{issueType(row).replaceAll('-', ' ')}</span></td>
+                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
+                    <td data-label="Impressions"><span class="num">{fmtNumber(row.impressions)}</span></td>
+                    <td data-label="CTR"><span class="num">{fmtPct(row.ctr)}</span></td>
+                    <td data-label="Position"><span class="num">{fmtPos(row.position)}</span></td>
+                    <td data-label="Intent"><span class={`pill ${queryIntent(row.query)}`}>{queryIntent(row.query)}</span></td>
+                    <td data-label="Action"><span class="muted">{recommendedAction(row)}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <section class="panel" id="query-pages">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Queries By Ranking Page</div>
+                <div class="panel-note">Shows which page Google is pairing with each query so you can spot mismatches or pages that need strengthening.</div>
+              </div>
+              <span class="pill">{queryPages.length} rows</span>
+            </div>
+            <table>
+              <thead>
+                <tr><th>Query / Page</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                {queryPages.map((row) => (
+                  <tr>
+                    <td data-label="Query"><span class="query">{row.query}</span><a class="url" href={row.page} target="_blank" rel="noopener">{pagePath(row.page)}</a></td>
+                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
+                    <td data-label="Impressions"><span class="num">{fmtNumber(row.impressions)}</span></td>
+                    <td data-label="CTR"><span class="num">{fmtPct(row.ctr)}</span></td>
+                    <td data-label="Position"><span class="num">{fmtPos(row.position)}</span></td>
+                    <td data-label="Action"><span class="muted">{recommendedAction(row)}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Top Queries</div>
+                <div class="panel-note">Queries with the most clicks in the last 28 days.</div>
+              </div>
+            </div>
+            <table>
+              <thead><tr><th>Query</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th></tr></thead>
+              <tbody>
+                {topQueries.map((row) => (
+                  <tr>
+                    <td data-label="Query"><span class="query">{row.query}</span></td>
+                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
+                    <td data-label="Impressions"><span class="num">{fmtNumber(row.impressions)}</span></td>
+                    <td data-label="CTR"><span class="num">{fmtPct(row.ctr)}</span></td>
+                    <td data-label="Position"><span class="num">{fmtPos(row.position)}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Top Pages</div>
+                <div class="panel-note">Pages with the most clicks in the last 28 days.</div>
+              </div>
+            </div>
+            <table>
+              <thead><tr><th>Page</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th></tr></thead>
+              <tbody>
+                {topPages.map((row) => (
+                  <tr>
+                    <td data-label="Page"><a class="query" href={row.page || row.query} target="_blank" rel="noopener">{pagePath(row.page || row.query)}</a></td>
+                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
+                    <td data-label="Impressions"><span class="num">{fmtNumber(row.impressions)}</span></td>
+                    <td data-label="CTR"><span class="num">{fmtPct(row.ctr)}</span></td>
+                    <td data-label="Position"><span class="num">{fmtPos(row.position)}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <section class="panel" id="lost">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Position Losers</div>
+                <div class="panel-note">Queries that fell over the last 7 days compared with the prior 7 days.</div>
+              </div>
+            </div>
+            <table>
+              <thead><tr><th>Query</th><th>Current</th><th>Previous</th><th>Change</th><th>Clicks</th><th>Action</th></tr></thead>
+              <tbody>
+                {lost.map((row) => (
+                  <tr>
+                    <td data-label="Query"><span class="query">{row.query}</span></td>
+                    <td data-label="Current"><span class="num">{fmtPos(row.pos)}</span></td>
+                    <td data-label="Previous"><span class="num">{fmtPos(row.prev)}</span></td>
+                    <td data-label="Change"><span class="down">{row.delta.toFixed(1)}</span></td>
+                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
+                    <td data-label="Action"><span class="muted">Check the ranking page, add internal links, and compare the page title against current SERP intent.</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+
+          <section class="panel" id="gained">
+            <div class="panel-head">
+              <div>
+                <div class="panel-title">Position Gainers</div>
+                <div class="panel-note">Queries that improved over the last 7 days compared with the prior 7 days.</div>
+              </div>
+            </div>
+            <table>
+              <thead><tr><th>Query</th><th>Current</th><th>Previous</th><th>Change</th><th>Clicks</th><th>Action</th></tr></thead>
+              <tbody>
+                {gained.map((row) => (
+                  <tr>
+                    <td data-label="Query"><span class="query">{row.query}</span></td>
+                    <td data-label="Current"><span class="num">{fmtPos(row.pos)}</span></td>
+                    <td data-label="Previous"><span class="num">{fmtPos(row.prev)}</span></td>
+                    <td data-label="Change"><span class="up">+{row.delta.toFixed(1)}</span></td>
+                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
+                    <td data-label="Action"><span class="muted">Protect the gain with relevant internal links and avoid changing the page intent.</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </>
+      )}
+    </main>
+
+    <script>
+      const search = document.getElementById('search');
+      const issue = document.getElementById('issue');
+      const intent = document.getElementById('intent');
+      const resetFilters = document.getElementById('reset-filters');
+      const insightRows = Array.from(document.querySelectorAll('#insights tbody tr'));
+      const tbody = document.querySelector('#insights tbody');
+      const sortButtons = Array.from(document.querySelectorAll('.sort-button'));
+
+      function applyFilters() {
+        const query = search?.value.trim().toLowerCase() || '';
+        const issueValue = issue?.value || '';
+        const intentValue = intent?.value || '';
+        for (const row of insightRows) {
+          const matchesQuery = !query || row.dataset.search.includes(query);
+          const matchesIssue = !issueValue || row.dataset.issue === issueValue;
+          const matchesIntent = !intentValue || row.dataset.intent === intentValue;
+          row.style.display = matchesQuery && matchesIssue && matchesIntent ? '' : 'none';
+        }
+      }
+
+      search?.addEventListener('input', applyFilters);
+      issue?.addEventListener('change', applyFilters);
+      intent?.addEventListener('change', applyFilters);
+      resetFilters?.addEventListener('click', () => {
+        search.value = '';
+        issue.value = '';
+        intent.value = '';
+        for (const button of sortButtons) delete button.dataset.direction;
+        applyFilters();
+      });
+
+      for (const button of document.querySelectorAll('[data-jump]')) {
+        button.addEventListener('click', () => {
+          document.getElementById(button.dataset.jump)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+
+      for (const button of sortButtons) {
+        button.addEventListener('click', () => {
+          const key = button.dataset.sort;
+          const type = button.dataset.type;
+          const direction = button.dataset.direction === 'asc' ? 'desc' : 'asc';
+          for (const other of sortButtons) delete other.dataset.direction;
+          button.dataset.direction = direction;
+          insightRows.sort((a, b) => {
+            const aRaw = a.dataset[key] ?? '';
+            const bRaw = b.dataset[key] ?? '';
+            const comparison = type === 'number'
+              ? Number(aRaw) - Number(bRaw)
+              : aRaw.localeCompare(bRaw);
+            return direction === 'asc' ? comparison : -comparison;
+          });
+          for (const row of insightRows) tbody?.appendChild(row);
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,198 @@
+---
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+interface IndexedPage {
+  url: string;
+  status: 'indexed' | 'not-indexed' | 'unknown';
+  verdict?: string;
+  coverageState?: string;
+  lastCrawlTime?: string | null;
+  googleCanonical?: string | null;
+  userCanonical?: string | null;
+  pageFetchState?: string | null;
+}
+
+interface IndexCache {
+  fetchedAt?: string;
+  pages?: IndexedPage[];
+}
+
+const cachePath = join(process.cwd(), 'scripts/gsc-indexing-cache.json');
+const cache: IndexCache = existsSync(cachePath)
+  ? JSON.parse(readFileSync(cachePath, 'utf8'))
+  : { pages: [] };
+const pages = cache.pages ?? [];
+const indexed = pages.filter((page) => page.status === 'indexed').length;
+const notIndexed = pages.filter((page) => page.status === 'not-indexed').length;
+const unknown = pages.filter((page) => page.status === 'unknown').length;
+
+function fmtDate(value?: string | null) {
+  if (!value) return '-';
+  return new Date(value).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Google Indexing | NC Digital Admin</title>
+    <style>
+      :root { color-scheme:dark; --bg:#090911; --panel:#11111c; --border:#25253a; --text:#f7f7fb; --muted:#a6a6bb; --purple:#8750f7; --green:#2dd77c; --red:#ff5c7a; --amber:#f6c85f; }
+      * { box-sizing:border-box; }
+      body { margin:0; background:var(--bg); color:var(--text); font-family:Sora,Inter,system-ui,sans-serif; }
+      a { color:inherit; }
+      .topbar { position:sticky; top:0; z-index:10; display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1rem 1.5rem; background:rgba(9,9,17,.94); border-bottom:1px solid var(--border); }
+      .brand { font-weight:800; }
+      .nav { display:flex; gap:.5rem; flex-wrap:wrap; }
+      .nav a { text-decoration:none; color:var(--muted); border:1px solid var(--border); border-radius:8px; padding:.55rem .8rem; font-size:.82rem; font-weight:700; }
+      .nav a.active { color:var(--text); background:var(--purple); border-color:var(--purple); }
+      main { max-width:1320px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+      h1 { margin:0 0 .5rem; font-size:clamp(2rem,4vw,3.4rem); }
+      .sub { color:var(--muted); line-height:1.6; margin:0; }
+      .cmd { display:inline-block; margin-top:1rem; padding:.8rem 1rem; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--muted); font-family:ui-monospace,monospace; font-size:.8rem; }
+      .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1rem; margin:1.5rem 0; }
+      .stat { width:100%; padding:1rem; background:var(--panel); border:1px solid var(--border); border-radius:8px; color:inherit; text-align:left; font:inherit; }
+      button.stat { cursor:pointer; }
+      button.stat:hover { border-color:var(--purple); }
+      .label { color:var(--muted); font-size:.75rem; text-transform:uppercase; font-weight:800; }
+      .value { margin-top:.4rem; font-size:1.7rem; font-weight:900; }
+      .filters { display:flex; gap:.75rem; margin:1.25rem 0; flex-wrap:wrap; }
+      .filters input,.filters select { background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:.75rem .9rem; font:inherit; }
+      .filters input { flex:1; min-width:min(360px,100%); }
+      table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--border); }
+      th,td { padding:.8rem .9rem; border-bottom:1px solid var(--border); text-align:left; font-size:.84rem; vertical-align:top; }
+      th { color:var(--muted); background:#0d0d16; font-size:.72rem; text-transform:uppercase; }
+      .url { display:block; max-width:420px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .pill { display:inline-flex; border:1px solid var(--border); border-radius:999px; padding:.25rem .55rem; font-size:.7rem; font-weight:800; white-space:nowrap; }
+      .indexed { color:var(--green); }
+      .not-indexed { color:var(--red); }
+      .unknown { color:var(--amber); }
+      .muted { color:var(--muted); }
+      @media(max-width:900px){
+        .topbar { align-items:flex-start; padding:.75rem; }
+        .brand { display:none; }
+        .nav { width:100%; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.35rem; }
+        .nav a { padding:.5rem .25rem; text-align:center; font-size:.68rem; }
+        main { padding:1.25rem .75rem 3rem; }
+        h1 { font-size:1.8rem; }
+        .sub { font-size:.85rem; }
+        .cmd { display:none; }
+        .stats { grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem; margin:1rem 0; }
+        .stat { padding:.75rem; }
+        .label { font-size:.62rem; }
+        .value { font-size:1.35rem; }
+        .filters { position:sticky; top:3.7rem; z-index:8; gap:.5rem; margin:1rem 0; padding:.5rem 0; background:var(--bg); }
+        .filters input,.filters select { width:100%; min-width:0; padding:.7rem; font-size:.82rem; }
+        table,tbody,tr,td { display:block; width:100%; }
+        table { border:0; background:transparent; }
+        thead { display:none; }
+        tbody { display:grid; gap:.55rem; }
+        tr {
+          display:grid;
+          grid-template-columns:minmax(0,1fr) auto;
+          gap:.5rem .75rem;
+          padding:.75rem;
+          background:var(--panel);
+          border:1px solid var(--border);
+          border-radius:8px;
+        }
+        td {
+          display:grid;
+          grid-template-columns:5.5rem minmax(0,1fr);
+          gap:.5rem;
+          align-items:start;
+          min-width:0;
+          padding:.15rem 0;
+          border:0;
+          font-size:.76rem;
+        }
+        td::before {
+          content:attr(data-label);
+          color:var(--muted);
+          font-size:.58rem;
+          font-weight:800;
+          text-transform:uppercase;
+        }
+        td:first-child { display:block; grid-column:1; padding:0; }
+        td:first-child::before { display:none; }
+        td:nth-child(2) { display:block; grid-column:2; grid-row:1; padding:0; }
+        td:nth-child(2)::before { display:none; }
+        td:nth-child(n+3) { grid-column:1 / -1; }
+        .url { max-width:100%; font-size:.78rem; }
+        td:first-child .url { color:var(--text); font-weight:800; }
+        .pill { padding:.2rem .45rem; font-size:.62rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">NC Digital Admin</div>
+      <nav class="nav">
+        <a href="/admin/links/">Internal Links</a>
+        <a href="/admin/backlinks/">Backlinks</a>
+        <a href="/admin/keywords/">Keywords</a>
+        <a href="/admin/keyword-research/">Keyword Research</a>
+        <a href="/admin/indexing/" class="active">Indexing</a>
+        <a href="/admin/gsc/">GSC</a>
+      </nav>
+    </header>
+    <main>
+      <h1>Google Indexing</h1>
+      <p class="sub">Google Search Console URL Inspection results for every URL in the sitemap.</p>
+      <div class="cmd">npm run build && npm run gsc:indexing && npm run build && npx wrangler deploy</div>
+
+      <section class="stats">
+        <div class="stat"><div class="label">Last Refresh</div><div class="value" style="font-size:1rem">{fmtDate(cache.fetchedAt)}</div></div>
+        <button class="stat" data-status-filter="indexed"><div class="label">Indexed</div><div class="value">{indexed}</div></button>
+        <button class="stat" data-status-filter="not-indexed"><div class="label">Not Indexed</div><div class="value">{notIndexed}</div></button>
+        <button class="stat" data-status-filter="unknown"><div class="label">Unknown / Error</div><div class="value">{unknown}</div></button>
+      </section>
+
+      <div class="filters">
+        <input id="search" type="search" placeholder="Search page URL or coverage reason" />
+        <select id="status">
+          <option value="">All index statuses</option>
+          <option value="indexed">Indexed</option>
+          <option value="not-indexed">Not indexed</option>
+          <option value="unknown">Unknown / error</option>
+        </select>
+      </div>
+
+      <table id="pages">
+        <thead><tr><th>Page</th><th>Status</th><th>Google Coverage Reason</th><th>Last Crawl</th><th>Google Canonical</th><th>Fetch</th></tr></thead>
+        <tbody>
+          {pages.map((page) => (
+            <tr data-status={page.status} data-search={`${page.url} ${page.coverageState ?? ''}`.toLowerCase()}>
+              <td data-label="Page"><a class="url" href={page.url} target="_blank" rel="noopener">{page.url.replace('https://nc-digital.co.uk', '') || '/'}</a></td>
+              <td data-label="Status"><span class={`pill ${page.status}`}>{page.status === 'not-indexed' ? 'Not indexed' : page.status}</span></td>
+              <td data-label="Coverage">{page.coverageState ?? '-'}</td>
+              <td data-label="Last crawl" class="muted">{fmtDate(page.lastCrawlTime)}</td>
+              <td data-label="Canonical">{page.googleCanonical ? <a class="url" href={page.googleCanonical} target="_blank" rel="noopener">{page.googleCanonical.replace('https://nc-digital.co.uk', '') || '/'}</a> : '-'}</td>
+              <td data-label="Fetch">{page.pageFetchState ?? '-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </main>
+    <script>
+      const search = document.getElementById('search');
+      const status = document.getElementById('status');
+      const rows = Array.from(document.querySelectorAll('#pages tbody tr'));
+      function applyFilters() {
+        const query = search.value.trim().toLowerCase();
+        const selected = status.value;
+        for (const row of rows) row.style.display = (!query || row.dataset.search.includes(query)) && (!selected || row.dataset.status === selected) ? '' : 'none';
+      }
+      search?.addEventListener('input', applyFilters);
+      status?.addEventListener('change', applyFilters);
+      for (const stat of document.querySelectorAll('[data-status-filter]')) stat.addEventListener('click', () => {
+        status.value = stat.dataset.statusFilter;
+        applyFilters();
+        document.getElementById('pages')?.scrollIntoView({ behavior:'smooth', block:'start' });
+      });
+    </script>
+  </body>
+</html>

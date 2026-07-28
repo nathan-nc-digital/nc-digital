@@ -1,0 +1,302 @@
+---
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+
+const CACHE_PATH = join(process.cwd(), 'scripts/ahrefs-cache.json');
+
+let cache: any = null;
+let cacheError: string | null = null;
+
+if (existsSync(CACHE_PATH)) {
+  try { cache = JSON.parse(readFileSync(CACHE_PATH, 'utf-8')); }
+  catch (e: any) { cacheError = 'Cache file is invalid JSON. Run: node scripts/ahrefs-fetch.mjs'; }
+} else {
+  cacheError = 'No cache found. Run: node scripts/ahrefs-fetch.mjs';
+}
+
+const dr        = cache?.domainRating?.domain_rating ?? 0;
+const rank      = cache?.domainRating?.ahrefs_rank ?? 0;
+const summary   = cache?.summary ?? {};
+const refdomains: any[] = cache?.refdomains ?? [];
+const backlinks: any[]  = cache?.backlinks  ?? [];
+const topPages: any[]   = cache?.topPages   ?? [];
+
+const fetchedAt = cache?.fetchedAt
+  ? new Date(cache.fetchedAt).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })
+  : null;
+
+function shortUrl(url: string, max = 60): string {
+  return url.replace(/^https?:\/\/(www\.)?/, '').slice(0, max) + (url.length > max + 15 ? '…' : '');
+}
+
+function fmtDate(iso: string): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function fmtNum(n: number): string {
+  return n ? n.toLocaleString() : '0';
+}
+
+const dofollowCount  = refdomains.filter(r => r.dofollow_links > 0).length;
+const spamCount      = refdomains.filter(r => r.is_spam).length;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Backlinks — NC Digital Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d14; color: #e2e8f0; font-size: 15px; line-height: 1.6; }
+
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid #1e1e30; background: #0d0d14; position: sticky; top: 0; z-index: 50; }
+    .topbar h1 { font-size: 1rem; font-weight: 700; color: #f8fafc; letter-spacing: -0.02em; }
+    .topbar-right { display: flex; align-items: center; gap: 1rem; }
+    .topbar a { color: #a78bfa; text-decoration: none; font-size: 0.8125rem; }
+    .topbar a:hover { text-decoration: underline; }
+    .build-note { font-size: 0.75rem; color: #94a3b8; }
+
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid #1e1e30; }
+    .stat { background: #13131f; border: 1px solid #1e1e30; border-radius: 8px; padding: 0.875rem 1.25rem; }
+    .stat .val { font-size: 1.625rem; font-weight: 700; color: #f8fafc; line-height: 1; }
+    .stat .lbl { font-size: 0.75rem; color: #94a3b8; margin-top: 0.3rem; }
+    .stat.purple .val { color: #c4b5fd; }
+    .stat.green  .val { color: #34d399; }
+    .stat.warn   .val { color: #fbbf24; }
+
+    .section { padding: 1.5rem; border-bottom: 1px solid #1e1e30; }
+    .section-title { font-size: 0.8125rem; font-weight: 700; color: #f8fafc; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .section-count { font-size: 0.75rem; color: #94a3b8; font-weight: 400; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 0.75rem 0.875rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #1e1e30; white-space: nowrap; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: #cbd5e1; }
+    td { padding: 0.75rem 0.875rem; border-bottom: 1px solid #12121c; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #13131f; }
+
+    .domain-cell { font-family: 'SF Mono', 'Fira Code', Consolas, monospace; font-size: 0.9375rem; color: #f1f5f9; font-weight: 500; }
+    .url-cell { font-family: 'SF Mono', 'Fira Code', Consolas, monospace; font-size: 0.8125rem; color: #818cf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+    .anchor-cell { font-size: 0.9375rem; color: #e2e8f0; font-style: italic; }
+    .dr-badge { display: inline-block; padding: 0.125rem 0.4rem; border-radius: 4px; font-size: 0.6875rem; font-weight: 700; }
+    .num { color: #cbd5e1; font-variant-numeric: tabular-nums; }
+    .dofollow  { color: #34d399; font-size: 0.6875rem; font-weight: 600; }
+    .nofollow  { color: #94a3b8; font-size: 0.6875rem; }
+    .spam-tag  { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: #f87171; background: #ef444415; border: 1px solid #ef444430; border-radius: 3px; padding: 0.1rem 0.3rem; margin-left: 0.375rem; }
+    .date-cell { color: #cbd5e1; font-size: 0.875rem; white-space: nowrap; }
+    .traffic-cell { color: #cbd5e1; font-size: 0.875rem; }
+
+    .error-box { margin: 2rem 1.5rem; padding: 1.25rem 1.5rem; background: #1a0f0f; border: 1px solid #7f1d1d; border-radius: 8px; color: #fca5a5; font-family: monospace; }
+    .refresh-note { margin: 0 1.5rem 1.5rem; padding: 0.875rem 1.25rem; background: #0f1623; border: 1px solid #1e3a5f; border-radius: 8px; font-size: 0.8125rem; color: #93c5fd; }
+    .refresh-note code { background: #1e3a5f; padding: 0.1rem 0.375rem; border-radius: 4px; font-family: monospace; }
+
+    @media (max-width: 768px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Backlinks</h1>
+  <div class="topbar-right">
+    {fetchedAt && <span class="build-note">Data from {fetchedAt}</span>}
+    <a href="/admin/links/">Internal Links →</a>
+    <a href="/admin/keywords/">Keywords →</a>
+    <a href="/admin/keyword-research/">Keyword Research →</a>
+    <a href="/admin/indexing/">Indexing →</a>
+    <a href="/admin/gsc/">GSC →</a>
+    <a href="/">← Back to site</a>
+  </div>
+</div>
+
+{cacheError ? (
+  <div class="error-box">⚠ {cacheError}</div>
+) : (
+  <>
+    <div class="stats">
+      <div class="stat purple">
+        <div class="val">{dr}</div>
+        <div class="lbl">Domain Rating</div>
+      </div>
+      <div class="stat">
+        <div class="val">{fmtNum(summary.refdomains)}</div>
+        <div class="lbl">Referring Domains</div>
+      </div>
+      <div class="stat green">
+        <div class="val">{fmtNum(summary.dofollow)}</div>
+        <div class="lbl">Dofollow Backlinks</div>
+      </div>
+      <div class="stat">
+        <div class="val">{fmtNum(summary.totalBacklinks)}</div>
+        <div class="lbl">Total Backlinks</div>
+      </div>
+      <div class={`stat ${spamCount > 0 ? 'warn' : ''}`}>
+        <div class="val">{spamCount}</div>
+        <div class="lbl">Spam Domains Flagged</div>
+      </div>
+    </div>
+
+    <div class="refresh-note">
+      To refresh: run <code>node scripts/ahrefs-fetch.mjs</code> then <code>npm run build &amp;&amp; npx wrangler deploy</code>
+    </div>
+
+    <!-- Top Linked Pages -->
+    <div class="section">
+      <div class="section-title">
+        Top Pages by Backlinks
+        <span class="section-count">{topPages.length} pages</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Page</th>
+              <th>Ref Domains</th>
+              <th>Dofollow</th>
+              <th>Total Links</th>
+              <th>URL Rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            {topPages.map(p => (
+              <tr>
+                <td class="url-cell" title={p.url_to_plain}>{p.url_to_plain.replace('https://nc-digital.co.uk', '') || '/'}</td>
+                <td><span class="num">{p.refdomains_target}</span></td>
+                <td><span class="num">{fmtNum(p.dofollow_to_target)}</span></td>
+                <td><span class="num">{fmtNum(p.links_to_target)}</span></td>
+                <td>
+                  <span class="dr-badge" style={`background:${p.url_rating_target > 30 ? '#7c3aed22' : '#1e1e30'};color:${p.url_rating_target > 30 ? '#a78bfa' : '#94a3b8'}`}>
+                    UR {p.url_rating_target}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Referring Domains -->
+    <div class="section">
+      <div class="section-title">
+        Referring Domains
+        <span class="section-count">{refdomains.length} domains · {dofollowCount} with dofollow</span>
+      </div>
+      <div class="table-wrap">
+        <table id="rdTable">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th class="sortable" data-col="dr">DR ↕</th>
+              <th class="sortable" data-col="links">Links ↕</th>
+              <th>Dofollow</th>
+              <th class="sortable" data-col="traffic">Traffic ↕</th>
+              <th>First Seen</th>
+            </tr>
+          </thead>
+          <tbody id="rdBody">
+            {refdomains.map(r => (
+              <tr data-dr={r.domain_rating} data-links={r.links_to_target} data-traffic={r.traffic_domain}>
+                <td>
+                  <span class="domain-cell">{r.domain}</span>
+                  {r.is_spam && <span class="spam-tag">spam</span>}
+                </td>
+                <td>
+                  <span class="dr-badge" style={`background:${r.domain_rating >= 60 ? '#7c3aed22' : r.domain_rating >= 30 ? '#2563eb22' : '#1e1e30'};color:${r.domain_rating >= 60 ? '#a78bfa' : r.domain_rating >= 30 ? '#93c5fd' : '#94a3b8'}`}>
+                    {r.domain_rating}
+                  </span>
+                </td>
+                <td class="num">{r.links_to_target}</td>
+                <td>
+                  {r.dofollow_links > 0
+                    ? <span class="dofollow">✓ {r.dofollow_links}</span>
+                    : <span class="nofollow">nofollow</span>}
+                </td>
+                <td class="traffic-cell">{r.traffic_domain ? fmtNum(r.traffic_domain) : '—'}</td>
+                <td class="date-cell">{fmtDate(r.first_seen)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Backlinks -->
+    <div class="section">
+      <div class="section-title">
+        Recent Backlinks
+        <span class="section-count">last {backlinks.length} crawled</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Anchor Text</th>
+              <th>From</th>
+              <th>To (your page)</th>
+              <th>DR</th>
+              <th>Type</th>
+              <th>First Seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            {backlinks.map(b => (
+              <tr>
+                <td class="anchor-cell">"{b.anchor || '(no anchor)'}"</td>
+                <td class="url-cell" title={b.url_from}>{shortUrl(b.url_from)}</td>
+                <td class="url-cell" title={b.url_to}>{b.url_to.replace('https://nc-digital.co.uk', '') || '/'}</td>
+                <td>
+                  <span class="dr-badge" style={`background:${b.domain_rating_source >= 60 ? '#7c3aed22' : b.domain_rating_source >= 30 ? '#2563eb22' : '#1e1e30'};color:${b.domain_rating_source >= 60 ? '#a78bfa' : b.domain_rating_source >= 30 ? '#93c5fd' : '#94a3b8'}`}>
+                    {b.domain_rating_source}
+                  </span>
+                </td>
+                <td>
+                  {b.is_dofollow
+                    ? <span class="dofollow">dofollow</span>
+                    : <span class="nofollow">nofollow</span>}
+                </td>
+                <td class="date-cell">{fmtDate(b.first_seen)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </>
+)}
+
+<script is:inline>
+  // Sort referring domains table
+  const rdBody = document.getElementById('rdBody');
+  if (rdBody) {
+    const colSortState = {};
+    document.querySelectorAll('#rdTable th.sortable').forEach(th => {
+      th.dataset.label = th.textContent.trim().replace(' ↕','');
+      th.textContent = th.dataset.label + ' ↕';
+      th.addEventListener('click', () => {
+        const col  = th.dataset.col;
+        const next = colSortState[col] === 'asc' ? 'desc' : 'asc';
+        colSortState[col] = next;
+        const rows = Array.from(rdBody.querySelectorAll('tr'));
+        rows.sort((a, b) => {
+          const av = parseFloat(a.dataset[col] || '0');
+          const bv = parseFloat(b.dataset[col] || '0');
+          return next === 'asc' ? av - bv : bv - av;
+        });
+        rows.forEach(r => rdBody.appendChild(r));
+        document.querySelectorAll('#rdTable th.sortable').forEach(t => { t.textContent = t.dataset.label + ' ↕'; });
+        th.textContent = th.dataset.label + (next === 'asc' ? ' ↑' : ' ↓');
+      });
+    });
+  }
+</script>
+
+</body>
+</html>

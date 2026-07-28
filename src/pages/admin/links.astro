@@ -1,0 +1,992 @@
+---
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { join, sep } from 'node:path';
+import { BLOG_CATEGORY_META } from '../../data/blogCategories';
+
+// ── Types ──────────────────────────────────────────────────────────────────
+type PageType = 'service' | 'location' | 'blog' | 'portfolio' | 'page';
+interface LinkRef { url: string; anchor: string; }
+interface PageData {
+  url: string; title: string; type: PageType; category?: string; location?: string; locations?: string[]; town?: string;
+  inbound: LinkRef[]; outbound: LinkRef[]; inSitewide: boolean; isPillar?: boolean;
+}
+
+const PORTFOLIO_LOCATION_META: Record<string, { label: string; color: string }> = {
+  'merthyr-tydfil': { label: 'Merthyr Tydfil', color: '#0891b2' },
+  'caerphilly':     { label: 'Caerphilly',     color: '#7c3aed' },
+};
+
+const BLOG_LOCATION_META: Record<string, { label: string; color: string }> = {
+  'south-wales':    { label: 'South Wales',    color: '#7c3aed' },
+  'merthyr-tydfil': { label: 'Merthyr Tydfil', color: '#0891b2' },
+  'cardiff':        { label: 'Cardiff',        color: '#2563eb' },
+  'swansea':        { label: 'Swansea',        color: '#0d9488' },
+  'newport':        { label: 'Newport',        color: '#d97706' },
+  'bridgend':       { label: 'Bridgend',       color: '#9333ea' },
+  'pontypridd':     { label: 'Pontypridd',     color: '#db2777' },
+  'caerphilly':     { label: 'Caerphilly',     color: '#059669' },
+  'aberdare':       { label: 'Aberdare',       color: '#dc2626' },
+  'rhondda':        { label: 'Rhondda',        color: '#be185d' },
+  'barry':          { label: 'Barry',          color: '#0891b2' },
+  'neath':          { label: 'Neath',          color: '#b45309' },
+  'port-talbot':    { label: 'Port Talbot',    color: '#065f46' },
+  'cwmbran':        { label: 'Cwmbran',        color: '#1d4ed8' },
+  'llanelli':       { label: 'Llanelli',       color: '#9d174d' },
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const ROOT = process.cwd();
+const unix = (p: string) => p.split(sep).join('/');
+
+function norm(url: string): string {
+  url = url.split('?')[0].split('#')[0];
+  if (!url.startsWith('/')) return '';
+  if (url === '/') return '/';
+  return url.endsWith('/') ? url : url + '/';
+}
+
+function walk(dir: string, ext: string): string[] {
+  const out: string[] = [];
+  try {
+    for (const e of readdirSync(dir)) {
+      const p = join(dir, e);
+      statSync(p).isDirectory() ? out.push(...walk(p, ext)) : p.endsWith(ext) && out.push(p);
+    }
+  } catch {}
+  return out;
+}
+
+function fileToUrl(fp: string): string | null {
+  const r = unix(fp).replace(unix(ROOT) + '/', '');
+  let m: RegExpMatchArray | null;
+  if ((m = r.match(/^src\/content\/blog\/(.+?)\/index\.mdoc$/)))      return `/blog/${m[1]}/`;
+  if ((m = r.match(/^src\/content\/locations\/(.+?)\/index\.mdoc$/))) return `/${m[1]}/`;
+  if ((m = r.match(/^src\/content\/services\/(.+?)\/index\.mdoc$/)))  return `/services/${m[1]}/`;
+  if ((m = r.match(/^src\/content\/portfolio\/(.+?)\/index\.mdoc$/))) return `/portfolio/${m[1]}/`;
+  const pages: Record<string, string> = {
+    'src/pages/index.astro':                '/',
+    'src/pages/about.astro':                '/about/',
+    'src/pages/contact.astro':              '/contact/',
+    'src/pages/free-website-plan.astro':    '/free-website-plan/',
+    'src/pages/privacy-policy.astro':       '/privacy-policy/',
+    'src/pages/services/index.astro':       '/services/',
+    'src/pages/portfolio/index.astro':      '/portfolio/',
+    'src/pages/blog/[...page].astro':       '/blog/',
+  };
+  return pages[r] ?? null;
+}
+
+function getType(fp: string): PageType {
+  const u = unix(fp);
+  if (u.includes('/content/blog/'))      return 'blog';
+  if (u.includes('/content/locations/')) return 'location';
+  if (u.includes('/content/services/'))  return 'service';
+  if (u.includes('/content/portfolio/')) return 'portfolio';
+  return 'page';
+}
+
+function getTitle(content: string): string {
+  const fm = content.match(/^title:\s*["']?(.+?)["']?\s*$/m);
+  if (fm) return fm[1].trim();
+  const h = content.match(/^#{1,2}\s+(.+)$/m);
+  return h ? h[1].trim() : 'Untitled';
+}
+
+function getCategory(content: string): string | undefined {
+  const m = content.match(/^category:\s*["']?(.+?)["']?\s*$/m);
+  return m ? m[1].trim() : undefined;
+}
+
+function getLocation(content: string): string | undefined {
+  const m = content.match(/^location:\s*["']?(.+?)["']?\s*$/m);
+  return m ? m[1].trim() : undefined;
+}
+
+function getTown(content: string): string | undefined {
+  const m = content.match(/^town:\s*["']?(.+?)["']?\s*$/m);
+  return m ? m[1].trim() : undefined;
+}
+
+function getLocations(content: string): string[] {
+  // YAML block array: location:\n  - val
+  const block = content.match(/^location:\s*\n((?:[ \t]+-[ \t]+.+\n?)+)/m);
+  if (block) {
+    return (block[1].match(/-[ \t]+(.+)/g) ?? []).map(s => s.replace(/^-[ \t]+/, '').trim());
+  }
+  // Inline array: location: [val1, val2]
+  const inline = content.match(/^location:\s*\[([^\]]+)\]/m);
+  if (inline) {
+    return inline[1].split(',').map(s => s.trim().replace(/^["']|["']$/g, ''));
+  }
+  return [];
+}
+
+function mdocLinks(content: string): LinkRef[] {
+  const body = content.replace(/^---[\s\S]*?---\n?/, '');
+  const out: LinkRef[] = [];
+  const re = /\[([^\]]*)\]\((\/[^)"'\s]*)/g;
+  let m;
+  while ((m = re.exec(body)) !== null) {
+    const url = norm(m[2]);
+    if (url) out.push({ url, anchor: m[1] });
+  }
+  return out;
+}
+
+function astroLinks(content: string): LinkRef[] {
+  const out: LinkRef[] = [];
+  let m;
+  const re1 = /href=["'](\/[^"'#?]*)/g;
+  const re2 = /href=\{[`"'](\/[^`"'#?]*)/g;
+  while ((m = re1.exec(content)) !== null) { const u = norm(m[1]); if (u) out.push({ url: u, anchor: '' }); }
+  while ((m = re2.exec(content)) !== null) { const u = norm(m[1]); if (u) out.push({ url: u, anchor: '' }); }
+  return out;
+}
+
+// ── Build map ──────────────────────────────────────────────────────────────
+const map = new Map<string, PageData>();
+
+const contentFiles = walk(join(ROOT, 'src/content'), '.mdoc');
+const staticPages   = [
+  'src/pages/index.astro', 'src/pages/about.astro', 'src/pages/contact.astro',
+  'src/pages/free-website-plan.astro', 'src/pages/privacy-policy.astro',
+  'src/pages/services/index.astro', 'src/pages/portfolio/index.astro',
+  'src/pages/blog/[...page].astro',
+].map(f => join(ROOT, f));
+const sitewideFiles = [
+  join(ROOT, 'src/components/Footer.astro'),
+  join(ROOT, 'src/components/Nav.astro'),
+];
+
+// Pass 1 — register pages
+for (const fp of [...contentFiles, ...staticPages]) {
+  const url = fileToUrl(fp);
+  if (!url || map.has(url)) continue;
+  const content = readFileSync(fp, 'utf-8');
+  const type = getType(fp);
+  const category  = type === 'blog'      ? getCategory(content)  : undefined;
+  const location  = type === 'portfolio' ? getLocation(content)  : undefined;
+  const locations = type === 'blog'      ? getLocations(content) : undefined;
+  const town      = type === 'location'  ? getTown(content)      : undefined;
+  const isPillar  = type === 'location' && url.startsWith('/web-agency-') ? true : undefined;
+  map.set(url, { url, title: getTitle(content), type, category, location, locations, town, isPillar, inbound: [], outbound: [], inSitewide: false });
+}
+
+// Pass 2 — extract editorial links
+for (const fp of [...contentFiles, ...staticPages]) {
+  const fromUrl = fileToUrl(fp);
+  if (!fromUrl) continue;
+  const content = readFileSync(fp, 'utf-8');
+  const links = fp.endsWith('.mdoc') ? mdocLinks(content) : astroLinks(content);
+  const fromData = map.get(fromUrl)!;
+  const seenOut = new Set<string>();
+  const seenIn  = new Set<string>();
+
+  for (const link of links) {
+    const to = link.url;
+    if (!map.has(to) || to === fromUrl) continue;
+    if (!seenOut.has(to)) { fromData.outbound.push(link); seenOut.add(to); }
+    if (!seenIn.has(to))  { map.get(to)!.inbound.push({ url: fromUrl, anchor: link.anchor }); seenIn.add(to); }
+  }
+}
+
+// Pass 3 — sitewide flags
+for (const fp of sitewideFiles) {
+  const content = readFileSync(fp, 'utf-8');
+  for (const link of astroLinks(content)) {
+    if (map.has(link.url)) map.get(link.url)!.inSitewide = true;
+  }
+}
+
+// ── Sort & stats ───────────────────────────────────────────────────────────
+const ORDER: Record<PageType, number> = { service: 0, location: 1, portfolio: 2, page: 3, blog: 4 };
+const pages = [...map.values()].sort((a, b) =>
+  a.type !== b.type ? ORDER[a.type] - ORDER[b.type] : a.inbound.length - b.inbound.length
+);
+
+const moneyPages  = pages.filter(p => p.type === 'service' || p.type === 'location');
+const avgInbound  = moneyPages.length
+  ? Math.round(moneyPages.reduce((s, p) => s + p.inbound.length, 0) / moneyPages.length) : 0;
+const underlinked = moneyPages.filter(p => p.inbound.length < 5).length;
+const zeroLinked  = moneyPages.filter(p => p.inbound.length === 0).length;
+
+const TYPE_COLOR: Record<PageType, string> = {
+  service:   '#7c3aed', location: '#2563eb', blog:      '#059669',
+  portfolio: '#d97706', page:     '#6b7280',
+};
+
+function inClass(p: PageData): string {
+  if (p.type !== 'service' && p.type !== 'location') return 'neutral';
+  const n = p.inbound.length;
+  if (n === 0) return 'red';
+  if (n < 5)   return 'amber';
+  return 'green';
+}
+
+// Blog category counts
+const blogCategoryCounts: Record<string, number> = {};
+for (const p of pages) {
+  if (p.type === 'blog' && p.category) {
+    blogCategoryCounts[p.category] = (blogCategoryCounts[p.category] ?? 0) + 1;
+  }
+}
+
+// Portfolio location counts
+const portfolioLocationCounts: Record<string, number> = {};
+for (const p of pages) {
+  if (p.type === 'portfolio' && p.location) {
+    portfolioLocationCounts[p.location] = (portfolioLocationCounts[p.location] ?? 0) + 1;
+  }
+}
+
+// Blog location counts
+const blogLocationCounts: Record<string, number> = {};
+for (const p of pages) {
+  if (p.type === 'blog' && p.locations?.length) {
+    for (const loc of p.locations) {
+      blogLocationCounts[loc] = (blogLocationCounts[loc] ?? 0) + 1;
+    }
+  }
+}
+
+// Location page town counts
+const locationTownCounts: Record<string, number> = {};
+for (const p of pages) {
+  if (p.type === 'location' && p.town) {
+    locationTownCounts[p.town] = (locationTownCounts[p.town] ?? 0) + 1;
+  }
+}
+const TOWN_COLORS: Record<string, string> = {
+  'Merthyr Tydfil': '#0891b2', 'Cardiff': '#2563eb', 'Swansea': '#0d9488',
+  'Newport': '#d97706', 'Bridgend': '#9333ea', 'Pontypridd': '#db2777',
+  'Caerphilly': '#059669', 'Aberdare': '#dc2626', 'Rhondda': '#be185d',
+  'Barry': '#0891b2', 'Neath': '#b45309', 'Port Talbot': '#065f46',
+  'Cwmbran': '#1d4ed8', 'Llanelli': '#9d174d', 'Penarth': '#7c3aed',
+  'Vale of Glamorgan': '#0f766e', 'Ebbw Vale': '#6d28d9', 'South Wales': '#475569',
+  'Mid Wales': '#64748b', 'North Wales': '#94a3b8', 'Wales': '#6b7280',
+  'Wrexham': '#854d0e',
+  'Bangor': '#0e7490', 'Rhyl': '#b91c1c', 'Llandudno': '#0369a1',
+  'Caernarfon': '#15803d', 'Holyhead': '#6b21a8', 'Colwyn Bay': '#c2410c',
+  'Aberystwyth': '#0891b2', 'Newtown': '#16a34a', 'Welshpool': '#ca8a04',
+  'Llandrindod Wells': '#7c3aed', 'Brecon': '#dc2626', 'Machynlleth': '#0d9488',
+  'Mold': '#1d4ed8', 'Flint': '#9333ea', 'Buckley': '#b45309',
+  'Holywell': '#0f766e', 'Ruthin': '#be185d', 'Denbigh': '#6d28d9',
+  'East Wales': '#475569',
+  'West Wales': '#0369a1',
+  'Haverfordwest': '#2563eb', 'Pembroke': '#0891b2', 'Tenby': '#0d9488',
+  'Fishguard': '#7c3aed', 'Carmarthen': '#db2777', 'Cardigan': '#d97706',
+  'Milford Haven': '#0f766e', 'Pembroke Dock': '#1d4ed8', 'Ammanford': '#dc2626', 'Llandeilo': '#6d28d9',
+  'Chepstow': '#0891b2', 'Porthcawl': '#7c3aed', 'Blackwood': '#16a34a', 'Bargoed': '#b91c1c',
+  'Tredegar': '#d97706', 'Prestatyn': '#0369a1', 'Conwy': '#15803d', 'Pwllheli': '#9333ea',
+  'Porthmadog': '#be185d', 'Dolgellau': '#854d0e',
+  'Builth Wells': '#ca8a04', 'Hay-on-Wye': '#065f46',
+};
+const townsSorted = Object.keys(locationTownCounts).sort((a, b) =>
+  locationTownCounts[b] - locationTownCounts[a]
+);
+
+// Ahrefs backlink data keyed by page path
+import { existsSync } from 'node:fs';
+const AHREFS_CACHE = join(ROOT, 'scripts/ahrefs-cache.json');
+const ahrefsBacklinks: Record<string, { anchor: string; url_from: string; dr: number; dofollow: boolean; first_seen: string }[]> = {};
+if (existsSync(AHREFS_CACHE)) {
+  try {
+    const raw = JSON.parse(readFileSync(AHREFS_CACHE, 'utf-8'));
+    for (const b of (raw.backlinks ?? [])) {
+      const path = b.url_to.replace(/^https?:\/\/nc-digital\.co\.uk/, '') || '/';
+      const key  = path.endsWith('/') ? path : path + '/';
+      (ahrefsBacklinks[key] = ahrefsBacklinks[key] ?? []).push({
+        anchor:     b.anchor || '',
+        url_from:   b.url_from,
+        dr:         b.domain_rating_source ?? 0,
+        dofollow:   b.is_dofollow ?? false,
+        first_seen: b.first_seen ?? '',
+      });
+    }
+  } catch {}
+}
+
+// Client-side data for detail panel
+const clientData = Object.fromEntries(
+  pages.map(p => [p.url, {
+    title: p.title,
+    type: p.type,
+    category: p.category,
+    location: p.location,
+    inbound: p.inbound,
+    outbound: p.outbound,
+    inSitewide: p.inSitewide,
+    backlinks: ahrefsBacklinks[p.url] ?? [],
+  }])
+);
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Internal Link Map — NC Digital</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d0d14; color: #e2e8f0; font-size: 15px; line-height: 1.6; }
+
+    /* ── Header ── */
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid #1e1e30; background: #0d0d14; position: sticky; top: 0; z-index: 50; }
+    .topbar h1 { font-size: 1rem; font-weight: 700; color: #f1f5f9; letter-spacing: -0.02em; }
+    .topbar-right { display: flex; align-items: center; gap: 1rem; }
+    .topbar a { color: #7c3aed; text-decoration: none; font-size: 0.8125rem; }
+    .topbar a:hover { text-decoration: underline; }
+    .build-note { font-size: 0.75rem; color: #94a3b8; }
+
+    /* ── Stats ── */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid #1e1e30; }
+    .stat { background: #13131f; border: 1px solid #1e1e30; border-radius: 8px; padding: 0.875rem 1.25rem; }
+    .stat .val { font-size: 1.625rem; font-weight: 700; color: #f1f5f9; line-height: 1; }
+    .stat .lbl { font-size: 0.75rem; color: #94a3b8; margin-top: 0.3rem; }
+    .stat.warn .val { color: #f59e0b; }
+    .stat.danger .val { color: #ef4444; }
+    .stat.ok .val { color: #10b981; }
+    .clickable-stat { cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+    .clickable-stat:hover { border-color: #7c3aed66; background: #18182a; }
+    .clickable-stat.active-stat { border-color: #7c3aed; background: #18182a; }
+    .clickable-stat .lbl::after { content: ' ↗'; font-size: 0.6rem; opacity: 0.5; }
+
+    /* ── Controls ── */
+    .controls { display: flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; border-bottom: 1px solid #1e1e30; flex-wrap: wrap; }
+    .pill { padding: 0.3rem 0.75rem; border-radius: 999px; border: 1px solid #2a2a3e; background: transparent; color: #94a3b8; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+    .pill:hover { border-color: #7c3aed44; color: #c4b5fd; }
+    .pill.active { background: #7c3aed22; border-color: #7c3aed66; color: #c4b5fd; }
+    .pill[data-filter="service"].active  { background: #7c3aed22; border-color: #7c3aed66; color: #c4b5fd; }
+    .pill[data-filter="location"].active { background: #2563eb22; border-color: #2563eb66; color: #93c5fd; }
+    .pill[data-filter="blog"].active     { background: #05966922; border-color: #05966966; color: #6ee7b7; }
+    .pill[data-filter="portfolio"].active{ background: #d9770622; border-color: #d9770666; color: #fcd34d; }
+    .controls-right { margin-left: auto; display: flex; gap: 0.5rem; }
+    .ctrl-input { padding: 0.3rem 0.625rem; border-radius: 6px; border: 1px solid #2a2a3e; background: #13131f; color: #e2e8f0; font-size: 0.8125rem; }
+    .ctrl-input:focus { outline: none; border-color: #7c3aed66; }
+    #searchInput { width: 200px; }
+    #searchInput::placeholder { color: #374151; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: 0.75rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #1e1e30; white-space: nowrap; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: #cbd5e1; }
+    td { padding: 0.875rem 1rem; border-bottom: 1px solid #12121c; vertical-align: middle; }
+    tr.page-row { cursor: pointer; }
+    tr.page-row:hover td { background: #13131f; }
+    tr.hidden { display: none; }
+    tr.active-row td { background: #18182a; }
+
+    .page-title { font-size: 0.9375rem; font-weight: 600; color: #f1f5f9; }
+    .page-url   { font-family: 'SF Mono', 'Fira Code', Consolas, monospace; font-size: 0.8125rem; color: #818cf8; margin-top: 0.2rem; }
+    .badge { display: inline-flex; align-items: center; padding: 0.175rem 0.5rem; border-radius: 4px; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .count { font-size: 1.0625rem; font-weight: 700; }
+    .count.red     { color: #ef4444; }
+    .count.amber   { color: #f59e0b; }
+    .count.green   { color: #10b981; }
+    .count.neutral { color: #cbd5e1; }
+    .sitewide-tag { font-size: 0.75rem; color: #94a3b8; margin-left: 0.375rem; }
+    .money-tag { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #fbbf24; background: #fbbf2415; border: 1px solid #fbbf2440; border-radius: 3px; padding: 0.1rem 0.35rem; margin-left: 0.4rem; vertical-align: middle; }
+    .pillar-tag { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #a78bfa; background: #7c3aed18; border: 1px solid #7c3aed50; border-radius: 3px; padding: 0.1rem 0.35rem; margin-left: 0.4rem; vertical-align: middle; }
+    .cat-tag { display: inline-flex; align-items: center; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; border-radius: 3px; padding: 0.1rem 0.35rem; margin-left: 0.4rem; vertical-align: middle; border: 1px solid; }
+    .cat-pills { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-bottom: 1px solid #1e1e30; flex-wrap: wrap; background: #0b0b11; }
+    .cat-label { font-size: 0.6875rem; color: #94a3b8; font-weight: 500; margin-right: 0.25rem; }
+    .cat-pill { padding: 0.25rem 0.625rem; border-radius: 999px; border: 1px solid #2a2a3e; background: transparent; color: #94a3b8; font-size: 0.6875rem; font-weight: 500; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+    .cat-pill:hover { border-color: #2a2a4e; color: #c4b5fd; }
+    .cat-pill.active { border-color: currentColor; }
+    .out-count { color: #94a3b8; }
+    .no-results { padding: 3rem 1.5rem; text-align: center; color: #94a3b8; }
+
+    /* ── Detail panel ── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .overlay.show { opacity: 1; pointer-events: auto; }
+    .panel { position: fixed; top: 0; right: -520px; width: 520px; max-width: 100vw; height: 100vh; background: #13131f; border-left: 1px solid #1e1e30; overflow-y: auto; transition: right 0.22s ease; z-index: 91; display: flex; flex-direction: column; }
+    .panel.open { right: 0; }
+    .panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.5rem; border-bottom: 1px solid #1e1e30; position: sticky; top: 0; background: #13131f; z-index: 1; }
+    .panel-title { font-size: 0.9375rem; font-weight: 600; color: #f1f5f9; }
+    .panel-url   { font-family: monospace; font-size: 0.75rem; color: #6366f1; margin-top: 0.2rem; }
+    .panel-close { background: none; border: none; color: #94a3b8; font-size: 1.375rem; line-height: 1; cursor: pointer; flex-shrink: 0; padding: 0.25rem; }
+    .panel-close:hover { color: #94a3b8; }
+    .panel-body { flex: 1; overflow-y: auto; }
+    .panel-section { padding: 1.25rem 1.5rem; }
+    .panel-section + .panel-section { border-top: 1px solid #1e1e30; }
+    .section-heading { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: #94a3b8; margin-bottom: 0.875rem; }
+    .link-group { margin-bottom: 1rem; }
+    .link-group:last-child { margin-bottom: 0; }
+    .link-group-label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.375rem; padding-bottom: 0.375rem; border-bottom: 1px solid #1e1e30; }
+    .link-item { padding: 0.4rem 0; border-bottom: 1px solid #0f0f18; display: flex; flex-direction: column; gap: 0.1rem; }
+    .link-item:last-child { border-bottom: none; }
+    .link-from, .link-to { font-family: monospace; font-size: 0.875rem; color: #818cf8; }
+    .link-anchor { font-size: 0.8125rem; color: #cbd5e1; font-style: italic; }
+    .empty-state { color: #94a3b8; font-style: italic; font-size: 0.875rem; }
+    .bl-item { padding: 0.4rem 0; border-bottom: 1px solid #0f0f18; display: flex; flex-direction: column; gap: 0.15rem; }
+    .bl-item:last-child { border-bottom: none; }
+    .bl-from { font-family: monospace; font-size: 0.75rem; color: #818cf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bl-anchor { font-size: 0.75rem; color: #94a3b8; font-style: italic; }
+    .bl-meta { display: flex; align-items: center; gap: 0.5rem; font-size: 0.6875rem; }
+    .bl-dr { padding: 0.1rem 0.35rem; border-radius: 3px; font-weight: 700; font-size: 0.65rem; }
+    .bl-follow { font-weight: 600; }
+    .bl-date { color: #94a3b8; }
+
+    @media (max-width: 640px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .panel { width: 100%; right: -100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Internal Link Map</h1>
+  <div class="topbar-right">
+    <span class="build-note">Built at compile time · {pages.length} pages tracked</span>
+    <a href="/admin/backlinks/">Backlinks →</a>
+    <a href="/admin/keywords/">Keywords →</a>
+    <a href="/admin/keyword-research/">Keyword Research →</a>
+    <a href="/admin/indexing/">Indexing →</a>
+    <a href="/admin/gsc/">GSC →</a>
+    <a href="/">← Back to site</a>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="val">{pages.length}</div>
+    <div class="lbl">Total pages</div>
+  </div>
+  <div class={`stat clickable-stat ${underlinked > 0 ? 'warn' : 'ok'}`} data-stat-filter="underlinked" title="Click to show these pages">
+    <div class="val">{underlinked}</div>
+    <div class="lbl">Money pages with &lt;5 inbound links</div>
+  </div>
+  <div class={`stat clickable-stat ${zeroLinked > 0 ? 'danger' : 'ok'}`} data-stat-filter="zerolinked" title="Click to show these pages">
+    <div class="val">{zeroLinked}</div>
+    <div class="lbl">Money pages with 0 inbound links</div>
+  </div>
+  <div class="stat">
+    <div class="val">{avgInbound}</div>
+    <div class="lbl">Avg inbound per money page</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="pill active" data-filter="all">All <span class="count neutral" style="font-size:0.75rem;margin-left:2px">{pages.length}</span></button>
+  {(['service','location','portfolio','blog','page'] as PageType[]).map(t => (
+    <button class="pill" data-filter={t}
+      style={`--c:${TYPE_COLOR[t]}`}>
+      {t.charAt(0).toUpperCase() + t.slice(1)}
+      <span style="font-size:0.75rem;margin-left:2px;opacity:0.7">{pages.filter(p => p.type === t).length}</span>
+    </button>
+  ))}
+  <div class="controls-right">
+    <input class="ctrl-input" id="searchInput" type="search" placeholder="Search…" autocomplete="off" />
+    <select class="ctrl-input" id="sortSelect">
+      <option value="default">Sort: Type + Inbound ↑</option>
+      <option value="inbound-asc">Inbound ↑ (least first)</option>
+      <option value="inbound-desc">Inbound ↓ (most first)</option>
+      <option value="outbound-desc">Outbound ↓</option>
+      <option value="alpha">Alphabetical</option>
+    </select>
+  </div>
+</div>
+
+<div class="cat-pills" id="catPills">
+  <span class="cat-label">Blog category:</span>
+  <button class="cat-pill active" data-cat="all" style="color:#94a3b8">
+    All blogs <span style="opacity:0.6">{pages.filter(p => p.type === 'blog').length}</span>
+  </button>
+  {Object.entries(BLOG_CATEGORY_META).map(([key, meta]) => blogCategoryCounts[key] ? (
+    <button
+      class="cat-pill"
+      data-cat={key}
+      style={`color:${meta.color}`}
+    >
+      {meta.label}
+      {meta.serviceUrl && <span style="opacity:0.5;font-size:0.6rem;margin-left:3px">→ service</span>}
+      <span style="opacity:0.6;margin-left:4px">{blogCategoryCounts[key]}</span>
+    </button>
+  ) : null)}
+</div>
+
+<div class="cat-pills" id="townPills">
+  <span class="cat-label">Town:</span>
+  <button class="town-pill active" data-town="all" style="color:#94a3b8">
+    All locations <span style="opacity:0.6">{pages.filter(p => p.type === 'location').length}</span>
+  </button>
+  {townsSorted.map(town => (
+    <button class="town-pill" data-town={town} style={`color:${TOWN_COLORS[town] ?? '#94a3b8'}`}>
+      {town}
+      <span style="opacity:0.6;margin-left:4px">{locationTownCounts[town]}</span>
+    </button>
+  ))}
+  <button class="town-pill pillar-filter-pill" data-town="__pillar__" style="color:#a78bfa;border-color:#7c3aed50;margin-left:0.5rem">
+    ★ Pillar only
+    <span style="opacity:0.6;margin-left:4px">{pages.filter(p => p.isPillar).length}</span>
+  </button>
+</div>
+
+<div class="cat-pills" id="locPills">
+  <span class="cat-label">Portfolio location:</span>
+  <button class="loc-pill active" data-loc="all" style="color:#94a3b8">
+    All portfolios <span style="opacity:0.6">{pages.filter(p => p.type === 'portfolio').length}</span>
+  </button>
+  {Object.entries(PORTFOLIO_LOCATION_META).map(([key, meta]) => portfolioLocationCounts[key] ? (
+    <button class="loc-pill" data-loc={key} style={`color:${meta.color}`}>
+      {meta.label}
+      <span style="opacity:0.6;margin-left:4px">{portfolioLocationCounts[key]}</span>
+    </button>
+  ) : null)}
+</div>
+
+<div class="cat-pills" id="blogLocPills">
+  <span class="cat-label">Blog location:</span>
+  <button class="blog-loc-pill active" data-bloc="all" style="color:#94a3b8">
+    All blogs <span style="opacity:0.6">{pages.filter(p => p.type === 'blog').length}</span>
+  </button>
+  {Object.entries(BLOG_LOCATION_META).map(([key, meta]) => blogLocationCounts[key] ? (
+    <button class="blog-loc-pill" data-bloc={key} style={`color:${meta.color}`}>
+      {meta.label}
+      <span style="opacity:0.6;margin-left:4px">{blogLocationCounts[key]}</span>
+    </button>
+  ) : null)}
+</div>
+
+<div class="table-wrap">
+  <table id="mainTable">
+    <thead>
+      <tr>
+        <th>Page</th>
+        <th>Type</th>
+        <th class="sortable" data-col="inbound" style="width:120px">Inbound</th>
+        <th class="sortable" data-col="outbound" style="width:110px">Outbound</th>
+        <th class="sortable" data-col="backlinks" style="width:110px">Backlinks</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      {pages.map(p => (
+        <tr
+          class="page-row"
+          data-url={p.url}
+          data-type={p.type}
+          data-cat={p.category ?? ''}
+          data-loc={p.location ?? ''}
+          data-locs={p.locations?.join(',') ?? ''}
+          data-town={p.town ?? ''}
+          data-pillar={p.isPillar ? 'true' : 'false'}
+          data-in={p.inbound.length}
+          data-out={p.outbound.length}
+          data-bl={(ahrefsBacklinks[p.url] ?? []).length}
+        >
+          <td>
+            <div class="page-title">
+              {p.title}
+              {(p.type === 'service' || p.type === 'location') && <span class="money-tag">£ Money</span>}
+              {p.isPillar && <span class="pillar-tag">★ Pillar</span>}
+              {p.type === 'blog' && p.category && BLOG_CATEGORY_META[p.category] && (
+                <span
+                  class="cat-tag"
+                  style={`color:${BLOG_CATEGORY_META[p.category].color};background:${BLOG_CATEGORY_META[p.category].color}18;border-color:${BLOG_CATEGORY_META[p.category].color}40`}
+                >
+                  {BLOG_CATEGORY_META[p.category].label}
+                </span>
+              )}
+              {p.type === 'location' && p.town && (
+                <span
+                  class="cat-tag"
+                  style={`color:${TOWN_COLORS[p.town] ?? '#94a3b8'};background:${TOWN_COLORS[p.town] ?? '#94a3b8'}18;border-color:${TOWN_COLORS[p.town] ?? '#94a3b8'}40`}
+                >
+                  {p.town}
+                </span>
+              )}
+              {p.type === 'portfolio' && p.location && PORTFOLIO_LOCATION_META[p.location] && (
+                <span
+                  class="cat-tag"
+                  style={`color:${PORTFOLIO_LOCATION_META[p.location].color};background:${PORTFOLIO_LOCATION_META[p.location].color}18;border-color:${PORTFOLIO_LOCATION_META[p.location].color}40`}
+                >
+                  {PORTFOLIO_LOCATION_META[p.location].label}
+                </span>
+              )}
+              {p.type === 'blog' && p.locations?.map(loc => BLOG_LOCATION_META[loc] && (
+                <span
+                  class="cat-tag"
+                  style={`color:${BLOG_LOCATION_META[loc].color};background:${BLOG_LOCATION_META[loc].color}18;border-color:${BLOG_LOCATION_META[loc].color}40`}
+                >
+                  {BLOG_LOCATION_META[loc].label}
+                </span>
+              ))}
+            </div>
+            <div class="page-url">{p.url}</div>
+          </td>
+          <td>
+            <span
+              class="badge"
+              style={`background:${TYPE_COLOR[p.type]}20;color:${TYPE_COLOR[p.type]};border:1px solid ${TYPE_COLOR[p.type]}40`}
+            >
+              {p.type}
+            </span>
+          </td>
+          <td>
+            <span class={`count ${inClass(p)}`}>{p.inbound.length}</span>
+            {p.inSitewide && <span class="sitewide-tag">+ nav/footer</span>}
+          </td>
+          <td><span class="out-count">{p.outbound.length}</span></td>
+          <td><span class={(ahrefsBacklinks[p.url] ?? []).length > 0 ? 'count green' : 'out-count'}>{(ahrefsBacklinks[p.url] ?? []).length}</span></td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <div class="no-results hidden" id="noResults">No pages match your filter.</div>
+</div>
+
+<!-- Detail panel -->
+<div class="overlay" id="overlay"></div>
+<div class="panel" id="panel">
+  <div class="panel-head">
+    <div>
+      <div class="panel-title" id="panelTitle"></div>
+      <div class="panel-url"   id="panelUrl"></div>
+    </div>
+    <button class="panel-close" id="panelClose">×</button>
+  </div>
+  <div class="panel-body">
+    <div class="panel-section" id="inboundSection">
+      <div class="section-heading">Inbound links — <span id="inboundCount">0</span> pages linking here</div>
+      <div id="inboundList"></div>
+    </div>
+    <div class="panel-section" id="outboundSection">
+      <div class="section-heading">Outbound links — <span id="outboundCount">0</span> unique targets</div>
+      <div id="outboundList"></div>
+    </div>
+    <div class="panel-section" id="backlinksSection">
+      <div class="section-heading">External backlinks — <span id="backlinksCount">0</span> from Ahrefs</div>
+      <div id="backlinksList"></div>
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ clientData }}>
+  const DATA = clientData;
+
+  // ── Filtering & sorting ──────────────────────────────────────────────────
+  const tbody      = document.getElementById('tbody');
+  const noResults  = document.getElementById('noResults');
+  const allRows    = () => Array.from(tbody.querySelectorAll('tr.page-row'));
+
+  let activeFilter        = 'all';
+  let activeSearch        = '';
+  let activeCatFilter     = 'all';
+  let activeLocFilter     = 'all';
+  let activeBlogLocFilter = 'all';
+  let activeTownFilter    = 'all';
+  let activeStatFilter    = '';
+
+  const catPills     = document.getElementById('catPills');
+  const locPills     = document.getElementById('locPills');
+  const blogLocPills = document.getElementById('blogLocPills');
+  const townPills    = document.getElementById('townPills');
+
+  function applyView() {
+    const rows = allRows();
+    let visible = 0;
+    rows.forEach(row => {
+      const type  = row.dataset.type;
+      const cat   = row.dataset.cat || '';
+      const loc   = row.dataset.loc || '';
+      const locs  = (row.dataset.locs || '').split(',').filter(Boolean);
+      const url   = row.dataset.url || '';
+      const title = row.querySelector('.page-title')?.textContent?.toLowerCase() || '';
+      const inbound  = +row.dataset.in;
+      const town  = row.dataset.town || '';
+      const matchType    = activeFilter === 'all' || type === activeFilter;
+      const matchCat     = activeCatFilter === 'all' || (type === 'blog' && cat === activeCatFilter);
+      const matchLoc     = activeLocFilter === 'all' || (type === 'portfolio' && loc === activeLocFilter);
+      const matchBlogLoc = activeBlogLocFilter === 'all' || (type === 'blog' && locs.includes(activeBlogLocFilter));
+      const isPillar = row.dataset.pillar === 'true';
+      const matchTown    = activeTownFilter === 'all'
+        || (activeTownFilter === '__pillar__' ? isPillar : (type === 'location' && town === activeTownFilter));
+      const matchSearch  = !activeSearch || url.includes(activeSearch) || title.includes(activeSearch);
+      const isMoney      = type === 'service' || type === 'location';
+      const matchStat    = !activeStatFilter
+        || (activeStatFilter === 'underlinked' && isMoney && inbound < 5)
+        || (activeStatFilter === 'zerolinked'  && isMoney && inbound === 0);
+      const show = matchType && matchCat && matchLoc && matchBlogLoc && matchTown && matchSearch && matchStat;
+      row.classList.toggle('hidden', !show);
+      if (show) visible++;
+    });
+    noResults.classList.toggle('hidden', visible > 0);
+    catPills.style.display     = (activeFilter === 'blog'      || activeCatFilter !== 'all')     ? 'flex' : 'none';
+    locPills.style.display     = (activeFilter === 'portfolio' || activeLocFilter !== 'all')     ? 'flex' : 'none';
+    blogLocPills.style.display = (activeFilter === 'blog'      || activeBlogLocFilter !== 'all') ? 'flex' : 'none';
+    townPills.style.display    = (activeFilter === 'location'  || activeTownFilter !== 'all')    ? 'flex' : 'none';
+  }
+
+  catPills.style.display     = 'none';
+  locPills.style.display     = 'none';
+  blogLocPills.style.display = 'none';
+  townPills.style.display    = 'none';
+
+  document.querySelectorAll('.pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter || 'all';
+      if (activeFilter !== 'blog')      { activeCatFilter = 'all'; document.querySelectorAll('.cat-pill').forEach(b => b.classList.toggle('active', b.dataset.cat === 'all')); }
+      if (activeFilter !== 'blog')      { activeBlogLocFilter = 'all'; document.querySelectorAll('.blog-loc-pill').forEach(b => b.classList.toggle('active', b.dataset.bloc === 'all')); }
+      if (activeFilter !== 'portfolio') { activeLocFilter = 'all'; document.querySelectorAll('.loc-pill').forEach(b => b.classList.toggle('active', b.dataset.loc === 'all')); }
+      if (activeFilter !== 'location')  { activeTownFilter = 'all'; document.querySelectorAll('.town-pill').forEach(b => b.classList.toggle('active', b.dataset.town === 'all')); }
+      activeStatFilter = ''; document.querySelectorAll('.clickable-stat').forEach(c => c.classList.remove('active-stat'));
+      applyView();
+    });
+  });
+
+  document.querySelectorAll('.town-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.town-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeTownFilter = btn.dataset.town || 'all';
+      if (activeTownFilter !== 'all') {
+        document.querySelectorAll('.pill').forEach(b => b.classList.toggle('active', b.dataset.filter === 'location'));
+        activeFilter = 'location';
+      }
+      applyView();
+    });
+  });
+
+  document.querySelectorAll('.blog-loc-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.blog-loc-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeBlogLocFilter = btn.dataset.bloc || 'all';
+      if (activeBlogLocFilter !== 'all') {
+        document.querySelectorAll('.pill').forEach(b => b.classList.toggle('active', b.dataset.filter === 'blog'));
+        activeFilter = 'blog';
+      }
+      applyView();
+    });
+  });
+
+  document.querySelectorAll('.cat-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCatFilter = btn.dataset.cat || 'all';
+      if (activeCatFilter !== 'all') {
+        document.querySelectorAll('.pill').forEach(b => b.classList.toggle('active', b.dataset.filter === 'blog'));
+        activeFilter = 'blog';
+      }
+      applyView();
+    });
+  });
+
+  document.querySelectorAll('.loc-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.loc-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeLocFilter = btn.dataset.loc || 'all';
+      if (activeLocFilter !== 'all') {
+        document.querySelectorAll('.pill').forEach(b => b.classList.toggle('active', b.dataset.filter === 'portfolio'));
+        activeFilter = 'portfolio';
+      }
+      applyView();
+    });
+  });
+
+  document.querySelectorAll('.clickable-stat').forEach(card => {
+    card.addEventListener('click', () => {
+      const f = card.dataset.statFilter;
+      if (activeStatFilter === f) {
+        // toggle off
+        activeStatFilter = '';
+        card.classList.remove('active-stat');
+      } else {
+        activeStatFilter = f;
+        document.querySelectorAll('.clickable-stat').forEach(c => c.classList.remove('active-stat'));
+        card.classList.add('active-stat');
+        // reset other filters so only stat filter applies
+        activeFilter = 'all';
+        activeCatFilter = 'all';
+        activeLocFilter = 'all';
+        document.querySelectorAll('.pill').forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+        document.querySelectorAll('.cat-pill').forEach(b => b.classList.toggle('active', b.dataset.cat === 'all'));
+        document.querySelectorAll('.loc-pill').forEach(b => b.classList.toggle('active', b.dataset.loc === 'all'));
+      }
+      applyView();
+    });
+  });
+
+  document.getElementById('searchInput').addEventListener('input', e => {
+    activeSearch = e.target.value.toLowerCase();
+    applyView();
+  });
+
+  // ── Sorting ──────────────────────────────────────────────────────────────
+  const TYPE_ORDER = { service: 0, location: 1, portfolio: 2, page: 3, blog: 4 };
+
+  function sortRows(mode) {
+    const rows = allRows();
+    rows.sort((a, b) => {
+      if (mode === 'inbound-asc')   return (+a.dataset.in)  - (+b.dataset.in);
+      if (mode === 'inbound-desc')  return (+b.dataset.in)  - (+a.dataset.in);
+      if (mode === 'outbound-asc')   return (+a.dataset.out) - (+b.dataset.out);
+      if (mode === 'outbound-desc')  return (+b.dataset.out) - (+a.dataset.out);
+      if (mode === 'backlinks-asc')  return (+a.dataset.bl)  - (+b.dataset.bl);
+      if (mode === 'backlinks-desc') return (+b.dataset.bl)  - (+a.dataset.bl);
+      if (mode === 'alpha')         return (a.dataset.url || '').localeCompare(b.dataset.url || '');
+      // default: type then inbound asc
+      const td = (TYPE_ORDER[a.dataset.type] || 99) - (TYPE_ORDER[b.dataset.type] || 99);
+      return td !== 0 ? td : (+a.dataset.in) - (+b.dataset.in);
+    });
+    rows.forEach(r => tbody.appendChild(r));
+  }
+
+  document.getElementById('sortSelect').addEventListener('change', e => {
+    sortRows(e.target.value);
+    // clear column sort indicators when dropdown used
+    document.querySelectorAll('th.sortable').forEach(th => { th.dataset.dir = ''; th.textContent = th.dataset.label; });
+  });
+
+  const colSortState = {};
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.dataset.label = th.textContent.trim();
+    th.textContent = th.dataset.label + ' ↕';
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      const prev = colSortState[col];
+      // toggle: asc → desc → asc
+      const next = prev === 'asc' ? 'desc' : 'asc';
+      colSortState[col] = next;
+      const mode = col === 'inbound'
+        ? (next === 'asc' ? 'inbound-asc' : 'inbound-desc')
+        : col === 'outbound'
+        ? (next === 'asc' ? 'outbound-asc' : 'outbound-desc')
+        : (next === 'asc' ? 'backlinks-asc' : 'backlinks-desc');
+      sortRows(mode);
+      // update header indicators
+      document.querySelectorAll('th.sortable').forEach(t => {
+        t.textContent = t.dataset.label + ' ↕';
+      });
+      th.textContent = th.dataset.label + (next === 'asc' ? ' ↑' : ' ↓');
+      // reset dropdown
+      document.getElementById('sortSelect').value = 'default';
+    });
+  });
+
+  // ── Detail panel ─────────────────────────────────────────────────────────
+  const panel   = document.getElementById('panel');
+  const overlay = document.getElementById('overlay');
+
+  function openPanel(url) {
+    const d = DATA[url];
+    if (!d) return;
+
+    document.getElementById('panelTitle').textContent = d.title;
+    document.getElementById('panelUrl').textContent   = url;
+    document.getElementById('inboundCount').textContent  = d.inbound.length;
+    document.getElementById('outboundCount').textContent = d.outbound.length;
+    document.getElementById('backlinksCount').textContent = (d.backlinks || []).length;
+
+    const inList  = document.getElementById('inboundList');
+    const outList = document.getElementById('outboundList');
+    const blList  = document.getElementById('backlinksList');
+
+    const TYPE_META = {
+      service:   { label: 'Service pages',   color: '#7c3aed' },
+      location:  { label: 'Location pages',  color: '#2563eb' },
+      blog:      { label: 'Blog posts',       color: '#059669' },
+      portfolio: { label: 'Portfolio pages',  color: '#d97706' },
+      page:      { label: 'Site pages',       color: '#6b7280' },
+    };
+    const TYPE_ORDER_P = ['service','location','portfolio','page','blog'];
+
+    function getUrlType(url) {
+      if (url.startsWith('/blog/'))      return 'blog';
+      if (url.startsWith('/services/'))  return 'service';
+      if (url.startsWith('/portfolio/')) return 'portfolio';
+      if (/^\/(about|contact|free-website-plan|privacy-policy)\/$/.test(url)) return 'page';
+      if (url === '/') return 'page';
+      return 'location';
+    }
+
+    function renderGrouped(links, urlKey) {
+      if (!links.length) return '<div class="empty-state">None.</div>';
+      const groups = {};
+      for (const l of links) {
+        const t = getUrlType(l.url);
+        (groups[t] = groups[t] || []).push(l);
+      }
+      return TYPE_ORDER_P.filter(t => groups[t])
+        .map(t => {
+          const meta = TYPE_META[t];
+          const items = groups[t].map(l =>
+            `<div class="link-item">
+              <div class="${urlKey}">${l.url}</div>
+              ${l.anchor ? `<div class="link-anchor">"${l.anchor}"</div>` : ''}
+            </div>`
+          ).join('');
+          return `<div class="link-group">
+            <div class="link-group-label">
+              <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${meta.color}"></span>
+              ${meta.label} <span style="color:#94a3b8;font-weight:400">(${groups[t].length})</span>
+            </div>
+            ${items}
+          </div>`;
+        }).join('');
+    }
+
+    inList.innerHTML  = renderGrouped(d.inbound,  'link-from');
+    outList.innerHTML = renderGrouped(d.outbound, 'link-to');
+
+    // Render external backlinks from Ahrefs
+    const bls = d.backlinks || [];
+    if (!bls.length) {
+      blList.innerHTML = '<div class="empty-state">No external backlinks found for this page in Ahrefs data.</div>';
+    } else {
+      blList.innerHTML = bls.map(b => {
+        const drColor = b.dr >= 60 ? '#a78bfa' : b.dr >= 30 ? '#93c5fd' : '#94a3b8';
+        const drBg    = b.dr >= 60 ? '#7c3aed22' : b.dr >= 30 ? '#2563eb22' : '#1e1e30';
+        const date    = b.first_seen ? new Date(b.first_seen).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '';
+        const from    = b.url_from.replace(/^https?:\/\/(www\.)?/, '');
+        return `<div class="bl-item">
+          <div class="bl-from" title="${b.url_from}">${from}</div>
+          ${b.anchor ? `<div class="bl-anchor">"${b.anchor}"</div>` : ''}
+          <div class="bl-meta">
+            <span class="bl-dr" style="background:${drBg};color:${drColor}">DR ${b.dr}</span>
+            <span class="bl-follow" style="color:${b.dofollow ? '#34d399' : '#94a3b8'}">${b.dofollow ? 'dofollow' : 'nofollow'}</span>
+            ${date ? `<span class="bl-date">${date}</span>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    panel.classList.add('open');
+    overlay.classList.add('show');
+
+    // Highlight active row
+    document.querySelectorAll('tr.active-row').forEach(r => r.classList.remove('active-row'));
+    const row = tbody.querySelector(`tr[data-url="${CSS.escape(url)}"]`);
+    if (row) row.classList.add('active-row');
+  }
+
+  function closePanel() {
+    panel.classList.remove('open');
+    overlay.classList.remove('show');
+    document.querySelectorAll('tr.active-row').forEach(r => r.classList.remove('active-row'));
+  }
+
+  tbody.addEventListener('click', e => {
+    const row = e.target.closest('tr.page-row');
+    if (row) openPanel(row.dataset.url);
+  });
+
+  document.getElementById('panelClose').addEventListener('click', closePanel);
+  overlay.addEventListener('click', closePanel);
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closePanel();
+  });
+</script>
+
+</body>
+</html>

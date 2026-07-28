@@ -1,0 +1,862 @@
+---
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+interface KeywordRow {
+  keyword: string;
+  group: string;
+  targetUrl: string;
+  targetAbsoluteUrl: string;
+  targetSource?: 'manual' | 'inferred' | 'none';
+  trackedInAhrefs?: boolean;
+  country?: string;
+  location?: string;
+  language?: string;
+  position: number | null;
+  previousPosition: number | null;
+  change: number | null;
+  url?: string | null;
+  traffic?: number | null;
+  trafficDiff?: number | null;
+  volume?: number | null;
+  keywordDifficulty?: number | null;
+  serpUpdated?: string | null;
+  hasData?: boolean;
+  frozen?: boolean;
+  tags?: string[];
+}
+
+interface KeywordCache {
+  fetchedAt?: string;
+  source?: string;
+  projectId?: string;
+  device?: string;
+  date?: string;
+  dateCompared?: string;
+  trackedKeywordCount?: number;
+  keywords?: KeywordRow[];
+}
+
+const CACHE_PATH = join(process.cwd(), 'scripts/ahrefs-keywords-cache.json');
+const INDEX_CACHE_PATH = join(process.cwd(), 'scripts/gsc-indexing-cache.json');
+const cache: KeywordCache = existsSync(CACHE_PATH)
+  ? JSON.parse(readFileSync(CACHE_PATH, 'utf8'))
+  : { keywords: [] };
+const indexCache = existsSync(INDEX_CACHE_PATH)
+  ? JSON.parse(readFileSync(INDEX_CACHE_PATH, 'utf8'))
+  : { pages: [] };
+const indexByUrl = new Map((indexCache.pages ?? []).map((page: { url: string; status: string }) => [page.url.replace(/\/+$/, ''), page.status]));
+
+const rows = cache.keywords ?? [];
+const groups = [...new Set(rows.map((row) => row.group))].sort();
+const rankingRows = rows.filter((row) => row.position !== null);
+const avgPosition = rankingRows.length
+  ? rankingRows.reduce((sum, row) => sum + (row.position ?? 0), 0) / rankingRows.length
+  : null;
+const topTen = rankingRows.filter((row) => (row.position ?? 999) <= 10).length;
+const trackedInAhrefs = rows.filter((row) => row.trackedInAhrefs).length;
+const missingInAhrefs = rows.length - trackedInAhrefs;
+
+function fmtDate(value?: string | null) {
+  if (!value) return 'Not refreshed yet';
+  return new Date(value).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function fmtNumber(value?: number | null) {
+  return value === null || value === undefined ? '-' : value.toLocaleString();
+}
+
+function fmtPos(value: number | null) {
+  return value === null ? '-' : value.toFixed(0);
+}
+
+function changeClass(value: number | null) {
+  if (value === null || value === 0) return 'muted';
+  return value < 0 ? 'up' : 'down';
+}
+
+function fmtChange(value: number | null) {
+  if (value === null) return '-';
+  if (value === 0) return '0';
+  return `${value > 0 ? '+' : ''}${value.toFixed(0)}`;
+}
+
+function rankingMatchesTarget(row: KeywordRow) {
+  if (!row.url || !row.targetUrl) return null;
+  try {
+    return new URL(row.url).pathname.replace(/\/+$/, '') === row.targetUrl.replace(/\/+$/, '');
+  } catch {
+    return false;
+  }
+}
+
+function urlIndexStatus(url?: string | null) {
+  if (!url) return 'unknown';
+  return indexByUrl.get(url.replace(/\/+$/, '')) ?? 'unknown';
+}
+
+function pageIndexStatus(row: KeywordRow) {
+  return urlIndexStatus(row.targetAbsoluteUrl || row.url);
+}
+
+function indexStatusLabel(status: string) {
+  return status === 'indexed' ? 'Indexed' : status === 'not-indexed' ? 'Not indexed' : 'Index unknown';
+}
+
+const rankingUrlMismatches = rows.filter((row) => rankingMatchesTarget(row) === false).length;
+const rankingDrops = rows.filter((row) => row.change !== null && row.change > 0).length;
+const quickWins = rows.filter((row) => row.position !== null && row.position >= 4 && row.position <= 20).length;
+const noRanking = rows.filter((row) => row.position === null).length;
+const newRankings = rows.filter((row) => row.position !== null && row.previousPosition === null).length;
+const unmappedTargets = rows.filter((row) => !row.targetUrl).length;
+const staleThreshold = new Date(cache.fetchedAt ?? Date.now());
+staleThreshold.setDate(staleThreshold.getDate() - 7);
+
+function isStale(row: KeywordRow) {
+  return Boolean(row.serpUpdated && new Date(row.serpUpdated) < staleThreshold);
+}
+
+const staleSerpChecks = rows.filter(isStale).length;
+const indexedTargets = rows.filter((row) => pageIndexStatus(row) === 'indexed').length;
+const notIndexedTargets = rows.filter((row) => pageIndexStatus(row) === 'not-indexed').length;
+const unknownIndexTargets = rows.filter((row) => pageIndexStatus(row) === 'unknown').length;
+
+function rowIssues(row: KeywordRow) {
+  const issues: string[] = [];
+  if (rankingMatchesTarget(row) === false) issues.push('mismatch');
+  if (row.change !== null && row.change > 0) issues.push('drop');
+  if (row.position !== null && row.position >= 4 && row.position <= 20) issues.push('quick-win');
+  if (row.position !== null && row.previousPosition === null) issues.push('new-ranking');
+  if (row.position === null) issues.push('no-ranking');
+  if (!row.targetUrl) issues.push('unmapped');
+  if (isStale(row)) issues.push('stale');
+  return issues;
+}
+
+function recommendedAction(row: KeywordRow) {
+  if (rankingMatchesTarget(row) === false) return 'Strengthen the intended page and review internal links.';
+  if (row.change !== null && row.change > 0) return 'Review the ranking drop and recently changed competitors.';
+  if (row.position !== null && row.position >= 4 && row.position <= 20) return 'Improve content and add relevant internal links.';
+  if (!row.targetUrl) return 'Assign the keyword to its intended landing page.';
+  if (row.position === null) return 'Check indexing, intent match, and page coverage.';
+  if (isStale(row)) return 'Refresh Ahrefs to request a newer SERP check.';
+  return 'Monitor ranking.';
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Keyword Rankings | NC Digital Admin</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #090911;
+        --panel: #11111c;
+        --border: #25253a;
+        --text: #f7f7fb;
+        --muted: #a6a6bb;
+        --purple: #8750f7;
+        --green: #2dd77c;
+        --red: #ff5c7a;
+        --amber: #f6c85f;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Sora, Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+      }
+      a { color: inherit; }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        background: rgba(9, 9, 17, 0.94);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+      }
+      .brand { font-weight: 800; }
+      .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+      .nav a {
+        text-decoration: none;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.55rem 0.8rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+      .nav a.active { color: var(--text); background: var(--purple); border-color: var(--purple); }
+      main { width: min(100% - 3rem, 1800px); margin: 0 auto; padding: 2rem 0 4rem; }
+      .hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
+      h1 { margin: 0 0 0.5rem; font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -0.04em; }
+      .sub { color: var(--muted); line-height: 1.6; margin: 0; max-width: 780px; }
+      .cmd {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.85rem 1rem;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+      }
+      .stat {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem;
+      }
+      button.stat {
+        width: 100%;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      button.stat:hover, button.stat:focus-visible {
+        border-color: var(--purple);
+        background: #171728;
+        outline: none;
+      }
+      .label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; }
+      .value { font-size: 1.7rem; font-weight: 900; margin-top: 0.4rem; letter-spacing: -0.03em; }
+      .filters {
+        display: flex;
+        gap: 0.75rem;
+        margin: 1.25rem 0;
+        flex-wrap: wrap;
+      }
+      .filters input, .filters select, .filters button {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0.75rem 0.9rem;
+        font: inherit;
+      }
+      .filters input { min-width: min(360px, 100%); flex: 1; }
+      .filters button {
+        cursor: pointer;
+        font-weight: 800;
+      }
+      .filters button:hover, .filters button:focus-visible {
+        border-color: var(--purple);
+        background: #171728;
+        outline: none;
+      }
+      .table-shell {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: auto;
+        background: var(--panel);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+      }
+      table {
+        width: 100%;
+        min-width: 1540px;
+        border-collapse: collapse;
+        background: var(--panel);
+      }
+      th, td {
+        padding: 0.7rem 0.85rem;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+        font-size: 0.82rem;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #0d0d16;
+        color: var(--muted);
+        font-size: 0.66rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      th:first-child,
+      td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        background: var(--panel);
+        box-shadow: 1px 0 0 var(--border);
+      }
+      th:first-child { z-index: 4; background: #0d0d16; }
+      tbody tr:hover td { background: #151522; }
+      tbody tr:hover td:first-child { background: #151522; }
+      th:nth-child(1) { width: 260px; }
+      th:nth-child(2) { width: 110px; }
+      th:nth-child(3),
+      th:nth-child(4),
+      th:nth-child(5),
+      th:nth-child(6),
+      th:nth-child(7) { width: 86px; }
+      th:nth-child(8),
+      th:nth-child(9) { width: 285px; }
+      th:nth-child(10) { width: 145px; }
+      th:nth-child(11) { width: 105px; }
+      th:nth-child(12) { width: 250px; }
+      .sort-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-weight: inherit;
+        text-transform: inherit;
+        letter-spacing: inherit;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .sort-button::after { content: '↕'; color: #66667d; }
+      .sort-button[data-direction="asc"]::after { content: '↑'; color: var(--purple); }
+      .sort-button[data-direction="desc"]::after { content: '↓'; color: var(--purple); }
+      tr:last-child td { border-bottom: 0; }
+      .keyword { display: block; max-width: 240px; font-weight: 800; line-height: 1.35; }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 0.25rem 0.55rem;
+        font-size: 0.66rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .pill.warn { color: var(--amber); border-color: rgba(246, 200, 95, 0.35); }
+      .pill.suggested { color: #b8a4ff; border-color: rgba(135, 80, 247, 0.35); }
+      .pill.indexed { color: var(--green); border-color: rgba(45, 215, 124, 0.35); }
+      .pill.not-indexed { color: var(--red); border-color: rgba(255, 92, 122, 0.35); }
+      .url {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        margin-top: 0.25rem;
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .expected-url {
+        display: block;
+        max-width: 260px;
+        margin-top: 0.3rem;
+        overflow: hidden;
+        color: #77778d;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .url-with-status {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.35rem;
+        max-width: 280px;
+      }
+      .url-with-status .url,
+      .url-with-status .expected-url { margin-top: 0; }
+      .pos { font-size: 1.05rem; font-weight: 900; }
+      .previous-pos {
+        display: inline-block;
+        margin-left: 0.35rem;
+        color: var(--muted);
+        font-size: 0.7rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .previous-pos.new { color: var(--green); }
+      .up { color: var(--green); }
+      .down { color: var(--red); }
+      .muted { color: var(--muted); }
+      td[data-label="Action"] .url {
+        max-width: 235px;
+        white-space: normal;
+        line-height: 1.45;
+      }
+      .empty {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        color: var(--muted);
+      }
+      code { color: var(--text); }
+      @media (max-width: 960px) {
+        .topbar { align-items: flex-start; padding: 0.75rem; }
+        .brand { display: none; }
+        .nav { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.35rem; }
+        .nav a { padding: 0.5rem 0.25rem; text-align: center; font-size: 0.68rem; }
+        main { width: auto; padding: 1.25rem 0.75rem 3rem; }
+        .hero { display: block; }
+        h1 { font-size: 1.8rem; }
+        .sub { font-size: 0.85rem; }
+        .cmd { display: none; }
+        .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+        .stat { padding: 0.75rem; }
+        .label { font-size: 0.62rem; }
+        .value { font-size: 1.35rem; }
+        .filters { gap: 0.5rem; margin: 1rem 0; }
+        .filters input, .filters select, .filters button { width: 100%; min-width: 0; padding: 0.7rem; font-size: 0.82rem; }
+        .table-shell { border: 0; background: transparent; overflow: visible; box-shadow: none; }
+        table, tbody, tr, td { display: block; width: 100%; min-width: 0; }
+        table { border: 0; background: transparent; overflow: visible; }
+        thead { display: none; }
+        tbody { display: grid; gap: 0.6rem; }
+        tr {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto auto;
+          gap: 0.45rem 0.75rem;
+          padding: 0.75rem;
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+        }
+        td {
+          display: grid;
+          grid-template-columns: 5.5rem minmax(0, 1fr);
+          gap: 0.5rem;
+          align-items: start;
+          min-width: 0;
+          padding: 0.15rem 0;
+          border: 0;
+          font-size: 0.76rem;
+        }
+        td::before {
+          content: attr(data-label);
+          color: var(--muted);
+          font-size: 0.58rem;
+          font-weight: 800;
+          text-transform: uppercase;
+        }
+        td:first-child { display: block; grid-column: 1; grid-row: 1; padding: 0; }
+        td:first-child::before, td:nth-child(2)::before, td:nth-child(3)::before, td:nth-child(4)::before { display: none; }
+        td:nth-child(2) { display: block; grid-column: 1; grid-row: 2; padding: 0; }
+        td:nth-child(3) { display: block; grid-column: 2; grid-row: 1 / span 2; padding: 0; text-align: right; }
+        td:nth-child(4) { display: block; grid-column: 3; grid-row: 1 / span 2; padding: 0; text-align: right; }
+        td:nth-child(n+5) { grid-column: 1 / -1; }
+        th:first-child,
+        td:first-child {
+          position: static;
+          box-shadow: none;
+          background: transparent;
+        }
+        .keyword { max-width: 100%; font-size: 0.88rem; }
+        .url, .expected-url { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+        .pos { font-size: 1rem; }
+        .previous-pos { display: block; margin: 0.1rem 0 0; }
+        .pill { padding: 0.2rem 0.45rem; font-size: 0.62rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">NC Digital Admin</div>
+      <nav class="nav">
+        <a href="/admin/links/">Internal Links</a>
+        <a href="/admin/backlinks/">Backlinks</a>
+        <a href="/admin/keywords/" class="active">Keywords</a>
+        <a href="/admin/keyword-research/">Keyword Research</a>
+        <a href="/admin/indexing/">Indexing</a>
+        <a href="/admin/gsc/">GSC</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>Keyword Rankings</h1>
+          <p class="sub">
+            Ahrefs Rank Tracker positions for your selected NC Digital keywords. Run the refresh command whenever you want the latest available Ahrefs data rebuilt and deployed.
+          </p>
+        </div>
+        <div class="cmd">node scripts/ahrefs-keywords.mjs && npm run build && npx wrangler deploy</div>
+      </section>
+
+      <section class="stats">
+        <div class="stat">
+          <div class="label">Last Refresh</div>
+          <div class="value" style="font-size:1rem;">{fmtDate(cache.fetchedAt)}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Tracked Keywords</div>
+          <div class="value">{trackedInAhrefs}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Top 10</div>
+          <div class="value">{topTen}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Avg Position</div>
+          <div class="value">{avgPosition === null ? '-' : avgPosition.toFixed(1)}</div>
+        </div>
+      </section>
+
+      <section class="stats">
+        <div class="stat">
+          <div class="label">Ahrefs Project Keywords</div>
+          <div class="value">{cache.trackedKeywordCount ?? '-'}</div>
+        </div>
+        <div class="stat">
+          <div class="label">Matched In Ahrefs</div>
+          <div class="value">{trackedInAhrefs}</div>
+        </div>
+        <button class="stat" id="show-missing" type="button">
+          <div class="label">Missing In Ahrefs</div>
+          <div class="value">{missingInAhrefs}</div>
+        </button>
+        <button class="stat" id="show-mismatches" type="button">
+          <div class="label">Ranking URL Mismatches</div>
+          <div class="value">{rankingUrlMismatches}</div>
+        </button>
+        <div class="stat">
+          <div class="label">Device / Date</div>
+          <div class="value" style="font-size:1rem;">{cache.device ?? '-'} / {cache.date ?? '-'}</div>
+        </div>
+      </section>
+
+      <section class="stats">
+        <button class="stat issue-stat" type="button" data-issue-filter="drop">
+          <div class="label">Ranking Drops</div>
+          <div class="value">{rankingDrops}</div>
+        </button>
+        <button class="stat issue-stat" type="button" data-issue-filter="quick-win">
+          <div class="label">Quick Wins: Positions 4-20</div>
+          <div class="value">{quickWins}</div>
+        </button>
+        <button class="stat issue-stat" type="button" data-issue-filter="no-ranking">
+          <div class="label">No Ranking Data</div>
+          <div class="value">{noRanking}</div>
+        </button>
+        <button class="stat issue-stat" type="button" data-issue-filter="new-ranking">
+          <div class="label">New Rankings</div>
+          <div class="value">{newRankings}</div>
+        </button>
+        <button class="stat issue-stat" type="button" data-issue-filter="unmapped">
+          <div class="label">No Target Page</div>
+          <div class="value">{unmappedTargets}</div>
+        </button>
+        <button class="stat issue-stat" type="button" data-issue-filter="stale">
+          <div class="label">Stale SERP Checks</div>
+          <div class="value">{staleSerpChecks}</div>
+        </button>
+      </section>
+
+      <section class="stats">
+        <button class="stat index-stat" type="button" data-index-filter="indexed">
+          <div class="label">Linked Pages Indexed</div>
+          <div class="value">{indexedTargets}</div>
+        </button>
+        <button class="stat index-stat" type="button" data-index-filter="not-indexed">
+          <div class="label">Linked Pages Not Indexed</div>
+          <div class="value">{notIndexedTargets}</div>
+        </button>
+        <button class="stat index-stat" type="button" data-index-filter="unknown">
+          <div class="label">Index Status Unknown</div>
+          <div class="value">{unknownIndexTargets}</div>
+        </button>
+      </section>
+
+      <div class="filters">
+        <input id="search" type="search" placeholder="Search keywords, groups, or URLs" />
+        <select id="group">
+          <option value="">All groups</option>
+          {groups.map((group) => <option value={group}>{group}</option>)}
+        </select>
+        <select id="ranking">
+          <option value="">All rankings</option>
+          <option value="ranked">Ranking data</option>
+          <option value="top3">Top 3</option>
+          <option value="top10">Top 10</option>
+          <option value="top20">Top 20</option>
+          <option value="not-ranked">No ranking data</option>
+        </select>
+        <select id="tracked">
+          <option value="">All Ahrefs status</option>
+          <option value="tracked">Tracked in Ahrefs</option>
+          <option value="missing">Missing from Ahrefs</option>
+        </select>
+        <select id="target">
+          <option value="">All target pages</option>
+          <option value="mapped">Has target page</option>
+          <option value="unmapped">No target page</option>
+          <option value="matched">Ranking URL matches target</option>
+          <option value="mismatch">Ranking URL mismatch</option>
+        </select>
+        <select id="issue">
+          <option value="">All SEO issues</option>
+          <option value="drop">Ranking drops</option>
+          <option value="quick-win">Quick wins: positions 4-20</option>
+          <option value="new-ranking">New rankings</option>
+          <option value="no-ranking">No ranking data</option>
+          <option value="unmapped">No target page</option>
+          <option value="mismatch">Ranking URL mismatch</option>
+          <option value="stale">Stale SERP check</option>
+        </select>
+        <select id="index-status">
+          <option value="">All index statuses</option>
+          <option value="indexed">Target page indexed</option>
+          <option value="not-indexed">Target page not indexed</option>
+          <option value="unknown">Index status unknown</option>
+        </select>
+        <button id="reset-filters" type="button">Reset filters</button>
+      </div>
+
+      {rows.length ? (
+        <div class="table-shell">
+        <table id="keywords">
+          <thead>
+            <tr>
+              <th>Keyword</th>
+              <th>Group</th>
+              <th><button class="sort-button" type="button" data-sort="position" data-type="number">Position</button></th>
+              <th><button class="sort-button" type="button" data-sort="change" data-type="number">Change</button></th>
+              <th><button class="sort-button" type="button" data-sort="volume" data-type="number">Volume</button></th>
+              <th><button class="sort-button" type="button" data-sort="kd" data-type="number">KD</button></th>
+              <th><button class="sort-button" type="button" data-sort="traffic" data-type="number">Traffic</button></th>
+              <th><button class="sort-button" type="button" data-sort="url" data-type="text">Ranking URL</button></th>
+              <th>Target</th>
+              <th>Ahrefs SERP Check</th>
+              <th>Ahrefs</th>
+              <th>Recommended Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr
+                data-search={`${row.keyword} ${row.group} ${row.targetUrl} ${row.url ?? ''}`.toLowerCase()}
+                data-group={row.group}
+                data-position={row.position ?? ''}
+                data-change={row.change ?? ''}
+                data-volume={row.volume ?? ''}
+                data-kd={row.keywordDifficulty ?? ''}
+                data-traffic={row.traffic ?? ''}
+                data-url={(row.url ?? '').toLowerCase()}
+                data-tracked={row.trackedInAhrefs ? 'tracked' : 'missing'}
+                data-target={row.targetUrl ? 'mapped' : 'unmapped'}
+                data-target-match={rankingMatchesTarget(row) === true ? 'matched' : rankingMatchesTarget(row) === false ? 'mismatch' : ''}
+                data-issues={rowIssues(row).join(' ')}
+                data-index-status={pageIndexStatus(row)}
+              >
+                <td data-label="Keyword"><span class="keyword">{row.keyword}</span></td>
+                <td data-label="Group"><span class="pill">{row.group}</span></td>
+                <td data-label="Position">
+                  <span class="pos">{fmtPos(row.position)}</span>
+                  {row.previousPosition !== null && (
+                    <span class="previous-pos" title="Previous position">was {fmtPos(row.previousPosition)}</span>
+                  )}
+                  {row.position !== null && row.previousPosition === null && (
+                    <span class="previous-pos new" title="No previous ranking position">new</span>
+                  )}
+                </td>
+                <td data-label="Change"><span class={changeClass(row.change)}>{fmtChange(row.change)}</span></td>
+                <td data-label="Volume">{fmtNumber(row.volume)}</td>
+                <td data-label="KD">{fmtNumber(row.keywordDifficulty)}</td>
+                <td data-label="Traffic">{fmtNumber(row.traffic)}</td>
+                <td data-label="Ranking URL">
+                  {row.url ? (
+                    <>
+                      <div class="url-with-status">
+                        <a class="url" href={row.url} target="_blank" rel="noopener">{row.url.replace('https://nc-digital.co.uk', '')}</a>
+                        <span class={`pill ${urlIndexStatus(row.url)}`}>{indexStatusLabel(urlIndexStatus(row.url))}</span>
+                      </div>
+                      {rankingMatchesTarget(row) === false && (
+                        <div class="url-with-status">
+                          <a class="expected-url" href={row.targetAbsoluteUrl} target="_blank" rel="noopener" title="Intended target URL">
+                            should be {row.targetUrl}
+                          </a>
+                          <span class={`pill ${pageIndexStatus(row)}`}>{indexStatusLabel(pageIndexStatus(row))}</span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <span class="muted">-</span>
+                      {row.targetUrl && (
+                        <div class="url-with-status">
+                          <a class="expected-url" href={row.targetAbsoluteUrl} target="_blank" rel="noopener" title="Intended target URL">
+                            should be {row.targetUrl}
+                          </a>
+                          <span class={`pill ${pageIndexStatus(row)}`}>{indexStatusLabel(pageIndexStatus(row))}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </td>
+                <td data-label="Target">
+                  {row.targetUrl ? (
+                    <>
+                      <div class="url-with-status">
+                        <a class="url" href={row.targetAbsoluteUrl} target="_blank" rel="noopener">{row.targetUrl}</a>
+                        {row.targetSource === 'inferred' && <span class="pill suggested">Suggested target</span>}
+                        <span class={`pill ${pageIndexStatus(row)}`}>{indexStatusLabel(pageIndexStatus(row))}</span>
+                      </div>
+                      {rankingMatchesTarget(row) === false && <span class="pill warn">Ranking URL mismatch</span>}
+                    </>
+                  ) : <span class="muted">No target</span>}
+                </td>
+                <td data-label="SERP check">{row.serpUpdated ? fmtDate(row.serpUpdated) : '-'}</td>
+                <td data-label="Ahrefs">
+                  {row.trackedInAhrefs ? (
+                    <span class="pill">Tracked</span>
+                  ) : (
+                    <span class="pill warn">Add to Ahrefs</span>
+                  )}
+                </td>
+                <td data-label="Action"><span class="url">{recommendedAction(row)}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        </div>
+      ) : (
+        <div class="empty">
+          No Ahrefs keyword cache found yet. Add <code>AHREFS_RANK_TRACKER_PROJECT_ID</code> to your environment, then run <code>node scripts/ahrefs-keywords.mjs</code> and rebuild.
+        </div>
+      )}
+    </main>
+
+    <script>
+      const search = document.getElementById('search');
+      const group = document.getElementById('group');
+      const ranking = document.getElementById('ranking');
+      const tracked = document.getElementById('tracked');
+      const target = document.getElementById('target');
+      const issue = document.getElementById('issue');
+      const indexStatus = document.getElementById('index-status');
+      const showMissing = document.getElementById('show-missing');
+      const showMismatches = document.getElementById('show-mismatches');
+      const resetFilters = document.getElementById('reset-filters');
+      const issueStats = Array.from(document.querySelectorAll('.issue-stat'));
+      const indexStats = Array.from(document.querySelectorAll('.index-stat'));
+      const tbody = document.querySelector('#keywords tbody');
+      const rows = Array.from(document.querySelectorAll('#keywords tbody tr'));
+      const originalRows = [...rows];
+      const sortButtons = Array.from(document.querySelectorAll('.sort-button'));
+
+      function applyFilters() {
+        const q = search.value.trim().toLowerCase();
+        const g = group.value;
+        const rank = ranking.value;
+        const trackedStatus = tracked.value;
+        const targetStatus = target.value;
+        const issueStatus = issue.value;
+        const selectedIndexStatus = indexStatus.value;
+        for (const row of rows) {
+          const matchesQuery = !q || row.dataset.search.includes(q);
+          const matchesGroup = !g || row.dataset.group === g;
+          const position = row.dataset.position ? Number(row.dataset.position) : null;
+          const matchesRanking =
+            !rank ||
+            (rank === 'ranked' && position !== null) ||
+            (rank === 'top3' && position !== null && position <= 3) ||
+            (rank === 'top10' && position !== null && position <= 10) ||
+            (rank === 'top20' && position !== null && position <= 20) ||
+            (rank === 'not-ranked' && position === null);
+          const matchesTracked = !trackedStatus || row.dataset.tracked === trackedStatus;
+          const matchesTarget = !targetStatus ||
+            row.dataset.target === targetStatus ||
+            row.dataset.targetMatch === targetStatus;
+          const matchesIssue = !issueStatus || row.dataset.issues.split(' ').includes(issueStatus);
+          const matchesIndexStatus = !selectedIndexStatus || row.dataset.indexStatus === selectedIndexStatus;
+          row.style.display = matchesQuery && matchesGroup && matchesRanking && matchesTracked && matchesTarget && matchesIssue && matchesIndexStatus ? '' : 'none';
+        }
+      }
+
+      search?.addEventListener('input', applyFilters);
+      group?.addEventListener('change', applyFilters);
+      ranking?.addEventListener('change', applyFilters);
+      tracked?.addEventListener('change', applyFilters);
+      target?.addEventListener('change', applyFilters);
+      issue?.addEventListener('change', applyFilters);
+      indexStatus?.addEventListener('change', applyFilters);
+      resetFilters?.addEventListener('click', () => {
+        search.value = '';
+        group.value = '';
+        ranking.value = '';
+        tracked.value = '';
+        target.value = '';
+        issue.value = '';
+        indexStatus.value = '';
+        for (const button of sortButtons) delete button.dataset.direction;
+        for (const row of originalRows) tbody?.appendChild(row);
+        applyFilters();
+      });
+      showMissing?.addEventListener('click', () => {
+        tracked.value = 'missing';
+        applyFilters();
+        document.getElementById('keywords')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      showMismatches?.addEventListener('click', () => {
+        target.value = 'mismatch';
+        issue.value = 'mismatch';
+        applyFilters();
+        document.getElementById('keywords')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      for (const stat of issueStats) {
+        stat.addEventListener('click', () => {
+          issue.value = stat.dataset.issueFilter;
+          applyFilters();
+          document.getElementById('keywords')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+      for (const stat of indexStats) {
+        stat.addEventListener('click', () => {
+          indexStatus.value = stat.dataset.indexFilter;
+          applyFilters();
+          document.getElementById('keywords')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+
+      for (const button of sortButtons) {
+        button.addEventListener('click', () => {
+          const key = button.dataset.sort;
+          const type = button.dataset.type;
+          const direction = button.dataset.direction === 'asc' ? 'desc' : 'asc';
+
+          for (const other of sortButtons) delete other.dataset.direction;
+          button.dataset.direction = direction;
+
+          rows.sort((a, b) => {
+            const aRaw = a.dataset[key] ?? '';
+            const bRaw = b.dataset[key] ?? '';
+            const aEmpty = aRaw === '';
+            const bEmpty = bRaw === '';
+
+            if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+            if (aEmpty && bEmpty) return 0;
+
+            const comparison = type === 'number'
+              ? Number(aRaw) - Number(bRaw)
+              : aRaw.localeCompare(bRaw);
+            return direction === 'asc' ? comparison : -comparison;
+          });
+
+          for (const row of rows) tbody?.appendChild(row);
+        });
+      }
+    </script>
+  </body>
+</html>
