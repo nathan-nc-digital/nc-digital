@@ -154,8 +154,8 @@ function buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, di
   });
 }
 
-function writeCache(checks) {
-  const cache = { fetchedAt: new Date().toISOString(), checks };
+function writeCache(checks, complete) {
+  const cache = { fetchedAt: new Date().toISOString(), complete, checks };
   fs.writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2), 'utf8');
 }
 
@@ -181,7 +181,7 @@ async function main() {
     await sleep(REQUEST_DELAY_MS);
     if ((i + 1) % PROGRESS_INTERVAL === 0 || i + 1 === opportunities.length) {
       console.log(`SERP fetch: ${i + 1}/${opportunities.length}`);
-      writeCache(buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList));
+      writeCache(buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList), false);
     }
   }
 
@@ -208,12 +208,12 @@ async function main() {
     await sleep(REQUEST_DELAY_MS);
     if ((i + 1) % PROGRESS_INTERVAL === 0 || i + 1 === domainList.length) {
       console.log(`Backlinks lookup: ${i + 1}/${domainList.length}`);
-      writeCache(buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList));
+      writeCache(buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList), false);
     }
   }
 
   const checks = buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList);
-  writeCache(checks);
+  writeCache(checks, true);
 
   const verdictCounts = checks.reduce((acc, c) => {
     acc[c.verdict] = (acc[c.verdict] ?? 0) + 1;

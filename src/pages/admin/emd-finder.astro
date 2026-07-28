@@ -36,6 +36,7 @@ interface CompetitorCheck {
 
 interface CompetitorCheckCache {
   fetchedAt?: string;
+  complete?: boolean;
   checks?: CompetitorCheck[];
 }
 
@@ -49,8 +50,13 @@ const competitorCache: CompetitorCheckCache = existsSync(COMPETITOR_CACHE_PATH)
   ? JSON.parse(readFileSync(COMPETITOR_CACHE_PATH, 'utf8'))
   : {};
 
+// Only trust competitor data from a run that finished — an interim
+// checkpoint from a killed run has floor: null everywhere, which
+// computeVerdict reads as "Soft" for every combo.
 const competitorChecksByKey = new Map(
-  (competitorCache.checks ?? []).map((check) => [`${check.trade}|${check.town}`, check])
+  competitorCache.complete === true
+    ? (competitorCache.checks ?? []).map((check) => [`${check.trade}|${check.town}`, check])
+    : []
 );
 
 const combos = cache.combos ?? [];
