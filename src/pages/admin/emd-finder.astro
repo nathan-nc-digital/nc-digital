@@ -1,0 +1,438 @@
+---
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+interface ComboRow {
+  trade: string;
+  town: string;
+  domain: string;
+  available: boolean | null;
+  volume: number | null;
+  cpc: number | null;
+  difficulty: number | null;
+}
+
+interface EmdCache {
+  fetchedAt?: string;
+  combos?: ComboRow[];
+}
+
+const CACHE_PATH = join(process.cwd(), 'scripts/emd-finder-cache.json');
+const cache: EmdCache = existsSync(CACHE_PATH)
+  ? JSON.parse(readFileSync(CACHE_PATH, 'utf8'))
+  : {};
+
+const combos = cache.combos ?? [];
+const hasData = Boolean(cache.fetchedAt);
+
+const availableCount = combos.filter((c) => c.available === true).length;
+const opportunityCount = combos.filter((c) => c.available === true && c.volume !== null && c.volume > 0).length;
+
+function fmtDate(value?: string | null) {
+  if (!value) return 'Not refreshed yet';
+  return new Date(value).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function fmtNumber(value?: number | null) {
+  return value === null || value === undefined ? '-' : value.toLocaleString();
+}
+
+function fmtCpc(value?: number | null) {
+  return value === null || value === undefined ? '-' : `£${value.toFixed(2)}`;
+}
+
+function availabilityLabel(value: boolean | null) {
+  return value === true ? 'Available' : value === false ? 'Taken' : 'Unknown';
+}
+
+function availabilityClass(value: boolean | null) {
+  return value === true ? 'available' : value === false ? 'taken' : 'unknown';
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EMD Finder | NC Digital Admin</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #090911;
+        --panel: #11111c;
+        --border: #25253a;
+        --text: #f7f7fb;
+        --muted: #a6a6bb;
+        --purple: #8750f7;
+        --green: #2dd77c;
+        --red: #ff5c7a;
+        --amber: #f6c85f;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Sora, Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+      }
+      a { color: inherit; }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        background: rgba(9, 9, 17, 0.94);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+      }
+      .brand { font-weight: 800; }
+      .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+      .nav a {
+        text-decoration: none;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.55rem 0.8rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+      .nav a.active { color: var(--text); background: var(--purple); border-color: var(--purple); }
+      main { width: min(100% - 3rem, 1400px); margin: 0 auto; padding: 2rem 0 4rem; }
+      .hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
+      h1 { margin: 0 0 0.5rem; font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -0.04em; }
+      .sub { color: var(--muted); line-height: 1.6; margin: 0; max-width: 780px; }
+      .cmd {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.85rem 1rem;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+      }
+      .stat {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem;
+      }
+      .label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 800; }
+      .value { font-size: 1.7rem; font-weight: 900; margin-top: 0.4rem; letter-spacing: -0.03em; }
+      .filters {
+        display: flex;
+        gap: 0.75rem;
+        margin: 1rem 0;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .filters input, .filters button {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 8px;
+        padding: 0.75rem 0.9rem;
+        font: inherit;
+      }
+      .filters input[type="search"] { min-width: min(260px, 100%); flex: 1; }
+      .filters input[type="number"] { flex: 0 0 140px; min-width: 0; }
+      .filters button { cursor: pointer; font-weight: 800; }
+      .filters button:hover, .filters button:focus-visible { border-color: var(--purple); background: #171728; outline: none; }
+      .checkbox-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .checkbox-label input[type="checkbox"] { width: 1.1rem; height: 1.1rem; accent-color: var(--purple); }
+      .table-shell {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: auto;
+        background: var(--panel);
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+      }
+      table { width: 100%; border-collapse: collapse; background: var(--panel); }
+      th, td {
+        padding: 0.7rem 0.85rem;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+        font-size: 0.82rem;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #0d0d16;
+        color: var(--muted);
+        font-size: 0.66rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      tr:last-child td { border-bottom: 0; }
+      tbody tr:hover td { background: #151522; }
+      tbody tr.opportunity td:first-child { box-shadow: inset 3px 0 0 var(--green); }
+      .sort-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-weight: inherit;
+        text-transform: inherit;
+        letter-spacing: inherit;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .sort-button::after { content: '↕'; color: #66667d; }
+      .sort-button[data-direction="asc"]::after { content: '↑'; color: var(--purple); }
+      .sort-button[data-direction="desc"]::after { content: '↓'; color: var(--purple); }
+      .domain { font-weight: 800; }
+      .muted { color: var(--muted); }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 0.25rem 0.55rem;
+        font-size: 0.7rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .pill.available { color: var(--green); border-color: rgba(45, 215, 124, 0.35); }
+      .pill.taken { color: var(--muted); }
+      .pill.unknown { color: var(--amber); border-color: rgba(246, 200, 95, 0.35); }
+      .empty {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        color: var(--muted);
+      }
+      code { color: var(--text); }
+      @media (max-width: 960px) {
+        .topbar { align-items: flex-start; padding: 0.75rem; }
+        .brand { display: none; }
+        .nav { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.35rem; }
+        .nav a { padding: 0.5rem 0.25rem; text-align: center; font-size: 0.62rem; }
+        main { width: auto; padding: 1.25rem 0.75rem 3rem; }
+        .hero { display: block; }
+        h1 { font-size: 1.8rem; }
+        .sub { font-size: 0.85rem; }
+        .cmd { display: none; }
+        .stats { grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 0.5rem; margin: 1rem 0; }
+        .stat { padding: 0.75rem; }
+        .label { font-size: 0.62rem; }
+        .value { font-size: 1.35rem; }
+        .filters input, .filters button { width: 100%; min-width: 0; }
+        .filters input[type="number"] { flex: 1 1 auto; }
+        table, tbody, tr, td { display: block; width: 100%; }
+        table { border: 0; background: transparent; }
+        thead { display: none; }
+        tbody { display: grid; gap: 0.6rem; padding: 0.6rem; }
+        tr { display: grid; gap: 0.4rem; padding: 0.75rem; background: #0d0d16; border: 1px solid var(--border); border-radius: 8px; }
+        tbody tr.opportunity { box-shadow: inset 3px 0 0 var(--green); }
+        tbody tr.opportunity td:first-child { box-shadow: none; }
+        td {
+          display: grid;
+          grid-template-columns: 6rem minmax(0, 1fr);
+          gap: 0.5rem;
+          border: 0;
+          padding: 0.15rem 0;
+          font-size: 0.78rem;
+        }
+        td::before {
+          content: attr(data-label);
+          color: var(--muted);
+          font-size: 0.6rem;
+          font-weight: 800;
+          text-transform: uppercase;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">NC Digital Admin</div>
+      <nav class="nav">
+        <a href="/admin/links/">Internal Links</a>
+        <a href="/admin/backlinks/">Backlinks</a>
+        <a href="/admin/keywords/">Keywords</a>
+        <a href="/admin/keyword-research/">Keyword Research</a>
+        <a href="/admin/indexing/">Indexing</a>
+        <a href="/admin/gsc/">GSC</a>
+        <a href="/admin/emd-finder/" class="active">EMD Finder</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <h1>EMD Finder</h1>
+          <p class="sub">
+            Checks exact-match .co.uk domains for trade + South Wales town combinations against real availability and search demand, for rank-and-rent opportunities. Refresh whenever you want current data rebuilt and deployed.
+          </p>
+        </div>
+        <div class="cmd">node scripts/emd-finder.mjs && npm run build && npx wrangler deploy</div>
+      </section>
+
+      {!hasData ? (
+        <div class="empty">
+          No EMD finder cache found yet. Edit <code>scripts/emd-finder-seed.json</code> with your trade and town lists (a starter list is already included), then run <code>node scripts/emd-finder.mjs</code> and rebuild.
+        </div>
+      ) : (
+        <>
+          <section class="stats">
+            <div class="stat">
+              <div class="label">Last Refresh</div>
+              <div class="value" style="font-size:1rem;">{fmtDate(cache.fetchedAt)}</div>
+            </div>
+            <div class="stat">
+              <div class="label">Combos Checked</div>
+              <div class="value">{combos.length}</div>
+            </div>
+            <div class="stat">
+              <div class="label">Domains Available</div>
+              <div class="value">{availableCount}</div>
+            </div>
+          </section>
+
+          <section class="stats">
+            <div class="stat">
+              <div class="label">Opportunities</div>
+              <div class="value">{opportunityCount}</div>
+            </div>
+          </section>
+
+          <div class="filters">
+            <input id="search" type="search" placeholder="Search trade, town, or domain" />
+            <input id="min-volume" type="number" min="0" placeholder="Min volume" />
+            <label class="checkbox-label">
+              <input id="available-only" type="checkbox" />
+              Available only
+            </label>
+            <button id="reset-filters" type="button">Reset filters</button>
+          </div>
+
+          {combos.length ? (
+            <div class="table-shell">
+              <table id="combos">
+                <thead>
+                  <tr>
+                    <th>Domain</th>
+                    <th>Trade</th>
+                    <th>Town</th>
+                    <th>Availability</th>
+                    <th><button class="sort-button" type="button" data-sort="volume" data-type="number">Volume</button></th>
+                    <th><button class="sort-button" type="button" data-sort="cpc" data-type="number">CPC</button></th>
+                    <th><button class="sort-button" type="button" data-sort="difficulty" data-type="number">Difficulty</button></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {combos.map((row) => (
+                    <tr
+                      class={row.available === true && row.volume !== null && row.volume > 0 ? 'opportunity' : ''}
+                      data-search={`${row.trade} ${row.town} ${row.domain}`.toLowerCase()}
+                      data-available={row.available === true ? 'true' : row.available === false ? 'false' : 'unknown'}
+                      data-volume={row.volume ?? ''}
+                      data-cpc={row.cpc ?? ''}
+                      data-difficulty={row.difficulty ?? ''}
+                    >
+                      <td data-label="Domain"><span class="domain">{row.domain}</span></td>
+                      <td data-label="Trade">{row.trade}</td>
+                      <td data-label="Town">{row.town.replace(/-/g, ' ')}</td>
+                      <td data-label="Availability"><span class={`pill ${availabilityClass(row.available)}`}>{availabilityLabel(row.available)}</span></td>
+                      <td data-label="Volume">{fmtNumber(row.volume)}</td>
+                      <td data-label="CPC">{fmtCpc(row.cpc)}</td>
+                      <td data-label="Difficulty">{fmtNumber(row.difficulty)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div class="empty">No combos in the cache yet.</div>
+          )}
+        </>
+      )}
+    </main>
+
+    <script>
+      const search = document.getElementById('search') as HTMLInputElement | null;
+      const minVolume = document.getElementById('min-volume') as HTMLInputElement | null;
+      const availableOnly = document.getElementById('available-only') as HTMLInputElement | null;
+      const reset = document.getElementById('reset-filters');
+      const table = document.getElementById('combos');
+      const tbody = table?.querySelector('tbody');
+      const rows = Array.from(table?.querySelectorAll<HTMLTableRowElement>('tbody tr') ?? []);
+      const sortButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.sort-button'));
+
+      function applyFilters() {
+        const q = search?.value.trim().toLowerCase() || '';
+        const minVol = minVolume?.value ? Number(minVolume.value) : null;
+        const onlyAvailable = availableOnly?.checked ?? false;
+        for (const row of rows) {
+          const matchesQuery = !q || (row.dataset.search ?? '').includes(q);
+          const volume = row.dataset.volume ? Number(row.dataset.volume) : null;
+          const matchesVolume = minVol === null || (volume !== null && volume >= minVol);
+          const matchesAvailable = !onlyAvailable || row.dataset.available === 'true';
+          row.style.display = matchesQuery && matchesVolume && matchesAvailable ? '' : 'none';
+        }
+      }
+
+      search?.addEventListener('input', applyFilters);
+      minVolume?.addEventListener('input', applyFilters);
+      availableOnly?.addEventListener('change', applyFilters);
+      reset?.addEventListener('click', () => {
+        if (search) search.value = '';
+        if (minVolume) minVolume.value = '';
+        if (availableOnly) availableOnly.checked = false;
+        for (const button of sortButtons) delete button.dataset.direction;
+        for (const row of rows) tbody?.appendChild(row);
+        applyFilters();
+      });
+
+      for (const button of sortButtons) {
+        button.addEventListener('click', () => {
+          const key = button.dataset.sort as string;
+          const type = button.dataset.type;
+          const direction = button.dataset.direction === 'asc' ? 'desc' : 'asc';
+          for (const other of sortButtons) delete other.dataset.direction;
+          button.dataset.direction = direction;
+          rows.sort((a, b) => {
+            const aRaw = a.dataset[key] ?? '';
+            const bRaw = b.dataset[key] ?? '';
+            const aEmpty = aRaw === '';
+            const bEmpty = bRaw === '';
+            if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+            if (aEmpty && bEmpty) return 0;
+            const comparison = type === 'number'
+              ? Number(aRaw) - Number(bRaw)
+              : aRaw.localeCompare(bRaw);
+            return direction === 'asc' ? comparison : -comparison;
+          });
+          for (const row of rows) tbody?.appendChild(row);
+        });
+      }
+    </script>
+  </body>
+</html>
