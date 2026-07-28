@@ -83,8 +83,9 @@ async function postTask(authHeader, endpoint, tasks) {
     body: JSON.stringify(tasks),
   });
   const json = await res.json();
-  if (!res.ok || (json.status_code && json.status_code >= 40000)) {
-    const message = json.status_message || `${res.status} ${res.statusText}`;
+  const task = json.tasks?.[0];
+  if (!res.ok || (json.status_code && json.status_code >= 40000) || (task?.status_code && task.status_code >= 40000)) {
+    const message = task?.status_message || json.status_message || `${res.status} ${res.statusText}`;
     throw new Error(`${endpoint}: ${message}`);
   }
   return json;
@@ -135,7 +136,7 @@ async function main() {
   const overviewByKeyword = new Map(overviewItems.map((item) => [item.keyword.trim().toLowerCase(), item]));
 
   const keywords = [];
-  const relatedKeywordBatches = [];
+  const relatedKeywordItems = [];
 
   for (const keyword of seedKeywords) {
     const [serp, related] = await Promise.all([
@@ -150,10 +151,10 @@ async function main() {
       difficulty: null,
     };
     keywords.push({ ...overview, serp });
-    relatedKeywordBatches.push(...related);
+    relatedKeywordItems.push(...related);
   }
 
-  const relatedKeywords = dedupeRelatedKeywords(relatedKeywordBatches);
+  const relatedKeywords = dedupeRelatedKeywords(relatedKeywordItems);
 
   const cache = {
     fetchedAt: new Date().toISOString(),
