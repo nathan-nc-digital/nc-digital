@@ -66,6 +66,15 @@ function fmtCpc(value?: number | null) {
 function fmtCompetition(value?: number | null) {
   return value === null || value === undefined ? '-' : `${Math.round(value * 100)}%`;
 }
+
+function yourRank(serp: SerpResult[]) {
+  const match = serp.find((result) => result.domain.toLowerCase().includes('nc-digital.co.uk'));
+  return match?.position ?? null;
+}
+
+function fmtYourRank(value: number | null) {
+  return value === null ? 'Not in top 10' : `#${value}`;
+}
 ---
 
 <html lang="en">
@@ -354,6 +363,7 @@ function fmtCompetition(value?: number | null) {
                     <th><button class="sort-button" type="button" data-sort="cpc" data-type="number">CPC</button></th>
                     <th><button class="sort-button" type="button" data-sort="competition" data-type="number">Competition</button></th>
                     <th><button class="sort-button" type="button" data-sort="difficulty" data-type="number">Difficulty</button></th>
+                    <th><button class="sort-button" type="button" data-sort="yourRank" data-type="number">Your Rank</button></th>
                     <th>Top Ranking Domain</th>
                   </tr>
                 </thead>
@@ -365,6 +375,7 @@ function fmtCompetition(value?: number | null) {
                       data-cpc={row.cpc ?? ''}
                       data-competition={row.competition ?? ''}
                       data-difficulty={row.difficulty ?? ''}
+                      data-your-rank={yourRank(row.serp) ?? ''}
                     >
                       <td data-label="Keyword">
                         <span class="keyword">{row.keyword}</span>
@@ -393,6 +404,7 @@ function fmtCompetition(value?: number | null) {
                       <td data-label="CPC">{fmtCpc(row.cpc)}</td>
                       <td data-label="Competition">{fmtCompetition(row.competition)}</td>
                       <td data-label="Difficulty">{fmtNumber(row.difficulty)}</td>
+                      <td data-label="Your Rank">{fmtYourRank(yourRank(row.serp))}</td>
                       <td data-label="Top Domain">
                         {row.serp[0] ? <span class="muted">{row.serp[0].domain}</span> : <span class="muted">-</span>}
                       </td>
