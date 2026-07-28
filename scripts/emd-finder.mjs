@@ -102,11 +102,25 @@ async function postTask(authHeader, endpoint, tasks) {
   return json;
 }
 
+const KEYWORD_OVERVIEW_BATCH_SIZE = 700;
+
+function chunk(array, size) {
+  const chunks = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
+
 async function fetchKeywordOverview(authHeader, phrases) {
-  const json = await postTask(authHeader, 'dataforseo_labs/google/keyword_overview/live', [
-    { keywords: phrases, location_name: LOCATION_NAME, language_code: LANGUAGE_CODE },
-  ]);
-  const items = json.tasks?.[0]?.result?.[0]?.items ?? [];
+  const batches = chunk(phrases, KEYWORD_OVERVIEW_BATCH_SIZE);
+  const items = [];
+  for (const batch of batches) {
+    const json = await postTask(authHeader, 'dataforseo_labs/google/keyword_overview/live', [
+      { keywords: batch, location_name: LOCATION_NAME, language_code: LANGUAGE_CODE },
+    ]);
+    items.push(...(json.tasks?.[0]?.result?.[0]?.items ?? []));
+  }
   return items.map(mapKeywordOverviewItem);
 }
 
