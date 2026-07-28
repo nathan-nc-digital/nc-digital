@@ -96,7 +96,11 @@ async function fetchKeywordOverview(authHeader, keywords) {
     { keywords, location_name: LOCATION_NAME, language_code: LANGUAGE_CODE },
   ]);
   const items = json.tasks?.[0]?.result?.[0]?.items ?? [];
-  return items.map(mapKeywordOverviewItem);
+  const mapped = items.map(mapKeywordOverviewItem);
+  if (mapped.length > 0 && mapped.every((item) => item.volume === null)) {
+    console.warn('Every keyword came back with volume: null. This usually means the DataForSEO response shape has changed and scripts/lib/dataforseo-helpers.mjs needs updating, not that these keywords genuinely have zero volume.');
+  }
+  return mapped;
 }
 
 async function fetchRelatedKeywords(authHeader, keyword) {
