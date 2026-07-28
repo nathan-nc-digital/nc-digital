@@ -351,7 +351,7 @@ function availabilityClass(value: boolean | null) {
                   {combos.map((row) => (
                     <tr
                       class={row.available === true && row.volume !== null && row.volume > 0 ? 'opportunity' : ''}
-                      data-search={`${row.trade} ${row.town} ${row.domain}`.toLowerCase()}
+                      data-search={`${row.trade} ${row.town.replace(/-/g, ' ')} ${row.domain}`.toLowerCase()}
                       data-available={row.available === true ? 'true' : row.available === false ? 'false' : 'unknown'}
                       data-volume={row.volume ?? ''}
                       data-cpc={row.cpc ?? ''}
