@@ -12,6 +12,7 @@
     "astro": "astro",
     "ahrefs:backlinks": "node scripts/ahrefs-fetch.mjs",
     "ahrefs:keywords": "node scripts/ahrefs-keywords.mjs",
+    "dataforseo:keywords": "node scripts/dataforseo-keywords.mjs",
     "gsc:indexing": "node scripts/gsc-indexing.mjs",
     "test:unit": "node --test tests/unit/**/*.test.js"
   },
