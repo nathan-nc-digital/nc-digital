@@ -324,6 +324,10 @@ function availabilityClass(value: boolean | null) {
           font-weight: 800;
           text-transform: uppercase;
         }
+        .competitor-table, .competitor-table thead, .competitor-table tbody, .competitor-table tr, .competitor-table th, .competitor-table td {
+          display: revert;
+        }
+        .competitor-table td::before { content: none; }
       }
     </style>
   </head>
@@ -422,7 +426,7 @@ function availabilityClass(value: boolean | null) {
                           <span class="domain">{row.domain}</span>
                           {competitorCheck && competitorCheck.competitors.length > 0 && (
                             <details class="competitor-details">
-                              <summary>Check competitors — {competitorCheck.verdict}</summary>
+                              <summary>Check competitors — <span class={`pill ${competitorCheck.verdict.toLowerCase()}`}>{competitorCheck.verdict}</span></summary>
                               <p class="competitor-summary muted">
                                 Directory ratio: {Math.round(competitorCheck.directoryRatio * 100)}%
                                 {' · '}
@@ -471,7 +475,7 @@ function availabilityClass(value: boolean | null) {
       const reset = document.getElementById('reset-filters');
       const table = document.getElementById('combos');
       const tbody = table?.querySelector('tbody');
-      const rows = Array.from(table?.querySelectorAll<HTMLTableRowElement>('tbody tr') ?? []);
+      const rows = Array.from(table?.querySelectorAll<HTMLTableRowElement>(':scope > tbody > tr') ?? []);
       const sortButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.sort-button'));
 
       function applyFilters() {
