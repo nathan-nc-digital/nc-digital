@@ -10,6 +10,7 @@ interface ComboRow {
   volume: number | null;
   cpc: number | null;
   difficulty: number | null;
+  avgJobCost: number | null;
 }
 
 interface EmdCache {
@@ -39,6 +40,10 @@ function fmtNumber(value?: number | null) {
 
 function fmtCpc(value?: number | null) {
   return value === null || value === undefined ? '-' : `£${value.toFixed(2)}`;
+}
+
+function fmtCost(value?: number | null) {
+  return value === null || value === undefined ? '-' : `£${value.toLocaleString()}`;
 }
 
 function availabilityLabel(value: boolean | null) {
@@ -345,6 +350,7 @@ function availabilityClass(value: boolean | null) {
                     <th><button class="sort-button" type="button" data-sort="volume" data-type="number">Volume</button></th>
                     <th><button class="sort-button" type="button" data-sort="cpc" data-type="number">CPC</button></th>
                     <th><button class="sort-button" type="button" data-sort="difficulty" data-type="number">Difficulty</button></th>
+                    <th><button class="sort-button" type="button" data-sort="avgJobCost" data-type="number">Avg Job Cost</button></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -356,6 +362,7 @@ function availabilityClass(value: boolean | null) {
                       data-volume={row.volume ?? ''}
                       data-cpc={row.cpc ?? ''}
                       data-difficulty={row.difficulty ?? ''}
+                      data-avg-job-cost={row.avgJobCost ?? ''}
                     >
                       <td data-label="Domain"><span class="domain">{row.domain}</span></td>
                       <td data-label="Trade">{row.trade}</td>
@@ -364,6 +371,7 @@ function availabilityClass(value: boolean | null) {
                       <td data-label="Volume">{fmtNumber(row.volume)}</td>
                       <td data-label="CPC">{fmtCpc(row.cpc)}</td>
                       <td data-label="Difficulty">{fmtNumber(row.difficulty)}</td>
+                      <td data-label="Avg Job Cost">{fmtCost(row.avgJobCost)}</td>
                     </tr>
                   ))}
                 </tbody>

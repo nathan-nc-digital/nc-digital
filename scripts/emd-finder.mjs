@@ -62,11 +62,12 @@ Create it with "trades" and "towns" arrays, e.g.:
   const seed = JSON.parse(fs.readFileSync(SEED_PATH, 'utf8'));
   const trades = seed.trades;
   const towns = seed.towns;
+  const tradeCosts = seed.tradeCosts || {};
   if (!Array.isArray(trades) || trades.length === 0 || !Array.isArray(towns) || towns.length === 0) {
     console.error('scripts/emd-finder-seed.json must have non-empty "trades" and "towns" arrays.');
     process.exit(1);
   }
-  return { trades, towns };
+  return { trades, towns, tradeCosts };
 }
 
 function sleep(ms) {
@@ -110,7 +111,7 @@ async function fetchKeywordOverview(authHeader, phrases) {
 }
 
 async function main() {
-  const { trades, towns } = loadSeed();
+  const { trades, towns, tradeCosts } = loadSeed();
   const { login, password } = loadConfig();
   const authHeader = buildAuthHeader(login, password);
   const combos = buildCombos(trades, towns);
@@ -145,6 +146,7 @@ async function main() {
       volume: overview?.volume ?? null,
       cpc: overview?.cpc ?? null,
       difficulty: overview?.difficulty ?? null,
+      avgJobCost: tradeCosts[combo.trade] ?? null,
     };
   });
 

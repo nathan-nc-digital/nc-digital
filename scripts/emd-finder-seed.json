@@ -13,6 +13,20 @@
     "window cleaner",
     "skip hire"
   ],
+  "tradeCosts": {
+    "plumber": 180,
+    "electrician": 150,
+    "roofer": 800,
+    "locksmith": 90,
+    "gardener": 150,
+    "carpet cleaner": 70,
+    "driveway paving": 3000,
+    "tree surgeon": 350,
+    "pest control": 150,
+    "heating engineer": 250,
+    "window cleaner": 25,
+    "skip hire": 200
+  },
   "towns": [
     "aberdare",
     "abergavenny",
