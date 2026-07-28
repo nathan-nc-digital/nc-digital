@@ -66,6 +66,14 @@ describe('computeFloor', () => {
     ];
     assert.equal(computeFloor(competitors), 20);
   });
+
+  test('preserves a genuine 0 referring-domains value rather than treating it as missing', () => {
+    const competitors = [
+      { isDirectory: false, referringDomains: 0 },
+      { isDirectory: false, referringDomains: 50 },
+    ];
+    assert.equal(computeFloor(competitors), 0);
+  });
 });
 
 describe('computeVerdict', () => {
@@ -87,5 +95,17 @@ describe('computeVerdict', () => {
 
   test('returns Moderate otherwise', () => {
     assert.equal(computeVerdict(0.4, 20), 'Moderate');
+  });
+
+  test('treats floor === 30 as high enough for Defended (boundary)', () => {
+    assert.equal(computeVerdict(0.3, 30), 'Defended');
+  });
+
+  test('treats floor === 15 as not low enough for Soft (boundary)', () => {
+    assert.equal(computeVerdict(0.4, 15), 'Moderate');
+  });
+
+  test('a low directory ratio with an insufficient floor is still Moderate, not Defended', () => {
+    assert.equal(computeVerdict(0.2, 25), 'Moderate');
   });
 });
