@@ -2,10 +2,10 @@
  * EMD competitor check — SERP + referring-domain analysis for EMD Finder domains.
  * Run: node scripts/emd-competitor-check.mjs [--limit=N] [--force]
  *
- * Checks every domain marked available in scripts/emd-finder-cache.json,
- * regardless of measured search volume — a null volume reading is a
- * DataForSEO data gap, not proof there's no real competition worth
- * scoring. By default, skips combos that already have a check in
+ * Checks every domain marked available in scripts/emd-finder-cache.json
+ * whose volume isn't a confirmed 0 (a null volume reading is a
+ * DataForSEO data gap, not proof of zero demand, so it's still worth
+ * checking). By default, skips combos that already have a check in
  * scripts/emd-competitor-check-cache.json (e.g. after emd-finder.mjs
  * surfaces new available domains) and only checks what's new, merging
  * the results with what's already there. Pass --force to re-check
@@ -78,11 +78,12 @@ function loadCombosToCheck() {
   const cache = JSON.parse(fs.readFileSync(EMD_CACHE_PATH, 'utf8'));
   const combos = cache.combos ?? [];
   // Every available domain gets checked, not just ones with confirmed
-  // search volume — a null/zero volume reading is a DataForSEO data gap,
-  // not proof there's no real competition worth scoring.
-  const available = combos.filter((c) => c.available === true);
+  // search volume — a null volume reading is a DataForSEO data gap, not
+  // proof there's no real competition worth scoring. A confirmed 0 is
+  // excluded (genuinely zero demand, not worth checking).
+  const available = combos.filter((c) => c.available === true && c.volume !== 0);
   if (available.length === 0) {
-    console.error('No available domains found in scripts/emd-finder-cache.json (need available === true).');
+    console.error('No checkable domains found in scripts/emd-finder-cache.json (need available === true and volume !== 0).');
     process.exit(1);
   }
   return LIMIT ? available.slice(0, LIMIT) : available;
@@ -105,6 +106,11 @@ function loadExistingChecks() {
   if (FORCE || !fs.existsSync(CACHE_PATH)) return [];
   try {
     const existing = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
+    // Only trust a run that actually finished — an interrupted run's
+    // checkpoint can have incomplete backlink data for combos that were
+    // "SERP-fetched" before the kill but never got their referring-domain
+    // lookups finished, which would silently poison their floor/verdict.
+    if (existing.complete !== true) return [];
     return existing.checks ?? [];
   } catch {
     return [];
