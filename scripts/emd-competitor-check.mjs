@@ -1,6 +1,12 @@
 /**
  * EMD competitor check — SERP + referring-domain analysis for EMD Finder opportunities.
- * Run: node scripts/emd-competitor-check.mjs [--limit=N]
+ * Run: node scripts/emd-competitor-check.mjs [--limit=N] [--force]
+ *
+ * By default, skips opportunities that already have a check in
+ * scripts/emd-competitor-check-cache.json (e.g. after emd-finder.mjs
+ * surfaces new opportunities) and only checks what's new, merging the
+ * results with what's already there. Pass --force to re-check
+ * everything from scratch.
  *
  * Reads scripts/emd-finder-cache.json and scripts/emd-directory-domains.json,
  * writes scripts/emd-competitor-check-cache.json.
@@ -35,6 +41,7 @@ const args = Object.fromEntries(
   })
 );
 const LIMIT = args.limit ? Number(args.limit) : null;
+const FORCE = Boolean(args.force);
 
 function parseEnvFile() {
   if (!fs.existsSync(ENV_PATH)) return {};
@@ -86,6 +93,16 @@ function loadDirectoryList() {
     process.exit(1);
   }
   return list;
+}
+
+function loadExistingChecks() {
+  if (FORCE || !fs.existsSync(CACHE_PATH)) return [];
+  try {
+    const existing = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
+    return existing.checks ?? [];
+  } catch {
+    return [];
+  }
 }
 
 function sleep(ms) {
@@ -164,24 +181,33 @@ const PROGRESS_INTERVAL = 25;
 async function main() {
   const opportunities = loadOpportunities();
   const directoryList = loadDirectoryList();
+  const existingChecks = loadExistingChecks();
+  const existingKeys = new Set(existingChecks.map((c) => `${c.trade}|${c.town}`));
+  const toCheck = opportunities.filter((combo) => !existingKeys.has(`${combo.trade}|${combo.town}`));
+
+  if (toCheck.length === 0) {
+    console.log(`All ${opportunities.length} opportunity combo(s) already have a competitor check. Nothing to do — pass --force to re-check everything.`);
+    return;
+  }
+
   const { login, password } = loadConfig();
   const authHeader = buildAuthHeader(login, password);
 
-  console.log(`Running competitor check for ${opportunities.length} opportunity combo(s)...`);
+  console.log(`Running competitor check for ${toCheck.length} opportunity combo(s) (${existingChecks.length} already checked)...`);
 
   const serpByComboKey = new Map();
   const referringDomainsByDomain = new Map();
 
-  for (let i = 0; i < opportunities.length; i++) {
-    const combo = opportunities[i];
+  for (let i = 0; i < toCheck.length; i++) {
+    const combo = toCheck[i];
     const key = `${combo.trade}|${combo.town}`;
     const phrase = `${combo.trade} ${combo.town.replace(/-/g, ' ')}`;
     const serp = await fetchSerp(authHeader, phrase);
     serpByComboKey.set(key, serp);
     await sleep(REQUEST_DELAY_MS);
-    if ((i + 1) % PROGRESS_INTERVAL === 0 || i + 1 === opportunities.length) {
-      console.log(`SERP fetch: ${i + 1}/${opportunities.length}`);
-      writeCache(buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList), false);
+    if ((i + 1) % PROGRESS_INTERVAL === 0 || i + 1 === toCheck.length) {
+      console.log(`SERP fetch: ${i + 1}/${toCheck.length}`);
+      writeCache([...existingChecks, ...buildChecks(toCheck, serpByComboKey, referringDomainsByDomain, directoryList)], false);
     }
   }
 
@@ -194,7 +220,7 @@ async function main() {
     }
   }
 
-  if (opportunities.length > 0 && uniqueBusinessDomains.size === 0) {
+  if (toCheck.length > 0 && uniqueBusinessDomains.size === 0) {
     console.warn('No real-business competitor domains found across any opportunity\'s SERP. This usually means the SERP fetch is failing broadly (e.g. an outage or auth issue), not that every top-10 result is genuinely a directory.');
   }
 
@@ -208,11 +234,12 @@ async function main() {
     await sleep(REQUEST_DELAY_MS);
     if ((i + 1) % PROGRESS_INTERVAL === 0 || i + 1 === domainList.length) {
       console.log(`Backlinks lookup: ${i + 1}/${domainList.length}`);
-      writeCache(buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList), false);
+      writeCache([...existingChecks, ...buildChecks(toCheck, serpByComboKey, referringDomainsByDomain, directoryList)], false);
     }
   }
 
-  const checks = buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList);
+  const newChecks = buildChecks(toCheck, serpByComboKey, referringDomainsByDomain, directoryList);
+  const checks = [...existingChecks, ...newChecks];
   writeCache(checks, true);
 
   const verdictCounts = checks.reduce((acc, c) => {
@@ -222,9 +249,10 @@ async function main() {
 
   console.log(`
 Done.
-  Combos checked: ${checks.length}
+  New combos checked: ${newChecks.length}
+  Total combos in cache: ${checks.length}
   Unique competitor domains looked up: ${uniqueBusinessDomains.size}
-  Verdicts: ${JSON.stringify(verdictCounts)}
+  Verdicts (all): ${JSON.stringify(verdictCounts)}
 
 Cache saved to: scripts/emd-competitor-check-cache.json
 `);
