@@ -408,6 +408,10 @@ function availabilityClass(value: boolean | null) {
               <input id="available-only" type="checkbox" />
               Available only
             </label>
+            <label class="checkbox-label">
+              <input id="has-emd-competitor" type="checkbox" />
+              Has EMD competitor
+            </label>
             <button id="reset-filters" type="button">Reset filters</button>
           </div>
 
@@ -429,6 +433,9 @@ function availabilityClass(value: boolean | null) {
                 <tbody>
                   {combos.map((row) => {
                     const competitorCheck = competitorChecksByKey.get(`${row.trade}|${row.town}`) ?? null;
+                    const hasEmdCompetitor = Boolean(
+                      competitorCheck && competitorCheck.competitors.some((c) => isEmdLikeDomain(c.domain, row.trade, row.town))
+                    );
                     return (
                       <tr
                         class={row.available === true && row.volume !== null && row.volume > 0 ? 'opportunity' : ''}
@@ -437,6 +444,7 @@ function availabilityClass(value: boolean | null) {
                         data-volume={row.volume ?? ''}
                         data-cpc={row.cpc ?? ''}
                         data-difficulty={row.difficulty ?? ''}
+                        data-has-emd-competitor={hasEmdCompetitor ? 'true' : 'false'}
                         data-avg-job-cost={row.avgJobCost ?? ''}
                         data-verdict={competitorCheck ? competitorCheck.verdict.toLowerCase() : 'none'}
                       >
@@ -498,6 +506,7 @@ function availabilityClass(value: boolean | null) {
       const minVolume = document.getElementById('min-volume') as HTMLInputElement | null;
       const verdictFilter = document.getElementById('verdict-filter') as HTMLSelectElement | null;
       const availableOnly = document.getElementById('available-only') as HTMLInputElement | null;
+      const hasEmdCompetitor = document.getElementById('has-emd-competitor') as HTMLInputElement | null;
       const reset = document.getElementById('reset-filters');
       const table = document.getElementById('combos');
       const tbody = table?.querySelector('tbody');
@@ -509,13 +518,15 @@ function availabilityClass(value: boolean | null) {
         const minVol = minVolume?.value ? Number(minVolume.value) : null;
         const verdict = verdictFilter?.value || '';
         const onlyAvailable = availableOnly?.checked ?? false;
+        const onlyEmdCompetitor = hasEmdCompetitor?.checked ?? false;
         for (const row of rows) {
           const matchesQuery = !q || (row.dataset.search ?? '').includes(q);
           const volume = row.dataset.volume ? Number(row.dataset.volume) : null;
           const matchesVolume = minVol === null || (volume !== null && volume >= minVol);
           const matchesVerdict = !verdict || row.dataset.verdict === verdict;
           const matchesAvailable = !onlyAvailable || row.dataset.available === 'true';
-          row.style.display = matchesQuery && matchesVolume && matchesVerdict && matchesAvailable ? '' : 'none';
+          const matchesEmdCompetitor = !onlyEmdCompetitor || row.dataset.hasEmdCompetitor === 'true';
+          row.style.display = matchesQuery && matchesVolume && matchesVerdict && matchesAvailable && matchesEmdCompetitor ? '' : 'none';
         }
       }
 
@@ -523,11 +534,13 @@ function availabilityClass(value: boolean | null) {
       minVolume?.addEventListener('input', applyFilters);
       verdictFilter?.addEventListener('change', applyFilters);
       availableOnly?.addEventListener('change', applyFilters);
+      hasEmdCompetitor?.addEventListener('change', applyFilters);
       reset?.addEventListener('click', () => {
         if (search) search.value = '';
         if (minVolume) minVolume.value = '';
         if (verdictFilter) verdictFilter.value = '';
         if (availableOnly) availableOnly.checked = false;
+        if (hasEmdCompetitor) hasEmdCompetitor.checked = false;
         for (const button of sortButtons) delete button.dataset.direction;
         for (const row of rows) tbody?.appendChild(row);
         applyFilters();
