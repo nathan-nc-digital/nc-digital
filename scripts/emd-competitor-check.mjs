@@ -5,11 +5,19 @@
  * Checks every domain marked available in scripts/emd-finder-cache.json
  * whose volume isn't a confirmed 0 (a null volume reading is a
  * DataForSEO data gap, not proof of zero demand, so it's still worth
- * checking). By default, skips combos that already have a check in
- * scripts/emd-competitor-check-cache.json (e.g. after emd-finder.mjs
- * surfaces new available domains) and only checks what's new, merging
- * the results with what's already there. Pass --force to re-check
- * everything from scratch.
+ * checking). By default, skips combos that already have a check in a
+ * COMPLETED scripts/emd-competitor-check-cache.json and only checks
+ * what's new, merging the results with what's already there. Pass
+ * --force to re-check everything from scratch.
+ *
+ * Raw SERP and referring-domain lookups are cached separately
+ * (scripts/emd-serp-raw-cache.json, scripts/emd-referring-domains-raw-cache.json)
+ * and persist across runs regardless of whether a run finishes — so if
+ * this script gets interrupted partway through (a long run can take
+ * hours), re-running it picks up from whatever raw data was already
+ * fetched instead of starting over. The final competitor-check cache
+ * is only ever written once, in full, after every combo in this run
+ * has real SERP + backlink data — no partial/placeholder entries.
  *
  * Reads scripts/emd-finder-cache.json and scripts/emd-directory-domains.json,
  * writes scripts/emd-competitor-check-cache.json.
@@ -31,11 +39,14 @@ const ENV_PATH = path.join(__dirname, '..', '.env');
 const EMD_CACHE_PATH = path.join(__dirname, 'emd-finder-cache.json');
 const DIRECTORY_LIST_PATH = path.join(__dirname, 'emd-directory-domains.json');
 const CACHE_PATH = path.join(__dirname, 'emd-competitor-check-cache.json');
+const SERP_RAW_CACHE_PATH = path.join(__dirname, 'emd-serp-raw-cache.json');
+const REFERRING_RAW_CACHE_PATH = path.join(__dirname, 'emd-referring-domains-raw-cache.json');
 const BASE = 'https://api.dataforseo.com/v3';
 const LOCATION_NAME = 'United Kingdom';
 const LANGUAGE_CODE = 'en';
 const SERP_LIMIT = 10;
 const REQUEST_DELAY_MS = 200;
+const RAW_CACHE_SAVE_INTERVAL = 10;
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((arg) => {
@@ -117,6 +128,20 @@ function loadExistingChecks() {
   }
 }
 
+function loadRawCache(rawPath) {
+  if (!fs.existsSync(rawPath)) return new Map();
+  try {
+    const obj = JSON.parse(fs.readFileSync(rawPath, 'utf8'));
+    return new Map(Object.entries(obj));
+  } catch {
+    return new Map();
+  }
+}
+
+function saveRawCache(rawPath, map) {
+  fs.writeFileSync(rawPath, JSON.stringify(Object.fromEntries(map), null, 2), 'utf8');
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -163,8 +188,8 @@ async function fetchReferringDomains(authHeader, domain) {
   }
 }
 
-function buildChecks(opportunities, serpByComboKey, referringDomainsByDomain, directoryList) {
-  return opportunities.map((combo) => {
+function buildChecks(combos, serpByComboKey, referringDomainsByDomain, directoryList) {
+  return combos.map((combo) => {
     const key = `${combo.trade}|${combo.town}`;
     const serp = serpByComboKey.get(key) ?? [];
     const competitors = serp.map((result) => {
@@ -205,26 +230,34 @@ async function main() {
   const { login, password } = loadConfig();
   const authHeader = buildAuthHeader(login, password);
 
-  console.log(`Running competitor check for ${toCheck.length} available combo(s) (${existingChecks.length} already checked)...`);
+  const serpByComboKey = loadRawCache(SERP_RAW_CACHE_PATH);
+  const referringDomainsByDomain = loadRawCache(REFERRING_RAW_CACHE_PATH);
 
-  const serpByComboKey = new Map();
-  const referringDomainsByDomain = new Map();
+  const alreadyCached = toCheck.filter((c) => serpByComboKey.has(`${c.trade}|${c.town}`)).length;
+  console.log(`Running competitor check for ${toCheck.length} available combo(s) (${existingChecks.length} already finalized, ${alreadyCached} already have raw SERP data cached from a prior run)...`);
 
+  let serpFetchedThisRun = 0;
   for (let i = 0; i < toCheck.length; i++) {
     const combo = toCheck[i];
     const key = `${combo.trade}|${combo.town}`;
+    if (serpByComboKey.has(key)) continue;
     const phrase = `${combo.trade} ${combo.town.replace(/-/g, ' ')}`;
     const serp = await fetchSerp(authHeader, phrase);
     serpByComboKey.set(key, serp);
+    serpFetchedThisRun++;
     await sleep(REQUEST_DELAY_MS);
+    if (serpFetchedThisRun % RAW_CACHE_SAVE_INTERVAL === 0) {
+      saveRawCache(SERP_RAW_CACHE_PATH, serpByComboKey);
+    }
     if ((i + 1) % PROGRESS_INTERVAL === 0 || i + 1 === toCheck.length) {
       console.log(`SERP fetch: ${i + 1}/${toCheck.length}`);
-      writeCache([...existingChecks, ...buildChecks(toCheck, serpByComboKey, referringDomainsByDomain, directoryList)], false);
     }
   }
+  saveRawCache(SERP_RAW_CACHE_PATH, serpByComboKey);
 
   const uniqueBusinessDomains = new Set();
-  for (const serp of serpByComboKey.values()) {
+  for (const combo of toCheck) {
+    const serp = serpByComboKey.get(`${combo.trade}|${combo.town}`) ?? [];
     for (const result of serp) {
       if (!isDirectoryDomain(result.domain, directoryList)) {
         uniqueBusinessDomains.add(result.domain);
@@ -233,22 +266,29 @@ async function main() {
   }
 
   if (toCheck.length > 0 && uniqueBusinessDomains.size === 0) {
-    console.warn('No real-business competitor domains found across any opportunity\'s SERP. This usually means the SERP fetch is failing broadly (e.g. an outage or auth issue), not that every top-10 result is genuinely a directory.');
+    console.warn('No real-business competitor domains found across any combo\'s SERP. This usually means the SERP fetch is failing broadly (e.g. an outage or auth issue), not that every top-10 result is genuinely a directory.');
   }
-
-  console.log(`Looking up referring domains for ${uniqueBusinessDomains.size} unique real-business domain(s)...`);
 
   const domainList = [...uniqueBusinessDomains];
+  const alreadyLookedUp = domainList.filter((d) => referringDomainsByDomain.has(d)).length;
+  console.log(`Looking up referring domains for ${domainList.length} unique real-business domain(s) (${alreadyLookedUp} already cached from a prior run)...`);
+
+  let lookedUpThisRun = 0;
   for (let i = 0; i < domainList.length; i++) {
     const domain = domainList[i];
+    if (referringDomainsByDomain.has(domain)) continue;
     const count = await fetchReferringDomains(authHeader, domain);
     referringDomainsByDomain.set(domain, count);
+    lookedUpThisRun++;
     await sleep(REQUEST_DELAY_MS);
+    if (lookedUpThisRun % RAW_CACHE_SAVE_INTERVAL === 0) {
+      saveRawCache(REFERRING_RAW_CACHE_PATH, referringDomainsByDomain);
+    }
     if ((i + 1) % PROGRESS_INTERVAL === 0 || i + 1 === domainList.length) {
       console.log(`Backlinks lookup: ${i + 1}/${domainList.length}`);
-      writeCache([...existingChecks, ...buildChecks(toCheck, serpByComboKey, referringDomainsByDomain, directoryList)], false);
     }
   }
+  saveRawCache(REFERRING_RAW_CACHE_PATH, referringDomainsByDomain);
 
   const newChecks = buildChecks(toCheck, serpByComboKey, referringDomainsByDomain, directoryList);
   const checks = [...existingChecks, ...newChecks];
@@ -263,7 +303,7 @@ async function main() {
 Done.
   New combos checked: ${newChecks.length}
   Total combos in cache: ${checks.length}
-  Unique competitor domains looked up: ${uniqueBusinessDomains.size}
+  Unique competitor domains looked up this run: ${lookedUpThisRun}
   Verdicts (all): ${JSON.stringify(verdictCounts)}
 
 Cache saved to: scripts/emd-competitor-check-cache.json
