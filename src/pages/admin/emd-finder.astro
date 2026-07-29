@@ -410,7 +410,7 @@ function availabilityClass(value: boolean | null) {
             </label>
             <label class="checkbox-label">
               <input id="has-emd-competitor" type="checkbox" />
-              Has EMD competitor
+              Hide EMD competitors
             </label>
             <button id="reset-filters" type="button">Reset filters</button>
           </div>
@@ -518,14 +518,14 @@ function availabilityClass(value: boolean | null) {
         const minVol = minVolume?.value ? Number(minVolume.value) : null;
         const verdict = verdictFilter?.value || '';
         const onlyAvailable = availableOnly?.checked ?? false;
-        const onlyEmdCompetitor = hasEmdCompetitor?.checked ?? false;
+        const hideEmdCompetitor = hasEmdCompetitor?.checked ?? false;
         for (const row of rows) {
           const matchesQuery = !q || (row.dataset.search ?? '').includes(q);
           const volume = row.dataset.volume ? Number(row.dataset.volume) : null;
           const matchesVolume = minVol === null || (volume !== null && volume >= minVol);
           const matchesVerdict = !verdict || row.dataset.verdict === verdict;
           const matchesAvailable = !onlyAvailable || row.dataset.available === 'true';
-          const matchesEmdCompetitor = !onlyEmdCompetitor || row.dataset.hasEmdCompetitor === 'true';
+          const matchesEmdCompetitor = !hideEmdCompetitor || row.dataset.hasEmdCompetitor !== 'true';
           row.style.display = matchesQuery && matchesVolume && matchesVerdict && matchesAvailable && matchesEmdCompetitor ? '' : 'none';
         }
       }
