@@ -15,7 +15,9 @@ export function computeDirectoryRatio(competitors) {
 export function computeFloor(competitors) {
   const realBusiness = competitors.filter((c) => !c.isDirectory && c.referringDomains !== null);
   if (realBusiness.length === 0) return null;
-  return Math.min(...realBusiness.map((c) => c.referringDomains));
+  const sorted = realBusiness.map((c) => c.referringDomains).sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
 }
 
 export function computeVerdict(directoryRatio, floor) {

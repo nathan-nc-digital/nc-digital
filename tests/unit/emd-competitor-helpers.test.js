@@ -45,13 +45,22 @@ describe('computeDirectoryRatio', () => {
 });
 
 describe('computeFloor', () => {
-  test('returns the lowest referring-domain count among real-business competitors', () => {
+  test('returns the median referring-domain count among real-business competitors (odd count)', () => {
     const competitors = [
       { isDirectory: false, referringDomains: 80 },
       { isDirectory: false, referringDomains: 42 },
+      { isDirectory: false, referringDomains: 10 },
       { isDirectory: true, referringDomains: null },
     ];
     assert.equal(computeFloor(competitors), 42);
+  });
+
+  test('averages the two middle values for an even count', () => {
+    const competitors = [
+      { isDirectory: false, referringDomains: 80 },
+      { isDirectory: false, referringDomains: 42 },
+    ];
+    assert.equal(computeFloor(competitors), 61);
   });
 
   test('returns null when there are no real-business competitors', () => {
@@ -67,12 +76,23 @@ describe('computeFloor', () => {
     assert.equal(computeFloor(competitors), 20);
   });
 
+  test('a single weak outlier no longer drags the result down the way a minimum would', () => {
+    const competitors = [
+      { isDirectory: false, referringDomains: 27 },
+      { isDirectory: false, referringDomains: 110 },
+      { isDirectory: false, referringDomains: 404 },
+      { isDirectory: false, referringDomains: 7 },
+      { isDirectory: false, referringDomains: 471 },
+    ];
+    assert.equal(computeFloor(competitors), 110);
+  });
+
   test('preserves a genuine 0 referring-domains value rather than treating it as missing', () => {
     const competitors = [
       { isDirectory: false, referringDomains: 0 },
       { isDirectory: false, referringDomains: 50 },
     ];
-    assert.equal(computeFloor(competitors), 0);
+    assert.equal(computeFloor(competitors), 25);
   });
 });
 
