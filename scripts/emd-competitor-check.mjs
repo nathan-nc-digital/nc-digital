@@ -1,11 +1,14 @@
 /**
- * EMD competitor check — SERP + referring-domain analysis for EMD Finder opportunities.
+ * EMD competitor check — SERP + referring-domain analysis for EMD Finder domains.
  * Run: node scripts/emd-competitor-check.mjs [--limit=N] [--force]
  *
- * By default, skips opportunities that already have a check in
+ * Checks every domain marked available in scripts/emd-finder-cache.json,
+ * regardless of measured search volume — a null volume reading is a
+ * DataForSEO data gap, not proof there's no real competition worth
+ * scoring. By default, skips combos that already have a check in
  * scripts/emd-competitor-check-cache.json (e.g. after emd-finder.mjs
- * surfaces new opportunities) and only checks what's new, merging the
- * results with what's already there. Pass --force to re-check
+ * surfaces new available domains) and only checks what's new, merging
+ * the results with what's already there. Pass --force to re-check
  * everything from scratch.
  *
  * Reads scripts/emd-finder-cache.json and scripts/emd-directory-domains.json,
@@ -67,19 +70,22 @@ function loadConfig() {
   return { login, password };
 }
 
-function loadOpportunities() {
+function loadCombosToCheck() {
   if (!fs.existsSync(EMD_CACHE_PATH)) {
     console.error('No scripts/emd-finder-cache.json found. Run node scripts/emd-finder.mjs first.');
     process.exit(1);
   }
   const cache = JSON.parse(fs.readFileSync(EMD_CACHE_PATH, 'utf8'));
   const combos = cache.combos ?? [];
-  const opportunities = combos.filter((c) => c.available === true && c.volume !== null && c.volume > 0);
-  if (opportunities.length === 0) {
-    console.error('No opportunities found in scripts/emd-finder-cache.json (need available === true && volume > 0).');
+  // Every available domain gets checked, not just ones with confirmed
+  // search volume — a null/zero volume reading is a DataForSEO data gap,
+  // not proof there's no real competition worth scoring.
+  const available = combos.filter((c) => c.available === true);
+  if (available.length === 0) {
+    console.error('No available domains found in scripts/emd-finder-cache.json (need available === true).');
     process.exit(1);
   }
-  return LIMIT ? opportunities.slice(0, LIMIT) : opportunities;
+  return LIMIT ? available.slice(0, LIMIT) : available;
 }
 
 function loadDirectoryList() {
@@ -179,21 +185,21 @@ function writeCache(checks, complete) {
 const PROGRESS_INTERVAL = 25;
 
 async function main() {
-  const opportunities = loadOpportunities();
+  const availableCombos = loadCombosToCheck();
   const directoryList = loadDirectoryList();
   const existingChecks = loadExistingChecks();
   const existingKeys = new Set(existingChecks.map((c) => `${c.trade}|${c.town}`));
-  const toCheck = opportunities.filter((combo) => !existingKeys.has(`${combo.trade}|${combo.town}`));
+  const toCheck = availableCombos.filter((combo) => !existingKeys.has(`${combo.trade}|${combo.town}`));
 
   if (toCheck.length === 0) {
-    console.log(`All ${opportunities.length} opportunity combo(s) already have a competitor check. Nothing to do — pass --force to re-check everything.`);
+    console.log(`All ${availableCombos.length} available combo(s) already have a competitor check. Nothing to do — pass --force to re-check everything.`);
     return;
   }
 
   const { login, password } = loadConfig();
   const authHeader = buildAuthHeader(login, password);
 
-  console.log(`Running competitor check for ${toCheck.length} opportunity combo(s) (${existingChecks.length} already checked)...`);
+  console.log(`Running competitor check for ${toCheck.length} available combo(s) (${existingChecks.length} already checked)...`);
 
   const serpByComboKey = new Map();
   const referringDomainsByDomain = new Map();
