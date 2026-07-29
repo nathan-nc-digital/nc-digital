@@ -5,6 +5,7 @@ import {
   computeDirectoryRatio,
   computeFloor,
   computeVerdict,
+  isEmdLikeDomain,
 } from '../../scripts/lib/emd-competitor-helpers.mjs';
 
 const DIRECTORY_LIST = ['yell.com', 'trustpilot.com', 'facebook.com'];
@@ -127,5 +128,35 @@ describe('computeVerdict', () => {
 
   test('a low directory ratio with an insufficient floor is still Moderate, not Defended', () => {
     assert.equal(computeVerdict(0.2, 25), 'Moderate');
+  });
+});
+
+describe('isEmdLikeDomain', () => {
+  test('matches a hyphenated trade-town domain', () => {
+    assert.equal(isEmdLikeDomain('locksmith-newport.co.uk', 'locksmith', 'newport'), true);
+  });
+
+  test('matches regardless of word order', () => {
+    assert.equal(isEmdLikeDomain('newportlocksmith.co.uk', 'locksmith', 'newport'), true);
+  });
+
+  test('matches even when the trade word is pluralized as part of a longer word', () => {
+    assert.equal(isEmdLikeDomain('locksmithsnewport.com', 'locksmith', 'newport'), true);
+  });
+
+  test('does not match a brand-name domain missing the town', () => {
+    assert.equal(isEmdLikeDomain('citylocksmithsgwent.co.uk', 'locksmith', 'newport'), false);
+  });
+
+  test('does not match a domain missing the trade', () => {
+    assert.equal(isEmdLikeDomain('allkeyeduplocks.co.uk', 'locksmith', 'newport'), false);
+  });
+
+  test('handles hyphenated multi-word towns', () => {
+    assert.equal(isEmdLikeDomain('porttalbotroofer.co.uk', 'roofer', 'port-talbot'), true);
+  });
+
+  test('handles multi-word trades', () => {
+    assert.equal(isEmdLikeDomain('cardiffcarpetcleaner.co.uk', 'carpet cleaner', 'cardiff'), true);
   });
 });

@@ -1,6 +1,7 @@
 ---
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { isEmdLikeDomain } from '../../../scripts/lib/emd-competitor-helpers.mjs';
 
 interface ComboRow {
   trade: string;
@@ -292,6 +293,7 @@ function availabilityClass(value: boolean | null) {
       .pill.defended { color: var(--red); border-color: rgba(255, 92, 122, 0.35); }
       .pill.business { color: var(--green); border-color: rgba(45, 215, 124, 0.35); }
       .pill.directory { color: var(--muted); }
+      .pill.emd { color: var(--red); border-color: rgba(255, 92, 122, 0.35); margin-left: 0.35rem; }
       code { color: var(--text); }
       @media (max-width: 960px) {
         .topbar { align-items: flex-start; padding: 0.75rem; }
@@ -447,6 +449,10 @@ function availabilityClass(value: boolean | null) {
                                 Directory ratio: {Math.round(competitorCheck.directoryRatio * 100)}%
                                 {' · '}
                                 Floor: {competitorCheck.floor === null ? 'No real competitors' : `${competitorCheck.floor} referring domains`}
+                                {(() => {
+                                  const emdCount = competitorCheck.competitors.filter((c) => isEmdLikeDomain(c.domain, row.trade, row.town)).length;
+                                  return emdCount > 0 && <>{' · '}{emdCount} EMD{emdCount > 1 ? 's' : ''} already ranking</>;
+                                })()}
                               </p>
                               <table class="competitor-table">
                                 <thead><tr><th>#</th><th>Domain</th><th>Type</th><th>Referring Domains</th></tr></thead>
@@ -454,7 +460,10 @@ function availabilityClass(value: boolean | null) {
                                   {competitorCheck.competitors.map((c) => (
                                     <tr>
                                       <td>{fmtNumber(c.position)}</td>
-                                      <td>{c.domain}</td>
+                                      <td>
+                                        {c.domain}
+                                        {isEmdLikeDomain(c.domain, row.trade, row.town) && <span class="pill emd">EMD</span>}
+                                      </td>
                                       <td><span class={`pill ${c.isDirectory ? 'directory' : 'business'}`}>{c.isDirectory ? 'Directory' : 'Business'}</span></td>
                                       <td>{fmtNumber(c.referringDomains)}</td>
                                     </tr>

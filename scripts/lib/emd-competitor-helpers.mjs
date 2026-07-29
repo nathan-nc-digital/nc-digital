@@ -26,3 +26,12 @@ export function computeVerdict(directoryRatio, floor) {
   if (directoryRatio >= 0.5 || floor < 15) return 'Soft';
   return 'Moderate';
 }
+
+export function isEmdLikeDomain(domain, trade, town) {
+  const normalize = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normalizedDomain = normalize(domain);
+  const tradeSlug = normalize(trade);
+  const townSlug = normalize(town);
+  if (!tradeSlug || !townSlug) return false;
+  return normalizedDomain.includes(tradeSlug) && normalizedDomain.includes(townSlug);
+}
