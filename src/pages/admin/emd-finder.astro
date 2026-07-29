@@ -178,7 +178,7 @@ function availabilityClass(value: boolean | null) {
         flex-wrap: wrap;
         align-items: center;
       }
-      .filters input, .filters button {
+      .filters input, .filters button, .filters select {
         background: var(--panel);
         border: 1px solid var(--border);
         color: var(--text);
@@ -188,6 +188,7 @@ function availabilityClass(value: boolean | null) {
       }
       .filters input[type="search"] { min-width: min(260px, 100%); flex: 1; }
       .filters input[type="number"] { flex: 0 0 140px; min-width: 0; }
+      .filters select { flex: 0 0 160px; cursor: pointer; }
       .filters button { cursor: pointer; font-weight: 800; }
       .filters button:hover, .filters button:focus-visible { border-color: var(--purple); background: #171728; outline: none; }
       .checkbox-label {
@@ -306,8 +307,9 @@ function availabilityClass(value: boolean | null) {
         .stat { padding: 0.75rem; }
         .label { font-size: 0.62rem; }
         .value { font-size: 1.35rem; }
-        .filters input, .filters button { width: 100%; min-width: 0; }
+        .filters input, .filters button, .filters select { width: 100%; min-width: 0; }
         .filters input[type="number"] { flex: 1 1 auto; }
+        .filters select { flex: 1 1 auto; }
         table, tbody, tr, td { display: block; width: 100%; }
         table { border: 0; background: transparent; }
         thead { display: none; }
@@ -393,6 +395,13 @@ function availabilityClass(value: boolean | null) {
           <div class="filters">
             <input id="search" type="search" placeholder="Search trade, town, or domain" />
             <input id="min-volume" type="number" min="0" placeholder="Min volume" />
+            <select id="verdict-filter">
+              <option value="">All verdicts</option>
+              <option value="soft">Soft</option>
+              <option value="moderate">Moderate</option>
+              <option value="defended">Defended</option>
+              <option value="none">Not checked yet</option>
+            </select>
             <label class="checkbox-label">
               <input id="available-only" type="checkbox" />
               Available only
@@ -427,6 +436,7 @@ function availabilityClass(value: boolean | null) {
                         data-cpc={row.cpc ?? ''}
                         data-difficulty={row.difficulty ?? ''}
                         data-avg-job-cost={row.avgJobCost ?? ''}
+                        data-verdict={competitorCheck ? competitorCheck.verdict.toLowerCase() : 'none'}
                       >
                         <td data-label="Domain">
                           <span class="domain">{row.domain}</span>
@@ -477,6 +487,7 @@ function availabilityClass(value: boolean | null) {
     <script>
       const search = document.getElementById('search') as HTMLInputElement | null;
       const minVolume = document.getElementById('min-volume') as HTMLInputElement | null;
+      const verdictFilter = document.getElementById('verdict-filter') as HTMLSelectElement | null;
       const availableOnly = document.getElementById('available-only') as HTMLInputElement | null;
       const reset = document.getElementById('reset-filters');
       const table = document.getElementById('combos');
@@ -487,22 +498,26 @@ function availabilityClass(value: boolean | null) {
       function applyFilters() {
         const q = search?.value.trim().toLowerCase() || '';
         const minVol = minVolume?.value ? Number(minVolume.value) : null;
+        const verdict = verdictFilter?.value || '';
         const onlyAvailable = availableOnly?.checked ?? false;
         for (const row of rows) {
           const matchesQuery = !q || (row.dataset.search ?? '').includes(q);
           const volume = row.dataset.volume ? Number(row.dataset.volume) : null;
           const matchesVolume = minVol === null || (volume !== null && volume >= minVol);
+          const matchesVerdict = !verdict || row.dataset.verdict === verdict;
           const matchesAvailable = !onlyAvailable || row.dataset.available === 'true';
-          row.style.display = matchesQuery && matchesVolume && matchesAvailable ? '' : 'none';
+          row.style.display = matchesQuery && matchesVolume && matchesVerdict && matchesAvailable ? '' : 'none';
         }
       }
 
       search?.addEventListener('input', applyFilters);
       minVolume?.addEventListener('input', applyFilters);
+      verdictFilter?.addEventListener('change', applyFilters);
       availableOnly?.addEventListener('change', applyFilters);
       reset?.addEventListener('click', () => {
         if (search) search.value = '';
         if (minVolume) minVolume.value = '';
+        if (verdictFilter) verdictFilter.value = '';
         if (availableOnly) availableOnly.checked = false;
         for (const button of sortButtons) delete button.dataset.direction;
         for (const row of rows) tbody?.appendChild(row);
