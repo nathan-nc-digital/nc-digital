@@ -1,48 +1,87 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { Image } from 'astro:assets';
-import nathanImg from '../assets/nathan.webp';
 ---
 
 <BaseLayout
   title="About NC Digital | Web Design & SEO South Wales"
-  description="NC Digital is a web design and SEO agency based in Merthyr Tydfil, South Wales. We help local businesses grow online."
+  description="NC Digital is a web design and SEO agency in Merthyr Tydfil, founded in 2025 by Nathan Constance — a web developer since 2015 who built his first website in 2008."
 >
 
-  <section style="padding:5rem 0 3rem; position:relative; overflow:hidden;">
-    <div style="position:absolute; top:0; right:0; width:400px; height:400px; background:radial-gradient(circle, #8750f720 0%, transparent 70%); pointer-events:none;"></div>
-    <div class="container site-pad layout-hero">
-
-      <div>
-        <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">About</p>
-        <h1 data-animate="fade-up" style="margin-bottom:1.25rem;">Hi, I'm Nathan</h1>
-        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:1.5rem;">
-          NC Digital is a web design and SEO agency based in Merthyr Tydfil, South Wales. I help local businesses get found online with affordable, high-quality websites.
-        </p>
-        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; line-height:1.7; margin-bottom:2rem;">
-          I started NC Digital because I saw too many South Wales businesses losing customers to competitors with better websites. I wanted to change that — making professional web design and SEO accessible to businesses of all sizes.
-        </p>
-        <div data-animate="fade-up" style="display:flex; gap:1rem;">
-          <a href="/free-website-plan" class="btn-primary">Work with me →</a>
-          <a href="/portfolio" class="btn-outline">See my work</a>
-        </div>
+  <!-- Hero -->
+  <section style="padding:5rem 0 4rem; text-align:center; position:relative; overflow:hidden;">
+    <div style="position:absolute; top:-80px; left:50%; transform:translateX(-50%); width:600px; height:400px; background:radial-gradient(ellipse at center, rgba(135,80,247,0.14) 0%, transparent 70%); pointer-events:none;"></div>
+    <div class="container site-pad" style="max-width:760px;">
+      <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">About NC Digital</p>
+      <h1 data-animate="fade-up" style="margin-bottom:1.25rem;">South Wales web design that gets results</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; line-height:1.75; margin-bottom:1.25rem;">
+        NC Digital is a <a href="/services/web-design/" style="color:var(--purple); text-decoration:underline; text-underline-offset:3px;">web design</a>, <a href="/services/web-development/" style="color:var(--purple); text-decoration:underline; text-underline-offset:3px;">web development</a>, and <a href="/services/local-seo-google-ranking/" style="color:var(--purple); text-decoration:underline; text-underline-offset:3px;">SEO</a> agency based in <a href="/web-design-merthyr-tydfil/" style="color:var(--purple); text-decoration:underline; text-underline-offset:3px;">Merthyr Tydfil, South Wales</a>. I help local businesses get found online with affordable, high-quality websites.
+      </p>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; line-height:1.75; margin-bottom:2rem;">
+        I started NC Digital in 2025 because I saw too many <a href="/web-design-south-wales/" style="color:var(--purple); text-decoration:underline; text-underline-offset:3px;">South Wales businesses</a> losing customers to competitors with better websites — making professional web design and SEO accessible to businesses of all sizes.
+      </p>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; line-height:1.75; margin-bottom:2rem;">
+        NC Digital is a new name, but the experience behind it isn't. I built my first website — and did the SEO on it — in 2008, while studying computing at Merthyr Tydfil College. I've worked as a professional web developer since 2015, first at Rhino Rugby and then at Rhys Welsh, building and ranking websites for businesses for more than a decade before launching my own studio. Every site NC Digital builds draws on those 11+ years of hands-on web development and SEO experience.
+      </p>
+      <div data-animate="fade-up" style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <a href="/free-website-plan/" class="btn-primary">Work with me →</a>
+        <a href="/portfolio/" class="btn-outline">See my work</a>
       </div>
-
-      <div style="position:relative; display:flex; justify-content:center;">
-        <div style="position:absolute; inset:0; background:radial-gradient(circle at center, #8750f730 0%, transparent 70%); border-radius:50%; pointer-events:none;"></div>
-        <Image
-          src={nathanImg}
-          alt="Nathan Constance — founder of NC Digital"
-          width={380}
-          data-animate="fade-in"
-          style="border-radius:16px; border:1px solid var(--border); display:block; max-width:100%; height:auto; position:relative;"
-        />
-      </div>
-
     </div>
   </section>
 
-  <section style="padding:4rem 0 5rem; background:var(--bg-2); border-top:1px solid var(--border);">
+  <!-- Experience & Education -->
+  <section style="padding:4rem 0 5rem; border-top:1px solid var(--border);">
+    <div class="container site-pad">
+      <div class="exp-edu-grid">
+
+        <!-- Experience -->
+        <div>
+          <div class="section-heading">
+            <span class="section-icon">🏆</span>
+            <h2 class="section-title">My Experience</h2>
+          </div>
+          <div class="timeline">
+            {[
+              { years: '2025 – Present', role: 'Founder & Web Developer', org: 'NC Digital' },
+              { years: '2020 – Present', role: 'Web Developer', org: 'Rhys Welsh' },
+              { years: '2015 – 2020',   role: 'Web Developer', org: 'Rhino Rugby' },
+              { years: '2008',          role: 'Built and ranked my first website', org: 'Self-taught web design & SEO' },
+            ].map(({ years, role, org }) => (
+              <div class="timeline-card">
+                <p class="tl-years">{years}</p>
+                <p class="tl-role">{role}</p>
+                <p class="tl-org">{org}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- Education -->
+        <div>
+          <div class="section-heading">
+            <span class="section-icon">🎓</span>
+            <h2 class="section-title">My Education</h2>
+          </div>
+          <div class="timeline">
+            {[
+              { years: '2010 – 2013', role: 'Computer Science',              org: 'University of South Wales' },
+              { years: '2008 – 2010', role: 'Computing for IT Practitioner', org: 'Merthyr Tydfil College' },
+            ].map(({ years, role, org }) => (
+              <div class="timeline-card">
+                <p class="tl-years">{years}</p>
+                <p class="tl-role">{role}</p>
+                <p class="tl-org">{org}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Why NC Digital -->
+  <section style="padding:4rem 0 5rem; border-top:1px solid var(--border);">
     <div class="container site-pad">
       <p class="eyebrow" style="margin-bottom:0.75rem; text-align:center;">Why NC Digital</p>
       <h2 data-animate="fade-up" style="text-align:center; margin-bottom:3rem;">What makes us different</h2>
@@ -62,5 +101,79 @@ import nathanImg from '../assets/nathan.webp';
       </div>
     </div>
   </section>
+
+  <style>
+    .exp-edu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-icon {
+      font-size: 1.75rem;
+      line-height: 1;
+    }
+
+    .section-title {
+      font-size: 1.625rem;
+      font-weight: 700;
+      color: var(--white);
+      margin: 0;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .timeline-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.375rem;
+      transition: border-color 0.2s;
+    }
+    .timeline-card:hover {
+      border-color: var(--purple);
+    }
+
+    .tl-years {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--purple);
+      letter-spacing: 0.02em;
+      margin: 0 0 0.375rem;
+    }
+
+    .tl-role {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin: 0 0 0.25rem;
+    }
+
+    .tl-org {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    @media (max-width: 700px) {
+      .exp-edu-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+    }
+  </style>
 
 </BaseLayout>

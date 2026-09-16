@@ -4,6 +4,7 @@ export interface Props {
   description: string;
   image?: string;
   canonical?: string;
+  noindex?: boolean;
 }
 
 const {
@@ -11,26 +12,100 @@ const {
   description,
   image = '/og-default.png',
   canonical = Astro.url.href,
+  noindex = false,
 } = Astro.props;
 
-const siteTitle = title.includes('NC Digital') ? title : `${title} | NC Digital`;
+function trimAtWord(value: string, maxLength: number) {
+  if (value.length <= maxLength) return value;
+  const trimmed = value.slice(0, maxLength - 3).replace(/\s+\S*$/, '').replace(/\s*[—–-]\s*$/, '').trim();
+  return `${trimmed}...`;
+}
+
+const fullTitle = title.includes('NC Digital') ? title : `${title} | NC Digital`;
+const unbrandedTitle = fullTitle.replace(/\s+\|\s+NC Digital$/, '');
+const siteTitle = fullTitle.length > 70 ? trimAtWord(unbrandedTitle, 70) : fullTitle;
+const metaDescription = trimAtWord(description, 155);
 ---
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>{siteTitle}</title>
-<meta name="description" content={description} />
+<meta name="description" content={metaDescription} />
 <link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex,follow" />}
 
 <meta property="og:type" content="website" />
 <meta property="og:url" content={canonical} />
 <meta property="og:title" content={siteTitle} />
-<meta property="og:description" content={description} />
+<meta property="og:description" content={metaDescription} />
 <meta property="og:image" content={new URL(image, Astro.site).href} />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={siteTitle} />
-<meta name="twitter:description" content={description} />
+<meta name="twitter:description" content={metaDescription} />
 <meta name="twitter:image" content={new URL(image, Astro.site).href} />
 
+<link rel="preload" href="/fonts/sora-400.woff2" as="font" type="font/woff2" crossorigin />
+<meta name="indexnow-verification" content="4c2616a9e08e4ce49f8a9f51d60b2228" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
 <link rel="shortcut icon" href="/favicon.png" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "@id": "https://nc-digital.co.uk/#localbusiness",
+  "name": "NC Digital",
+  "url": "https://nc-digital.co.uk",
+  "email": "info@nc-digital.co.uk",
+  "description": "Web design and SEO agency in Merthyr Tydfil, South Wales. Founded in 2025 by Nathan Constance, a professional web developer since 2015 who built and ranked his first website in 2008.",
+  "foundingDate": "2025",
+  "founder": {
+    "@type": "Person",
+    "@id": "https://nc-digital.co.uk/#nathan",
+    "name": "Nathan Constance",
+    "jobTitle": "Founder & Web Developer",
+    "url": "https://nc-digital.co.uk/about/",
+    "description": "Web designer and SEO specialist from Merthyr Tydfil. Professional web developer since 2015 (Rhino Rugby 2015–2020, Rhys Welsh 2020–present); built and did the SEO on his first website in 2008. Founded NC Digital in 2025.",
+    "alumniOf": [
+      { "@type": "CollegeOrUniversity", "name": "University of South Wales" },
+      { "@type": "CollegeOrUniversity", "name": "Merthyr Tydfil College" }
+    ],
+    "knowsAbout": ["Web Design", "Web Development", "WordPress", "Local SEO", "Search Engine Optimisation", "Logo Design"],
+    "worksFor": { "@id": "https://nc-digital.co.uk/#localbusiness" }
+  },
+  "priceRange": "££",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "70 Brynhyfryd St",
+    "addressLocality": "Merthyr Tydfil",
+    "addressRegion": "Wales",
+    "postalCode": "CF47 9YW",
+    "addressCountry": "GB"
+  },
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://nc-digital.co.uk/og-default.png"
+  },
+  "areaServed": [
+    { "@type": "City", "name": "Merthyr Tydfil" },
+    { "@type": "City", "name": "Cardiff" },
+    { "@type": "City", "name": "Swansea" },
+    { "@type": "City", "name": "Newport" },
+    { "@type": "AdministrativeArea", "name": "South Wales" }
+  ],
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+      "opens": "09:00",
+      "closes": "17:00"
+    }
+  ],
+  "sameAs": [
+    "https://www.facebook.com/profile.php?id=61575891781927",
+    "https://x.com/ncdigitaluk",
+    "https://www.instagram.com/ncdigitaluk/",
+    "https://www.linkedin.com/company/26759059/"
+  ]
+}
+</script>

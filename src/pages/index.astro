@@ -1,21 +1,56 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import JsonLD from '../components/JsonLD.astro';
 import { Image } from 'astro:assets';
 import nathanImg from '../assets/nathan.webp';
 import { createReader } from '@keystatic/core/reader';
 import config from '../../keystatic.config';
 import { getCollection } from 'astro:content';
+import { getBlogCategoryLabel } from '../data/blogCategories';
 
 const reader = createReader(process.cwd(), config);
 const settings = await reader.singletons.siteSettings.read();
-const portfolioEntries = await getCollection('portfolio');
+const homeMetaDescription = 'Affordable web design, SEO, logo design and website support for South Wales small businesses. Built by NC Digital in Merthyr Tydfil.';
+const allPortfolioEntries = await getCollection('portfolio');
+const portfolioEntries = allPortfolioEntries.sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+const recentProjects = portfolioEntries.slice(0, 3);
 
 const portfolioImages = import.meta.glob<{ default: ImageMetadata }>(
   '../assets/portfolio/*.{jpg,jpeg,png,webp}',
   { eager: true }
 );
+const portfolioSubfolderImages = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/portfolio/**/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG}',
+  { eager: true }
+);
+const folderMap: Record<string, string> = {
+  '3d-framing':                  '3D Framing',
+  'ak-promotions':               'AK Promotions',
+  'creative-redevelopments':     'Creative Redevelopment',
+  'ds-carpentry':                'DS Carpentry',
+  'davies-property-development': 'Davies Property Development',
+  'ir-energy':                   'IR Energy',
+  'k-williams-roofing':          'K Williams Roofing',
+  'lr-building-roofing':         'L&R Building and Roofing',
+  'mj-roofing':                  'M&J Roofing',
+  'rap-roofing':                 'RAP Roofing and Building',
+  'pro-tech-plumbing':           'Pro Tech Plumbing and Bathrooms',
+  'web-design-south-wales':      'Web Design South Wales',
+  'whats-on-merthyr-tydfil':    "What's On Merthyr Tydfil",
+  'sell-my-caravan-right':       'Sell My Caravan Right',
+  'electrician-barry':          'Electrician Barry',
+  'utopia-design':              'Utopia Design',
+  'c-morgan-pallets':           'C Morgan Pallets',
+};
 function getPortfolioImage(slug: string) {
+  const folder = folderMap[slug];
+  if (folder) {
+    const match = Object.entries(portfolioSubfolderImages).find(([path]) => {
+      if (!path.includes(`/${folder}/`)) return false;
+      const filename = path.split('/').pop() || '';
+      return !filename.toLowerCase().startsWith('whatsapp');
+    });
+    if (match) return match[1].default;
+  }
   for (const [path, mod] of Object.entries(portfolioImages)) {
     const filename = path.split('/').pop()!.replace(/\.[^.]+$/, '');
     if (filename === slug) return mod.default;
@@ -23,16 +58,64 @@ function getPortfolioImage(slug: string) {
   return null;
 }
 
-const blogEntries = (await reader.collections.blog.all())
-  .sort((a, b) => {
-    const dateA = a.entry.pubDate ? new Date(a.entry.pubDate).getTime() : 0;
-    const dateB = b.entry.pubDate ? new Date(b.entry.pubDate).getTime() : 0;
-    return dateB - dateA;
-  })
+const seoResults = [
+  {
+    slug: 'ir-energy',
+    client: 'IR Energy',
+    href: '/portfolio/ir-energy/',
+    service: 'Local SEO Campaign',
+    period: 'Last 3 months vs previous 3 months',
+    stats: [
+      { value: '+76%', label: 'Clicks from Google' },
+      { value: '+164%', label: 'Search impressions' },
+      { value: '50', label: 'Enquiries generated' },
+    ],
+  },
+  {
+    slug: 'mj-roofing',
+    client: 'M&J Roofing',
+    href: '/portfolio/mj-roofing/',
+    service: 'Local SEO Campaign',
+    period: 'Last 3 months vs previous 3 months',
+    stats: [
+      { value: '+101%', label: 'Clicks from Google' },
+      { value: '+745%', label: 'Search impressions' },
+      { value: '24', label: 'Qualified leads generated' },
+    ],
+  },
+  {
+    slug: 'ds-carpentry',
+    client: 'DS Carpentry',
+    href: '/portfolio/ds-carpentry/',
+    service: 'Local SEO Campaign',
+    period: 'Last 3 months vs previous 3 months',
+    stats: [
+      { value: '+300%', label: 'Clicks from Google' },
+      { value: '+384%', label: 'Search impressions' },
+      { value: '11', label: 'Enquiry forms submitted' },
+    ],
+  },
+  {
+    slug: 'ak-promotions',
+    client: 'AK Promotions',
+    href: '/portfolio/ak-promotions/',
+    service: 'Web Design & Build',
+    period: '15 Aug 2025 – 30 Apr 2026',
+    stats: [
+      { value: '2,800+', label: 'Visits since launch' },
+      { value: '75', label: 'Enquiry forms submitted' },
+      { value: '808', label: 'Organic search sessions' },
+    ],
+  },
+];
+
+const blogEntries = (await getCollection('blog'))
+  .filter(p => p.data.pubDate)
+  .sort((a, b) => new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime())
   .slice(0, 3);
 
 const stats = [
-  { value: '10+', label: 'Years of Experience' },
+  { value: '11+', label: 'Years as a Web Developer' },
   { value: '50+', label: 'Websites Built' },
   { value: '100%', label: 'Custom Built' },
   { value: '5★', label: 'Google Rating' },
@@ -41,66 +124,60 @@ const stats = [
 const services = [
   {
     num: '01',
-    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`,
-    title: 'Website Design & Build',
-    desc: 'Custom, mobile-optimised websites crafted to help your business stand out, convert visitors, and grow online.',
-    href: '/services/web-development',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`,
+    title: 'Web Design',
+    desc: 'Custom website designs, logo design, branding, colour schemes, and layouts built around your business. Mobile-first and built to make a strong first impression.',
+    href: '/services/web-design/',
   },
   {
     num: '02',
-    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
-    title: 'Website Hosting & Security',
-    desc: 'Fast, UK-based web hosting with free SSL certificates, daily backups, and security monitoring — keeping your site safe and running.',
-    href: '/services/website-hosting-security',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`,
+    title: 'Logo Design & Branding',
+    desc: 'Custom logo design and brand identity for small businesses. 5 initial concepts, revisions until you\'re happy, and every file format you\'ll ever need — all designed by hand, no AI.',
+    href: '/services/logo-design/',
   },
   {
     num: '03',
-    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>`,
-    title: 'Website Maintenance Packages',
-    desc: 'Ongoing support to keep your site updated, secure, and growing — including regular updates, backups, and small edits.',
-    href: '/services/website-maintenance-packages',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+    title: 'Web Development',
+    desc: 'Custom-coded websites built for speed, performance, and SEO. No page builders, no templates. Clean, fast code that scores well on Google and works on every device.',
+    href: '/services/web-development/',
   },
   {
     num: '04',
-    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
-    title: 'Local SEO & Google Ranking',
-    desc: 'SEO foundations built into your site, plus targeted strategies to help you appear higher in local search results and maps.',
-    href: '/services/local-seo-google-ranking',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`,
+    title: 'Managed Starter Websites',
+    desc: 'A fully managed website from £20/month inc. VAT — domain, hosting, and management included, with 5, 10, or unlimited new pages added monthly depending on your tier.',
+    href: '/services/managed-starter-websites/',
   },
   {
     num: '05',
-    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/></svg>`,
-    title: 'Professional Mailboxes & Email Setup',
-    desc: 'Reliable business email using your own domain, so you look professional and stay organised. We\'ll set everything up, keep it secure, and help manage accounts as your team grows.',
-    href: '/services/professional-mailboxes-email-setup',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+    title: 'Website Hosting & Security',
+    desc: 'Fast, UK-based web hosting with free SSL certificates, daily backups, and security monitoring. Your site stays safe and online.',
+    href: '/services/website-hosting-security/',
+  },
+  {
+    num: '06',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>`,
+    title: 'Website Maintenance Packages',
+    desc: 'Ongoing support to keep your site updated, secure, and running well. Regular updates, backups, and small content changes handled for you.',
+    href: '/services/website-maintenance-packages/',
+  },
+  {
+    num: '07',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
+    title: 'Local SEO & Google Ranking',
+    desc: 'SEO foundations built into your site, plus targeted strategies to help you appear higher in local search results and maps.',
+    href: '/services/local-seo-google-ranking/',
   },
 ];
 ---
 
 <BaseLayout
   title="NC Digital — Web Design & SEO South Wales"
-  description={settings?.heroSubtext ?? 'Affordable web design and local SEO for South Wales small businesses.'}
+  description={homeMetaDescription}
 >
-
-  <JsonLD schema={{
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "NC Digital",
-    "description": "Web design and local SEO for South Wales small businesses.",
-    "url": "https://nc-digital.co.uk",
-    "email": "nathan@nc-digital.co.uk",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Merthyr Tydfil",
-      "addressRegion": "South Wales",
-      "addressCountry": "GB"
-    },
-    "areaServed": {
-      "@type": "State",
-      "name": "South Wales"
-    },
-    "serviceType": ["Web Design", "Local SEO", "Website Maintenance"]
-  }} />
 
   <!-- HERO -->
   <section style="padding:5rem 0 4rem; position:relative; overflow:hidden;">
@@ -111,30 +188,36 @@ const services = [
       <div>
         <p data-animate="fade-up" class="eyebrow" style="margin-bottom:1rem;">Web Design · SEO · South Wales</p>
         <h1 data-animate="fade-up" style="margin-bottom:1.25rem;">
-          {settings?.heroHeadline ?? 'Websites that rank. Businesses that grow.'}
+          Affordable Web Design & SEO in South Wales
         </h1>
         <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:2rem; max-width:480px;">
           {settings?.heroSubtext ?? 'Affordable web design and local SEO for South Wales small businesses.'}
         </p>
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin:-1rem 0 2rem; max-width:480px;">
+          Founded in 2025 by <a href="/about/" style="color:var(--purple); text-decoration:underline; text-underline-offset:3px;">Nathan Constance</a> — a professional web developer since 2015, who built and ranked his first website back in 2008.
+        </p>
         <div data-animate="fade-up" style="display:flex; gap:1rem; flex-wrap:wrap;">
-          <a href="/free-website-plan" class="btn-primary">
-            {settings?.heroCTAPrimary ?? 'Get your free plan'} →
+          <a href="/contact/" class="btn-primary">
+            Get a free quote →
           </a>
-          <a href="/portfolio" class="btn-outline">
+          <a href="/portfolio/" class="btn-outline">
             {settings?.heroCTASecondary ?? 'See our work'}
           </a>
         </div>
       </div>
 
       <div style="position:relative; display:flex; justify-content:center;">
-        <div style="position:absolute; inset:0; background:radial-gradient(circle at center, #8750f730 0%, transparent 70%); border-radius:50%; pointer-events:none;"></div>
+        <div style="position:absolute; inset:-40px; background:radial-gradient(ellipse at center, rgba(135,80,247,0.22) 0%, rgba(135,80,247,0.06) 55%, transparent 75%); pointer-events:none;"></div>
         <Image
           src={nathanImg}
           alt="Nathan Constance — NC Digital"
-          width={380}
+          width={570}
           data-animate="fade-in"
           class="nathan-photo"
-          style="border-radius:16px; border:1px solid var(--border); display:block; max-width:100%; height:auto; position:relative;"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+          style="border-radius:16px; border:1px solid rgba(135,80,247,0.3); display:block; width:380px; max-width:100%; height:auto; position:relative; box-shadow:0 0 60px rgba(135,80,247,0.18), 0 24px 48px rgba(0,0,0,0.4);"
         />
       </div>
 
@@ -142,7 +225,7 @@ const services = [
   </section>
 
   <!-- STATS BAR -->
-  <section style="border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:2rem 0; background:var(--bg-2);">
+  <section style="padding:2rem 0;">
     <div class="container site-pad layout-stats">
       {stats.map(({ value, label }) => (
         <div style="text-align:center;">
@@ -158,8 +241,8 @@ const services = [
     <div class="container site-pad">
       <div style="text-align:center; margin-bottom:3.5rem;">
         <p class="eyebrow" style="margin-bottom:0.75rem;">What we do</p>
-        <h2 data-animate="fade-up" style="max-width:520px; margin:0 auto 1rem;">Everything your business needs to grow online</h2>
-        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; max-width:480px; margin:0 auto; line-height:1.7;">
+        <h2 data-animate="fade-up" style="margin:0 auto 1rem;">Everything your business needs to grow online</h2>
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; margin:0 auto; line-height:1.7;">
           One agency, every service. No juggling multiple suppliers.
         </p>
       </div>
@@ -168,8 +251,7 @@ const services = [
         {services.map(({ num, icon, title, desc, href }) => (
           <a href={href} class="svc-row">
             <div class="svc-left">
-              <span class="svc-num">{num}</span>
-              <div class="svc-icon" set:html={icon} />
+<div class="svc-icon" set:html={icon} />
               <div>
                 <h3 class="svc-title">{title}</h3>
                 <p class="svc-desc">{desc}</p>
@@ -187,39 +269,40 @@ const services = [
   </section>
 
   <!-- PORTFOLIO -->
-  <section id="work" style="padding:5rem 0; background:var(--bg-2);">
+  <section id="work" style="padding:5rem 0;">
     <div class="container site-pad">
-      <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:3rem;">
+      <div class="section-header">
         <div data-animate="fade-up">
           <p class="eyebrow" style="margin-bottom:0.75rem;">Our work</p>
           <h2 style="margin:0;">Recent projects</h2>
         </div>
-        <a href="/portfolio" class="btn-outline" style="font-size:0.875rem;">View all →</a>
+        <a href="/portfolio/" class="btn-outline" style="font-size:0.875rem;">View all →</a>
       </div>
 
-      {portfolioEntries.length > 0 ? (
-        <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.25rem;">
-          {portfolioEntries.slice(0, 3).map((project) => {
+      {recentProjects.length > 0 ? (
+        <div data-animate="stagger" class="portfolio-grid">
+          {recentProjects.map((project) => {
             const slug = project.id.replace('/index.mdoc', '');
             const img = getPortfolioImage(slug);
             return (
-              <a href={`/portfolio/${slug}`} class="card" style="display:block; text-decoration:none; padding:0; overflow:hidden;">
+              <a href={`/portfolio/${slug}/`} class="portfolio-card">
                 {img ? (
                   <Image
                     src={img}
                     alt={project.data.title}
                     width={600}
-                    height={340}
-                    style="width:100%; height:180px; object-fit:cover; display:block;"
+                    height={375}
+                    class="portfolio-img"
+                    loading="lazy"
                   />
                 ) : (
-                  <div style="width:100%; height:180px; background:var(--bg-3); display:flex; align-items:center; justify-content:center;">
-                    <span style="color:var(--text-muted); font-size:0.875rem;">{project.data.title}</span>
-                  </div>
+                  <div class="portfolio-img" style="background:var(--bg-3);"></div>
                 )}
-                <div style="padding:1.25rem;">
-                  <h3 style="font-size:1rem; font-weight:600; color:var(--white); margin-bottom:0.5rem;">{project.data.client}</h3>
-                  <p style="font-size:0.875rem; color:var(--text-muted); margin:0;">{project.data.summary}</p>
+                <div class="portfolio-overlay">
+                  <p class="portfolio-services">{project.data.services.map((s: string) => s.replace(/-/g, ' ')).join(' · ')}</p>
+                  <h3 class="portfolio-client">{project.data.client}</h3>
+                  <p class="portfolio-summary">{project.data.summary}</p>
+                  <span class="portfolio-cta">View project →</span>
                 </div>
               </a>
             );
@@ -231,25 +314,87 @@ const services = [
     </div>
   </section>
 
-  <!-- BLOG PREVIEW -->
+  <!-- SEO RESULTS -->
   <section style="padding:5rem 0;">
     <div class="container site-pad">
-      <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:3rem;">
+      <div style="text-align:center; margin-bottom:3rem;">
+        <p class="eyebrow" style="margin-bottom:0.75rem;">Real results</p>
+        <h2 data-animate="fade-up">Real results from real clients</h2>
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; margin:1rem auto 0; max-width:520px; line-height:1.7;">Real data from live client campaigns. No estimates, no projections.</p>
+      </div>
+
+      <div class="seo-carousel" id="seoCarousel">
+        <div class="seo-viewport">
+          <div class="seo-slides" id="seoSlides">
+            {seoResults.map(({ slug, client, href, service, period, stats }) => {
+              const img = getPortfolioImage(slug);
+              return (
+                <div class="seo-slide">
+                  <div class="seo-card">
+                    <div class="seo-img-wrap">
+                      {img && <Image src={img} alt={client} width={700} height={480} class="seo-img" loading="lazy" />}
+                    </div>
+                    <div class="seo-content">
+                      <p class="eyebrow" style="margin-bottom:0.625rem;">{service}</p>
+                      <h3 class="seo-client">{client}</h3>
+                      <p class="seo-period">{period}</p>
+                      <div class="seo-stats-grid">
+                        {stats.map(({ value, label }) => (
+                          <div class="seo-stat">
+                            <span class="seo-stat-val">{value}</span>
+                            <span class="seo-stat-label">{label}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p style="font-size:0.75rem; color:var(--text-muted); opacity:0.6; margin-top:1.5rem; margin-bottom:0;">Stats taken 30/04/2026</p>
+                      <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-top:0.75rem;">
+                        <a href={href} class="btn-outline" style="font-size:0.875rem;">View project →</a>
+                        <a href="/contact/" class="btn-primary" style="font-size:0.875rem;">Hire us →</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div class="seo-controls">
+          <div class="seo-dots" id="seoDots"></div>
+          <div class="reviews-arrows">
+            <button class="reviews-arrow" id="seoPrev" aria-label="Previous result">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button class="reviews-arrow" id="seoNext" aria-label="Next result">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOG PREVIEW -->
+  <section style="padding:5rem 0; background:var(--bg);">
+    <div class="container site-pad">
+      <div class="section-header">
         <div data-animate="fade-up">
           <p class="eyebrow" style="margin-bottom:0.75rem;">Insights</p>
           <h2 style="margin:0;">Latest from the blog</h2>
         </div>
-        <a href="/blog" class="btn-outline" style="font-size:0.875rem;">All posts →</a>
+        <a href="/blog/" class="btn-outline" style="font-size:0.875rem;">All posts →</a>
       </div>
 
       {blogEntries.length > 0 ? (
-        <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.25rem;">
-          {blogEntries.map(({ slug, entry }) => (
-            <a href={`/blog/${slug}`} class="card" style="display:block; text-decoration:none;">
-              <div style="background:var(--bg-3); border-radius:6px; height:160px; margin-bottom:1rem;"></div>
-              <p style="font-size:0.75rem; color:var(--purple); font-weight:600; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.1em;">{entry.category}</p>
-              <h3 style="font-size:1rem; font-weight:600; color:var(--white); margin-bottom:0.5rem; line-height:1.4;">{entry.title}</h3>
-              <p style="font-size:0.875rem; color:var(--text-muted); margin:0;">{entry.description}</p>
+        <div data-animate="stagger" class="blog-grid">
+          {blogEntries.map((post) => (
+            <a href={`/blog/${post.id.replace('/index.mdoc', '')}/`} class="blog-card">
+              <p class="blog-cat">{getBlogCategoryLabel(post.data.category) || ' '}</p>
+              <h3 class="blog-title">{post.data.title}</h3>
+              <div class="blog-desc-wrap">
+                <p class="blog-desc">{post.data.description}</p>
+              </div>
+              <span class="blog-read">Read post →</span>
             </a>
           ))}
         </div>
@@ -259,15 +404,76 @@ const services = [
     </div>
   </section>
 
+  <!-- REVIEWS -->
+  <section style="padding:5rem 0;">
+    <div class="container site-pad">
+      <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:2.75rem; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <p class="eyebrow" style="margin-bottom:0.75rem;">Google Reviews</p>
+          <h2 data-animate="fade-up" style="margin:0 0 0.625rem;">What our clients say</h2>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span style="color:#f5c518; font-size:1.125rem; letter-spacing:0.05em;">★★★★★</span>
+            <span style="color:var(--text-muted); font-size:0.9375rem;">5.0 on Google</span>
+          </div>
+        </div>
+        <a href="https://www.google.com/search?si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOTBzWIT6Ou4xKgk8HxTKUffXdX_ipDhpjv4Y166sqHtCNMgTl1pIhlGcOh7efwTupj9GFzILc54TrwurTz-lwsb2s2Tv&q=NC+Digital+Reviews&sa=X" target="_blank" rel="noopener" class="btn-outline" style="font-size:0.875rem; white-space:nowrap;">
+          See all reviews →
+        </a>
+      </div>
+
+      <div class="reviews-carousel" id="reviewsCarousel">
+        <div class="reviews-viewport">
+          <div class="reviews-slides">
+            {[
+              { name: 'Jake Lewis',       time: '1 hour ago',   href: '',                                        text: 'I couldn\'t be happier with the website that was designed for my business. From the very beginning, the team was professional, responsive, and easy to work with. They took the time to understand exactly what I wanted and turned my ideas into a modern, professional, and user-friendly website that exceeded my expectations. Communication was excellent throughout the entire process, and any questions or changes I had were handled quickly and efficiently. The attention to detail and quality of their work really stands out. I would highly recommend them to anyone looking for a reliable, talented web design company. Thank you for delivering a website I\'m genuinely proud of!' },
+              { name: 'Laura Ann',        time: '2 months ago', href: '/portfolio/ir-energy/',                  text: 'Nathan redesigned our website homepage exactly the way we envisioned it. He was attentive to what we wanted, incredibly helpful throughout the process and very knowledgeable. Nathan made everything smooth and easy, we\'re so happy with the final result. Our team from IR Energy would highly recommend him!' },
+              { name: 'Chris Davies',     time: '1 month ago',  href: '/portfolio/davies-property-development/', text: 'I contacted Nathan to redesign my website. Nathan was quick and efficient and explained how to carry on going forward with my new site. Excellent value for money and my new site looks so much more professional.' },
+              { name: 'Kerry Morgan',     time: '4 months ago', href: '/portfolio/ak-promotions/',               text: 'Highly recommend Nathan — from start to finish he was very professional, easy to work with and did an excellent job on our website.' },
+              { name: 'Michael Mordecai', time: '3 months ago', href: '/portfolio/pro-tech-plumbing/',           text: 'Contacted Nathan to build my first website for my company. Nothing was too much to ask of him, his efficiency and attention to detail was amazing throughout. Would highly recommend anyone wanting a website to get in touch.' },
+              { name: 'Stuart Baker',     time: '3 months ago', href: '/portfolio/3d-framing/',                  text: 'AMAZING service, so quick and affordable for small start-up companies. Thank you so much Nathan, much more professional look I have now 👍' },
+              { name: 'Sean Hicks',       time: '2 months ago', href: '/portfolio/ds-carpentry/',                text: '10/10 for the service provided. Website is outstanding — detail is key and he delivers that. Anyone wanting a website, this is your guy 💯' },
+              { name: 'Jamie Williams',   time: '5 months ago', href: '/portfolio/mj-roofing/',                  text: 'Nathan done the website for us at M&J Roofing. Brilliant service and always keeps contact to see if everything is going well. Thanks Nathan.' },
+              { name: 'Ryan Martin',      time: '5 months ago', href: '/portfolio/creative-redevelopments/',     text: 'Top class service, website is quality 👌' },
+            ].map(({ name, time, href, text }) => (
+              <div class="review-slide">
+                <div class="review-card">
+                  <div class="review-stars">★★★★★</div>
+                  <p class="review-text">"{text}"</p>
+                  <div class="review-meta">
+                    <span class="review-name">{name}</span>
+                    <span class="review-time">{time}</span>
+                  </div>
+                  {href && <a href={href} class="review-project-link">View project →</a>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div class="reviews-controls">
+          <div class="reviews-dots" id="reviewsDots"></div>
+          <div class="reviews-arrows">
+            <button class="reviews-arrow" id="reviewsPrev" aria-label="Previous review">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button class="reviews-arrow" id="reviewsNext" aria-label="Next review">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CTA BANNER -->
-  <section style="padding:5rem 0; background:var(--bg-2); border-top:1px solid var(--border);">
+  <section style="padding:5rem 0;">
     <div class="container site-pad" style="text-align:center;">
       <p class="eyebrow" style="margin-bottom:1rem;">Ready to grow?</p>
       <h2 data-animate="fade-up" style="margin-bottom:1rem;">Let's build your online presence</h2>
       <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; margin-bottom:2rem; max-width:500px; margin-left:auto; margin-right:auto;">
-        Get a free website plan with no commitment. We'll show you exactly what we'd build and what it would cost.
+        Get a free website plan with no commitment. We'll show you exactly what we'd help you with.
       </p>
-      <a data-animate="fade-up" href="/free-website-plan" class="btn-primary" style="font-size:1rem; padding:1rem 2rem;">
+      <a data-animate="fade-up" href="/free-website-plan/" class="btn-primary" style="font-size:1rem; padding:1rem 2rem;">
         Get your free plan →
       </a>
     </div>
@@ -290,6 +496,7 @@ const services = [
     border: 1px solid var(--border);
     border-radius: 16px;
     overflow: hidden;
+    background: var(--bg);
   }
 
   .svc-row {
@@ -302,6 +509,7 @@ const services = [
     border-bottom: 1px solid var(--border);
     position: relative;
     overflow: hidden;
+    background: transparent;
   }
   .svc-row:last-child { border-bottom: none; }
 
@@ -394,6 +602,639 @@ const services = [
     transform: translateX(7px);
     opacity: 1;
   }
+
+  @media (max-width: 640px) {
+    .svc-row {
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem;
+    }
+    .svc-left {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+      flex: 1;
+      min-width: 0;
+    }
+    .svc-icon {
+      width: 44px;
+      height: 44px;
+    }
+    .svc-title {
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
+    }
+    .svc-desc {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Section headers (title + "view all" link) */
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 560px) {
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+  }
+
+  /* Portfolio overlay cards */
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  .portfolio-card {
+    position: relative;
+    display: block;
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    height: 480px;
+    background: var(--bg-3);
+  }
+
+  .portfolio-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+  }
+
+  .portfolio-card:hover .portfolio-img {
+    transform: scale(1.04);
+  }
+
+  .portfolio-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.72) 45%, rgba(0,0,0,0.25) 75%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 2rem;
+  }
+
+  .portfolio-services {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    margin: 0 0 0.5rem;
+  }
+
+  .portfolio-client {
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: var(--white);
+    margin: 0 0 0.625rem;
+    line-height: 1.2;
+  }
+
+  .portfolio-summary {
+    font-size: 0.875rem;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.65;
+    margin: 0 0 1.25rem;
+    max-width: 480px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .portfolio-cta {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--purple-light);
+    transition: color 0.2s;
+  }
+
+  .portfolio-card:hover .portfolio-cta {
+    color: #fff;
+  }
+
+  @media (max-width: 760px) {
+    .portfolio-grid { grid-template-columns: 1fr; }
+    .portfolio-card { height: 380px; }
+  }
+
+  /* Blog cards */
+  .blog-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  .blog-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-decoration: none;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .blog-card:hover {
+    border-color: var(--purple);
+    transform: translateY(-2px);
+  }
+
+  .blog-cat {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--purple);
+    margin: 0 0 0.625rem;
+  }
+
+  .blog-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.45;
+    margin: 0 0 0.625rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .blog-desc-wrap {
+    flex: 1;
+    margin-bottom: 1rem;
+  }
+
+  .blog-desc {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .blog-read {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--purple);
+  }
+
+  @media (max-width: 900px) {
+    .blog-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .blog-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .svc-row {
+      padding: 1.25rem 1.25rem;
+      gap: 0.75rem;
+    }
+    .svc-num { display: none; }
+    .svc-left { gap: 0.875rem; }
+    .svc-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+    .svc-title { font-size: 0.9375rem; }
+    .svc-desc { font-size: 0.8125rem; }
+  }
+
+  /* SEO Results carousel */
+  .seo-viewport {
+    overflow: hidden;
+    border-radius: 16px;
+  }
+
+  .seo-slides {
+    display: flex;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+
+  .seo-slide {
+    flex: 0 0 100%;
+  }
+
+  .seo-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--bg);
+    min-height: 420px;
+  }
+
+  .seo-img-wrap {
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-3);
+  }
+
+  .seo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+    transition: transform 0.5s ease;
+  }
+  .seo-card:hover .seo-img { transform: scale(1.03); }
+
+  .seo-content {
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .seo-client {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--white);
+    margin: 0 0 0.375rem;
+    letter-spacing: -0.02em;
+  }
+
+  .seo-period {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0 0 2rem;
+  }
+
+  .seo-stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .seo-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .seo-stat-val {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--purple);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .seo-stat-label {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  .seo-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+  }
+
+  .seo-dots {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 760px) {
+    .seo-card {
+      grid-template-columns: 1fr;
+    }
+    .seo-img-wrap {
+      height: 360px;
+    }
+    .seo-content {
+      padding: 1.75rem 1.25rem;
+    }
+    .seo-client { font-size: 1.375rem; }
+    .seo-period { margin-bottom: 1.25rem; }
+    .seo-stats-grid {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .seo-stat { flex: 1; min-width: 80px; }
+    .seo-stat-val { font-size: 1.5rem; }
+    .seo-stat-label { font-size: 0.75rem; }
+  }
+
+  /* Reviews carousel */
+  .reviews-viewport {
+    overflow: hidden;
+    border-radius: 14px;
+  }
+
+  .reviews-slides {
+    display: flex;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+    user-select: none;
+    cursor: grab;
+  }
+  .reviews-slides:active { cursor: grabbing; }
+
+  .review-slide {
+    flex: 0 0 calc(33.333% - 0.84rem);
+    margin-right: 1.25rem;
+  }
+
+  .review-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.75rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .review-stars {
+    color: #f5c518;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  .review-text {
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0;
+    flex: 1;
+  }
+
+  .review-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .review-name {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .review-time {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  .review-project-link {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--purple-light);
+    text-decoration: none;
+    margin-top: 0.25rem;
+    transition: color 0.2s;
+  }
+  .review-project-link:hover { color: var(--white); }
+
+  .reviews-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+  }
+
+  .reviews-dots {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .reviews-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .reviews-dot.active {
+    background: var(--purple);
+    transform: scale(1.25);
+  }
+
+  .reviews-arrows {
+    display: flex;
+    gap: 0.625rem;
+  }
+
+  .reviews-arrow {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+  }
+
+  .reviews-arrow:hover {
+    border-color: var(--purple);
+    color: var(--white);
+    background: rgba(135,80,247,0.1);
+  }
+
+  @media (max-width: 900px) {
+    .review-slide {
+      flex: 0 0 calc(50% - 0.625rem);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .review-slide {
+      flex: 0 0 100%;
+      margin-right: 1.25rem;
+    }
+  }
 </style>
+
+<script>
+  // SEO carousel
+  (function () {
+    const slides  = document.getElementById('seoSlides') as HTMLElement;
+    const dotsWrap = document.getElementById('seoDots')!;
+    const prevBtn  = document.getElementById('seoPrev')!;
+    const nextBtn  = document.getElementById('seoNext')!;
+    if (!slides) return;
+
+    const items = slides.querySelectorAll('.seo-slide');
+    const total = items.length;
+    let current = 0;
+
+    function buildDots() {
+      dotsWrap.innerHTML = '';
+      for (let i = 0; i < total; i++) {
+        const d = document.createElement('button');
+        d.className = 'reviews-dot' + (i === current ? ' active' : '');
+        d.setAttribute('aria-label', `Go to slide ${i + 1}`);
+        d.addEventListener('click', () => goTo(i));
+        dotsWrap.appendChild(d);
+      }
+    }
+
+    function goTo(n: number) {
+      current = ((n % total) + total) % total;
+      const slideWidth = (items[0] as HTMLElement).offsetWidth;
+      slides.style.transform = `translateX(-${current * slideWidth}px)`;
+      dotsWrap.querySelectorAll('.reviews-dot').forEach((d, i) => d.classList.toggle('active', i === current));
+    }
+
+    prevBtn.addEventListener('click', () => goTo(current - 1));
+    nextBtn.addEventListener('click', () => goTo(current + 1));
+
+    let touchX = 0;
+    slides.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+    slides.addEventListener('touchend', (e) => {
+      const dx = touchX - e.changedTouches[0].clientX;
+      if (Math.abs(dx) > 40) goTo(dx > 0 ? current + 1 : current - 1);
+    }, { passive: true });
+
+    let dragStartX = 0;
+    let dragging = false;
+    slides.addEventListener('mousedown', (e) => { dragStartX = e.clientX; dragging = true; slides.style.cursor = 'grabbing'; });
+    document.addEventListener('mouseup', (e) => {
+      if (!dragging) return;
+      dragging = false;
+      slides.style.cursor = 'grab';
+      const dx = dragStartX - e.clientX;
+      if (Math.abs(dx) > 40) goTo(dx > 0 ? current + 1 : current - 1);
+    });
+    document.addEventListener('mouseleave', () => { if (dragging) { dragging = false; slides.style.cursor = 'grab'; } });
+    slides.style.cursor = 'grab';
+
+    window.addEventListener('resize', () => goTo(current));
+
+    buildDots();
+    goTo(0);
+
+    const carousel = document.getElementById('seoCarousel')!;
+    let autoTimer = window.setInterval(() => goTo(current + 1 < total ? current + 1 : 0), 4000);
+    carousel.addEventListener('mouseenter', () => window.clearInterval(autoTimer));
+    carousel.addEventListener('mouseleave', () => { autoTimer = window.setInterval(() => goTo(current + 1 < total ? current + 1 : 0), 4000); });
+  })();
+
+  // Reviews carousel
+  (function () {
+    const slides   = document.querySelector('.reviews-slides') as HTMLElement;
+    const dotsWrap = document.getElementById('reviewsDots')!;
+    const prevBtn  = document.getElementById('reviewsPrev')!;
+    const nextBtn  = document.getElementById('reviewsNext')!;
+    if (!slides) return;
+
+    const items   = slides.querySelectorAll('.review-slide');
+    const total   = items.length;
+    let perPage   = 3;
+    let current   = 0;
+
+    function getPerPage() {
+      if (window.innerWidth <= 560) return 1;
+      if (window.innerWidth <= 900) return 2;
+      return 3;
+    }
+
+    function maxPage() { return total - perPage; }
+
+    function buildDots() {
+      dotsWrap.innerHTML = '';
+      const pages = maxPage() + 1;
+      for (let i = 0; i < pages; i++) {
+        const d = document.createElement('button');
+        d.className = 'reviews-dot' + (i === current ? ' active' : '');
+        d.setAttribute('aria-label', `Go to slide ${i + 1}`);
+        d.addEventListener('click', () => goTo(i));
+        dotsWrap.appendChild(d);
+      }
+    }
+
+    function goTo(n: number) {
+      current = Math.max(0, Math.min(n, maxPage()));
+      const slideWidth = (items[0] as HTMLElement).offsetWidth + 20; // card width + gap
+      slides.style.transform = `translateX(-${current * slideWidth}px)`;
+      dotsWrap.querySelectorAll('.reviews-dot').forEach((d, i) => {
+        d.classList.toggle('active', i === current);
+      });
+    }
+
+    function init() {
+      perPage = getPerPage();
+      buildDots();
+      goTo(current);
+    }
+
+    prevBtn.addEventListener('click', () => goTo(current - 1));
+    nextBtn.addEventListener('click', () => goTo(current + 1));
+
+    // Touch swipe
+    let touchX = 0;
+    slides.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+    slides.addEventListener('touchend', (e) => {
+      const dx = touchX - e.changedTouches[0].clientX;
+      if (Math.abs(dx) > 40) goTo(dx > 0 ? current + 1 : current - 1);
+    }, { passive: true });
+
+    // Mouse drag
+    let dragStartX = 0;
+    let dragging = false;
+    slides.addEventListener('mousedown', (e) => {
+      dragStartX = e.clientX;
+      dragging = true;
+      slides.style.cursor = 'grabbing';
+    });
+    document.addEventListener('mouseup', (e) => {
+      if (!dragging) return;
+      dragging = false;
+      slides.style.cursor = 'grab';
+      const dx = dragStartX - e.clientX;
+      if (Math.abs(dx) > 40) goTo(dx > 0 ? current + 1 : current - 1);
+    });
+    document.addEventListener('mouseleave', () => {
+      if (dragging) { dragging = false; slides.style.cursor = 'grab'; }
+    });
+    slides.style.cursor = 'grab';
+
+    window.addEventListener('resize', () => {
+      perPage = getPerPage();
+      current = Math.min(current, maxPage());
+      buildDots();
+      goTo(current);
+    });
+
+    init();
+  })();
+</script>
 
 </BaseLayout>

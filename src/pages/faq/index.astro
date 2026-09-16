@@ -1,0 +1,454 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const faqs = [
+  // Cost & Value
+  {
+    category: 'Cost & Value',
+    q: 'How much does it cost to set up a website in the UK?',
+    a: 'Setup costs vary widely. DIY builders like Wix or Squarespace have free or low-cost plans but come with significant limitations. At NC Digital, a one-page WordPress website starts from £199. Our <a href="/services/managed-starter-websites/">managed starter websites</a> start from £20/month inc. VAT with no large upfront cost, while larger <a href="/services/web-development/">custom builds</a> are priced to your brief. See our full guide on <a href="/blog/how-much-does-a-website-cost-for-a-small-business-in-the-uk/">how much a website costs for a small business in the UK</a>.',
+  },
+  {
+    category: 'Cost & Value',
+    q: 'How much does it cost to set up and run a website in the UK?',
+    a: 'Beyond the build, ongoing costs include: domain registration (~£10-20/year for a .co.uk), hosting (£5-30/month), SSL certificates (usually bundled with hosting), and maintenance. Our <a href="/services/managed-starter-websites/">managed starter websites</a> bundle domain, hosting, SSL, and maintenance into one monthly fee with no surprise costs. For existing sites, we also offer standalone <a href="/services/website-hosting-security/">hosting and security</a> and <a href="/services/website-maintenance-packages/">maintenance packages</a>.',
+  },
+  {
+    category: 'Cost & Value',
+    q: 'What is a reasonable price to pay for a website?',
+    a: 'For a simple one-page WordPress website, our pricing starts from £199. For a 5-10 page small business website with good design, mobile responsiveness, and solid SEO foundations, the price depends on the number of pages, content, and functionality required. Be cautious of anything significantly cheaper — a £99 website almost always means a generic template with no real thought behind structure or SEO. <a href="/contact/">Get in touch</a> for an honest recommendation, or see our <a href="/portfolio/">portfolio</a> for examples of what we deliver.',
+  },
+  {
+    category: 'Cost & Value',
+    q: 'How much should a web designer cost?',
+    a: 'UK web designer day rates typically range from £150-£500/day depending on experience and specialism. For a fixed-price small business website, pricing depends on scope: a one-page WordPress build at NC Digital starts from £199, while larger multi-page websites cost more based on the pages, content, SEO work, and functionality required. See our <a href="/services/web-design/">web design service</a> or <a href="/contact/">talk to us</a> about your project.',
+  },
+  {
+    category: 'Cost & Value',
+    q: 'How much do freelancers charge for website design?',
+    a: 'UK freelance web designers typically charge £30-£100/hour, or fixed fees based on the size of the website. At NC Digital, one-page WordPress websites start from £199, with larger multi-page builds quoted around the brief. We combine agency-level strategy with the personal service of working directly with one person — covering <a href="/services/web-design/">design</a>, <a href="/services/local-seo-google-ranking/">SEO</a>, and <a href="/services/website-maintenance-packages/">ongoing maintenance</a> under one roof.',
+  },
+  {
+    category: 'Cost & Value',
+    q: 'Is it worth paying someone to build a website?',
+    a: 'For most businesses, yes — especially service businesses where the site needs to generate enquiries. A professionally built website will have better structure for <a href="/services/local-seo-google-ranking/">local SEO</a>, be designed to convert visitors into leads, and be maintained properly after launch. DIY builders give you a site; they do not give you a marketing asset. Even one or two extra enquiries a month typically covers the cost within the first year. See real results from our clients in our <a href="/portfolio/">portfolio</a>.',
+  },
+  {
+    category: 'Cost & Value',
+    q: 'Is it better to hire a freelancer or agency?',
+    a: 'Both have their place. A freelancer is often cheaper for a simple build, but you are relying on one person\'s skill set — if they excel at design, SEO may suffer; if they are a developer, the design might be generic. An agency brings broader expertise across design, development, SEO, and support under one roof, with more accountability. At <a href="/about/">NC Digital</a>, we work exclusively with small businesses and sit somewhere between the two — the personal relationship of a freelancer with the strategic capability of an agency. <a href="/contact/">Get in touch</a> to see if we are the right fit.',
+  },
+  {
+    category: 'Cost & Value',
+    q: 'Can I set up my own website for free?',
+    a: 'Technically yes. Platforms like Wix, Squarespace, and WordPress.com have free plans, and Google Sites is free. However, free plans include the platform\'s branding in your URL (e.g. yourname.wixsite.com), limited design options, and no custom domain. For a business, this signals to visitors that you have not invested in your own presence. Our <a href="/services/managed-starter-websites/">managed starter websites</a> start from £20/month inc. VAT and include a proper domain, hosting, and a professionally built site — a far stronger foundation for generating real enquiries.',
+  },
+  {
+    category: 'Cost & Value',
+    q: 'Can I host my own website for free?',
+    a: 'Yes — platforms like GitHub Pages, Netlify, and Cloudflare Pages offer free hosting for static websites. However, these require technical knowledge to set up and manage, and may not suit a business that needs reliable uptime, security monitoring, and regular backups without having to manage it yourself. Our <a href="/services/website-hosting-security/">hosting and security service</a> and <a href="/services/managed-starter-websites/">managed starter websites</a> handle all of this as part of one monthly plan, including SSL, performance monitoring, and <a href="/services/website-maintenance-packages/">ongoing maintenance</a>.',
+  },
+
+  // Design & Quality
+  {
+    category: 'Design & Quality',
+    q: 'How long does it take to build a website?',
+    a: 'A simple informational website can be built in a few days to two weeks. A more complex site with ecommerce, custom functionality, or many pages typically takes four to eight weeks. At NC Digital, our <a href="/services/managed-starter-websites/">managed starter websites</a> are typically live within five to seven working days of receiving your content. <a href="/services/web-development/">Custom builds</a> take longer depending on complexity. The timeline is also affected by how quickly you can provide content and feedback. Read our guide on <a href="/blog/what-happens-during-a-website-design-project-step-by-step/">what happens during a website design project</a>.',
+  },
+  {
+    category: 'Design & Quality',
+    q: 'How many pages does a small business website need?',
+    a: 'Most small business websites need at least five to seven pages: a homepage, individual pages for each main service, an about page, and a contact page. Individual service pages are particularly important for SEO — a single catch-all "Services" page gives Google very little to work with and limits your chances of ranking for specific search terms. We cover this in detail in our blog on <a href="/blog/how-many-pages-does-a-small-business-website-need/">how many pages a small business website needs</a>. A <a href="/blog/">blog</a> also helps significantly over time.',
+  },
+  {
+    category: 'Design & Quality',
+    q: 'What information do I need to give a web designer?',
+    a: 'The basics are: your business name and contact details, a list of your services, your service area, a short description of your business, and photos of your work (phone photos are fine). You do not need to write your own copy — we handle that. You also do not need to worry about technical setup; we manage domains, hosting, and everything else. Read our full guide on <a href="/blog/what-to-prepare-before-starting-a-website-project/">what to prepare before starting a website project</a>, or <a href="/contact/">get in touch</a> and we will walk you through it.',
+  },
+  {
+    category: 'Design & Quality',
+    q: 'Do I need social media as well as a website?',
+    a: 'Social media and a website serve different purposes. Social media is good for visibility and engaging existing customers — but you do not own the platform or your audience, and organic reach is increasingly limited. A website gives you a permanent, controllable presence that works around the clock and can rank on Google long after a post has been forgotten. For most small businesses, a professional website should come first — social media supports it, not the other way around. Read more about <a href="/blog/why-every-business-needs-a-website/">why your business needs a website</a>.',
+  },
+  {
+    category: 'Design & Quality',
+    q: 'What are the five golden rules of a website?',
+    a: '<strong>1. Clear purpose</strong> — visitors should understand within seconds what you do and who you serve. <strong>2. Fast loading</strong> — a slow website loses visitors and ranks lower on Google. <strong>3. Mobile first</strong> — most searches happen on mobile; your site must work perfectly on small screens. <strong>4. Easy navigation</strong> — visitors should find what they need in two clicks or fewer. <strong>5. A clear call to action</strong> — every page should guide visitors towards contacting you. We build every <a href="/services/web-design/">web design</a> project around these principles from day one.',
+  },
+  {
+    category: 'Design & Quality',
+    q: 'What are the signs of a good web design?',
+    a: 'A well-designed website loads quickly on mobile and desktop, has clear headings that communicate what the business offers immediately, makes it easy to get in touch or take the next step, uses consistent branding throughout, has no broken links or outdated content, and is structured so Google can crawl and understand it. Good design is not just about aesthetics — it is about performance, clarity, and conversion. See examples of our work in the <a href="/portfolio/">NC Digital portfolio</a>, or read about <a href="/blog/what-makes-a-good-small-business-website-in-2026/">what makes a good small business website</a>.',
+  },
+  {
+    category: 'Design & Quality',
+    q: 'What is the 3 second rule in website design?',
+    a: 'The 3 second rule refers to the window you have to convince a visitor to stay. Research shows that users form a first impression within seconds — if the site is slow, confusing, or unclear, most will leave immediately. This is why page speed, clear headlines, and strong visual hierarchy matter so much. It is central to how we approach <a href="/services/web-design/">web design</a> — every site we build is optimised for speed and instant clarity, whether it is a <a href="/services/managed-starter-websites/">starter site</a> or a <a href="/services/web-development/">full custom build</a>.',
+  },
+  {
+    category: 'Design & Quality',
+    q: 'What are the 7 C\'s of website design?',
+    a: 'The 7 C\'s are a framework for evaluating a website: <strong>Context</strong> (layout and visual design), <strong>Content</strong> (text, images, video), <strong>Community</strong> (user interaction), <strong>Customisation</strong> (personalisation for users), <strong>Communication</strong> (how the site engages visitors), <strong>Connection</strong> (links to other sites or platforms), and <strong>Commerce</strong> (transactional capability). For most small businesses, what matters most is simpler — does the site communicate clearly, load fast, rank on Google, and convert visitors into enquiries? That is what our <a href="/services/web-design/">web design service</a> is built around.',
+  },
+  {
+    category: 'Design & Quality',
+    q: 'What are the three types of web design?',
+    a: 'The three main types are: <strong>Static websites</strong> — fast-loading sites with fixed content, ideal for small businesses that want speed and simplicity; <strong>Dynamic/CMS websites</strong> — powered by a content management system, allowing you to update content without touching code; and <strong>Web applications</strong> — more complex platforms built around specific functionality. For most South Wales small businesses, a static or CMS-based site is the right choice. We offer <a href="/services/web-design/">web design</a>, <a href="/services/web-development/">custom web development</a>, and <a href="/services/ecommerce-development/">ecommerce</a> depending on what your business needs.',
+  },
+  {
+    category: 'Design & Quality',
+    q: 'What makes a website look unprofessional?',
+    a: 'Common signs include: outdated design; slow loading speed; not being mobile-friendly; spelling errors; generic stock photos; unclear navigation; no visible contact information; a missing or expired SSL certificate (showing "Not secure"); and inconsistent branding. Any one of these can undermine trust — several together will lose a visitor before they have read a word. See our blog on <a href="/blog/what-makes-a-good-small-business-website-in-2026/">what makes a good small business website</a>, and our <a href="/services/website-maintenance-packages/">maintenance packages</a> to keep your site in good shape.',
+  },
+  {
+    category: 'Design & Quality',
+    q: 'What are common website mistakes?',
+    a: 'The most common mistakes: no clear call to action on key pages; burying contact details; a homepage that talks about the business rather than the customer; one generic "Services" page instead of individual service pages (which limits <a href="/services/local-seo-google-ranking/">SEO</a> potential); not optimising for mobile; ignoring page speed; and launching without submitting to Google Search Console. Read our full guide on <a href="/blog/common-mistakes-to-avoid-when-building-a-new-website/">common website mistakes to avoid</a>, or <a href="/contact/">talk to us</a> about a review of your current site.',
+  },
+
+  // SEO & Visibility
+  {
+    category: 'SEO & Visibility',
+    q: 'What is SEO and do I need it?',
+    a: 'SEO (Search Engine Optimisation) is the process of improving your website so it ranks higher on Google for searches related to your business. For a local service business, this means appearing when someone searches "roofer in Merthyr Tydfil" or "web designer Cardiff" — rather than your competitors. Most small businesses need at least basic SEO foundations built in from day one. Whether you need an ongoing campaign depends on how competitive your market is. Read our guide on <a href="/blog/do-you-really-need-seo-for-your-business/">whether you really need SEO</a>, or explore our <a href="/services/local-seo-google-ranking/">local SEO service</a>.',
+  },
+  {
+    category: 'SEO & Visibility',
+    q: 'What is local SEO?',
+    a: 'Local SEO is the practice of optimising your website and online presence to appear in Google searches made in your area. When someone searches "plumber Newport" or "electrician Merthyr Tydfil", Google shows results it considers most relevant and local. Key elements include: individual service pages targeting local search terms, a verified Google Business Profile, consistent business information across the web, and location-specific content. This is one of our core services — we have helped businesses across <a href="/seo-merthyr-tydfil/">Merthyr Tydfil</a>, <a href="/seo-cardiff/">Cardiff</a>, <a href="/seo-swansea/">Swansea</a>, and across <a href="/seo-south-wales/">South Wales</a> grow through local search.',
+  },
+  {
+    category: 'SEO & Visibility',
+    q: 'How do I get my website to show up on Google?',
+    a: 'Start by submitting your site to Google Search Console so Google knows it exists. Beyond that, ranking requires: individual pages targeting specific search terms, fast and mobile-friendly design, proper page titles and headings, local signals if you serve a specific area, and quality content that answers what your customers are searching for. Building authority takes time, but getting the foundations right from day one makes a significant difference. Read our guide on <a href="/blog/how-to-improve-your-websites-seo-after-launch/">how to improve your website\'s SEO after launch</a>, or explore our <a href="/services/local-seo-google-ranking/">local SEO service</a>.',
+  },
+
+  // Technical & Legal
+  {
+    category: 'Technical & Legal',
+    q: 'What is website maintenance and why does it matter?',
+    a: 'Website maintenance involves keeping your site secure, up to date, and performing well after launch — including software updates, security monitoring, backups, and fixing any issues that arise. A site that is not maintained will eventually become outdated, slow, or vulnerable to attack, often without the owner noticing until it affects Google rankings or customer trust. Our <a href="/services/website-maintenance-packages/">website maintenance packages</a> handle all of this on a monthly basis. Read more in our blog on <a href="/blog/what-is-website-maintenance/">what website maintenance actually involves</a>.',
+  },
+  {
+    category: 'Technical & Legal',
+    q: 'Should I use WordPress for my website?',
+    a: 'WordPress powers around 40% of all websites and is a solid choice for businesses that need to update content regularly, want a large plugin ecosystem, or need a CMS their team can manage. However, it requires ongoing updates, security monitoring, and maintenance to stay healthy — a neglected WordPress site is a common target for attacks. We build on the platform that best suits the brief. What matters is that the site is fast, secure, and does its job. See our <a href="/services/web-design/">web design</a> and <a href="/services/web-development/">web development</a> services, and our <a href="/services/website-maintenance-packages/">maintenance packages</a> for ongoing care.',
+  },
+  {
+    category: 'Technical & Legal',
+    q: 'How do I know if my website is working?',
+    a: 'The clearest sign is enquiries — consistent contact form submissions, phone calls, or emails from your site mean it is working. Beyond that, Google Search Console shows how many people find you on Google, and Google Analytics tracks visitor numbers and behaviour. Key metrics to watch: organic clicks from Google, form submissions, and phone click-throughs. If you are getting visitors but few enquiries, the issue is usually conversion. If you are getting few visitors, the issue is usually <a href="/services/local-seo-google-ranking/">SEO</a>. <a href="/contact/">Talk to us</a> if you are unsure — we can take a look at your current performance.',
+  },
+  {
+    category: 'Technical & Legal',
+    q: 'Is it better to have a .com or .co.uk website?',
+    a: 'For UK businesses targeting UK customers, .co.uk is generally the better choice. Google recognises .co.uk as a signal of a UK-based business, which can help with local search rankings. It also signals to UK visitors that you are local — which builds trust. A .com is more universal if you operate internationally. If possible, register both and point them to the same site. For most of our <a href="/web-design-south-wales/">South Wales clients</a>, we recommend .co.uk as the primary domain — and we handle domain registration as part of our <a href="/services/managed-starter-websites/">managed website service</a>.',
+  },
+  {
+    category: 'Technical & Legal',
+    q: 'What are the legal requirements for a UK website?',
+    a: 'UK websites must have: a <a href="/privacy-policy/">Privacy Policy</a> explaining what data you collect and why; a Cookie Policy and consent mechanism (under UK GDPR and PECR); and clear business details including your trading name and contact information. If registered as a limited company, your Companies House number must be shown. If VAT registered, include your VAT number. If you take online payments, terms and conditions are required too. All sites we build at <a href="/about/">NC Digital</a> include these as standard.',
+  },
+  {
+    category: 'Technical & Legal',
+    q: 'Do I need GDPR for my website?',
+    a: 'Yes — if your website collects any personal data from visitors. This includes email addresses via a contact form and tracking data from analytics cookies. UK GDPR requires a lawful basis for data collection, a clear Privacy Policy, and a cookie consent mechanism for non-essential cookies. This applies to all businesses, including sole traders. The requirements are not as complex as they sound, but ignoring them entirely carries legal and reputational risk. If you are unsure where your current site stands, <a href="/contact/">get in touch</a> and we can take a look.',
+  },
+
+  // AI & Modern
+  {
+    category: 'AI & Modern',
+    q: 'Can ChatGPT create a website?',
+    a: 'ChatGPT and other AI tools can write code and generate content, so in a narrow sense — yes, they can produce website code. But producing code is not the same as building a website that works reliably, ranks on Google, and generates enquiries. A properly built business website requires decisions about structure, <a href="/services/local-seo-google-ranking/">local SEO</a>, hosting, performance, and conversion that do not happen automatically from a prompt. NC Digital websites are built around proper strategy, content structure, and hands-on expertise.',
+  },
+
+  // About NC Digital
+  {
+    category: 'About NC Digital',
+    q: 'How long has NC Digital been in business?',
+    a: 'NC Digital was founded in 2025 by Nathan Constance in Merthyr Tydfil, South Wales. The business is new, but the experience behind it is not: Nathan has worked as a professional web developer since 2015 — five years at Rhino Rugby, then at Rhys Welsh from 2020 — and built and ranked his first website in 2008. That is 11+ years of hands-on web development and SEO experience behind every site we build. See the <a href="/about/">about page</a> for the full timeline, or the <a href="/portfolio/">portfolio</a> for recent work.',
+  },
+  {
+    category: 'About NC Digital',
+    q: 'Who builds the websites at NC Digital?',
+    a: 'Nathan Constance, the founder, builds and manages every website personally — there are no account managers or outsourced developers. Nathan studied computing at Merthyr Tydfil College (2008–2010) and Computer Science at the University of South Wales (2010–2013), has been a professional web developer since 2015, and has been building and optimising websites for Google since 2008. Homepage designs are produced with an in-house graphic designer. You deal directly with the person doing the work from first call to launch. <a href="/contact/">Get in touch</a> to talk through your project.',
+  },
+];
+
+const categories = ['All', ...Array.from(new Set(faqs.map(f => f.category)))];
+
+const schemaFaqs = faqs.map(f => ({
+  '@type': 'Question',
+  name: f.q,
+  acceptedAnswer: {
+    '@type': 'Answer',
+    text: f.a.replace(/<[^>]+>/g, ''),
+  },
+}));
+
+const schema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: schemaFaqs,
+});
+---
+
+<BaseLayout
+  title="Website FAQs — Common Questions Answered | NC Digital"
+  description="Honest answers to the most common questions about website costs, design, legal requirements, and getting found on Google. From NC Digital, based in Merthyr Tydfil."
+>
+
+  <script type="application/ld+json" set:html={schema} />
+
+  <!-- Hero -->
+  <section style="padding:5rem 0 4rem; text-align:center; position:relative; overflow:hidden;">
+    <div style="position:absolute; top:-80px; left:50%; transform:translateX(-50%); width:700px; height:420px; background:radial-gradient(ellipse at center, rgba(135,80,247,0.15) 0%, transparent 70%); pointer-events:none;"></div>
+    <div class="container site-pad" style="max-width:760px; position:relative; z-index:1;">
+      <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Website FAQs</p>
+      <h1 data-animate="fade-up" style="margin-bottom:1.25rem;">Common website questions, answered honestly</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; line-height:1.75; max-width:580px; margin:0 auto 2rem;">
+        From costs and legal requirements to design and AI — straight answers to the questions South Wales business owners ask us most.
+      </p>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section style="padding:1rem 0 5rem;">
+    <div class="container site-pad" style="max-width:860px;">
+
+      <!-- Category Tabs -->
+      <div class="faq-tabs" data-animate="fade-up" role="tablist" aria-label="FAQ categories">
+        {categories.map((cat, i) => (
+          <button
+            class={`faq-tab${i === 0 ? ' active' : ''}`}
+            data-cat={cat}
+            role="tab"
+            aria-selected={i === 0 ? 'true' : 'false'}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      <!-- FAQ Items -->
+      <div class="faq-list" data-animate="stagger">
+        {faqs.map((faq, i) => (
+          <div class="faq-item" data-cat={faq.category}>
+            <button
+              class="faq-question"
+              aria-expanded="false"
+              aria-controls={`faq-answer-${i}`}
+              id={`faq-btn-${i}`}
+            >
+              <span class="faq-q-text">{faq.q}</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
+            </button>
+            <div
+              class="faq-answer"
+              id={`faq-answer-${i}`}
+              role="region"
+              aria-labelledby={`faq-btn-${i}`}
+            >
+              <div class="faq-answer-inner" set:html={faq.a} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section style="padding:4rem 0 5rem; border-top:1px solid var(--border);">
+    <div class="container site-pad" style="max-width:700px; text-align:center;">
+      <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Still have questions?</p>
+      <h2 data-animate="fade-up" style="margin-bottom:1rem;">Talk to us — no obligation</h2>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; line-height:1.75; margin-bottom:2rem;">
+        Every business is different. If you are not sure what you need or want an honest opinion on your current website, <a href="/contact/" style="color:var(--purple); text-decoration:underline; text-underline-offset:3px;">get in touch</a> and we will give you a straight answer.
+      </p>
+      <div data-animate="fade-up" style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <a href="/contact/" class="btn-primary">Get in touch &rarr;</a>
+        <a href="/services/" class="btn-outline">View our services</a>
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .faq-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .faq-tab {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--bg-2);
+      color: var(--text-muted);
+      border-radius: 999px;
+      padding: 0.45rem 1.1rem;
+      font: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+
+    .faq-tab:hover {
+      border-color: var(--purple);
+      color: var(--white);
+    }
+
+    .faq-tab.active {
+      background: var(--purple);
+      border-color: var(--purple);
+      color: #fff;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-2);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .faq-item:hover {
+      border-color: rgba(135, 80, 247, 0.4);
+    }
+
+    .faq-item.is-open {
+      border-color: var(--purple);
+    }
+
+    .faq-item[hidden] {
+      display: none;
+    }
+
+    .faq-question {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+      color: var(--white);
+    }
+
+    .faq-q-text {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .faq-icon {
+      flex-shrink: 0;
+      color: var(--purple);
+      transition: transform 0.3s ease;
+      display: flex;
+      align-items: center;
+    }
+
+    .faq-item.is-open .faq-icon {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.3s ease;
+    }
+
+    .faq-item.is-open .faq-answer {
+      grid-template-rows: 1fr;
+    }
+
+    .faq-answer-inner {
+      overflow: hidden;
+      padding: 0 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      line-height: 1.75;
+    }
+
+    .faq-item.is-open .faq-answer-inner {
+      padding-bottom: 1.5rem;
+    }
+
+    .faq-answer-inner a {
+      color: var(--purple);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .faq-answer-inner strong {
+      color: var(--white);
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      .faq-question { padding: 1rem 1.25rem; }
+      .faq-answer-inner { padding: 0 1.25rem; }
+      .faq-item.is-open .faq-answer-inner { padding-bottom: 1.25rem; }
+      .faq-q-text { font-size: 0.9375rem; }
+    }
+  </style>
+
+  <script>
+    document.querySelectorAll<HTMLButtonElement>('.faq-question').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item') as HTMLElement;
+        const isOpen = item.classList.contains('is-open');
+        document.querySelectorAll('.faq-item.is-open').forEach(el => {
+          el.classList.remove('is-open');
+          el.querySelector('.faq-question')?.setAttribute('aria-expanded', 'false');
+        });
+        if (!isOpen) {
+          item.classList.add('is-open');
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+
+    const tabs = document.querySelectorAll<HTMLButtonElement>('.faq-tab');
+    const items = document.querySelectorAll<HTMLElement>('.faq-item');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const cat = tab.dataset.cat!;
+        tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        items.forEach(item => {
+          const match = cat === 'All' || item.dataset.cat === cat;
+          if (match) {
+            item.removeAttribute('hidden');
+          } else {
+            item.setAttribute('hidden', '');
+            item.classList.remove('is-open');
+            item.querySelector('.faq-question')?.setAttribute('aria-expanded', 'false');
+          }
+        });
+      });
+    });
+  </script>
+
+</BaseLayout>

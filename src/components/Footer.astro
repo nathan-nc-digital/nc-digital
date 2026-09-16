@@ -1,104 +1,212 @@
 ---
 import { Image } from 'astro:assets';
-import logo from '../assets/logo.webp';
+import logo from '../assets/logo.png';
 
 const year = new Date().getFullYear();
 
 const socials = [
-  { href: 'https://www.facebook.com/profile.php?id=61575891781927', label: 'Facebook', icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>` },
-  { href: 'https://x.com/ncdigitaluk', label: 'X', icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>` },
-  { href: 'https://www.instagram.com/ncdigitaluk/', label: 'Instagram', icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>` },
-  { href: 'https://www.linkedin.com/company/26759059/', label: 'LinkedIn', icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>` },
+  { href: 'https://www.facebook.com/profile.php?id=61575891781927', label: 'Facebook', icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>` },
+  { href: 'https://x.com/ncdigitaluk', label: 'X', icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>` },
+  { href: 'https://www.instagram.com/ncdigitaluk/', label: 'Instagram', icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>` },
+  { href: 'https://www.linkedin.com/company/26759059/', label: 'LinkedIn', icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>` },
 ];
 
-const services = [
-  { href: '/services', label: 'All Services' },
-  { href: '/services/web-development', label: 'Web Development' },
-  { href: '/services/local-seo-google-ranking', label: 'Local SEO' },
-  { href: '/services/website-maintenance-packages', label: 'Maintenance' },
-  { href: '/services/website-hosting-security', label: 'Hosting & Security' },
-  { href: '/services/professional-mailboxes-email-setup', label: 'Business Email' },
+// Trimmed 2026-07-27: was 46 links (26 web design + 20 SEO) site-wide on every page,
+// diluting internal authority evenly across pages with no real signal behind most of them.
+// Kept to the towns with either proven client work (Merthyr Tydfil, Caerphilly) or
+// proven search performance (real clicks in GSC) — everything else is still linked
+// contextually from each service page's own location list and from sibling location pages.
+const webDesignLinks = [
+  { href: '/web-design-merthyr-tydfil/',    label: 'Web Design Merthyr Tydfil' },
+  { href: '/web-design-caerphilly/',        label: 'Web Design Caerphilly' },
+  { href: '/web-design-cardiff/',           label: 'Web Design Cardiff' },
+  { href: '/web-design-swansea/',           label: 'Web Design Swansea' },
+  { href: '/web-design-newport/',           label: 'Web Design Newport' },
+  { href: '/web-design-bridgend/',          label: 'Web Design Bridgend' },
+  { href: '/web-design-aberdare/',          label: 'Web Design Aberdare' },
+  { href: '/web-design-south-wales/',       label: 'Web Design South Wales' },
 ];
 
-const locations = [
-  { href: '/web-design-cardiff', label: 'Web Design Cardiff' },
-  { href: '/web-design-swansea', label: 'Web Design Swansea' },
-  { href: '/web-design-merthyr-tydfil', label: 'Web Design Merthyr Tydfil' },
-  { href: '/seo-cardiff', label: 'SEO Cardiff' },
-  { href: '/seo-south-wales', label: 'SEO South Wales' },
+const seoLinks = [
+  { href: '/seo-merthyr-tydfil/',       label: 'SEO Merthyr Tydfil' },
+  { href: '/seo-caerphilly/',           label: 'SEO Caerphilly' },
+  { href: '/seo-cardiff/',              label: 'SEO Cardiff' },
+  { href: '/seo-swansea/',              label: 'SEO Swansea' },
+  { href: '/seo-newport/',              label: 'SEO Newport' },
+  { href: '/seo-bridgend/',             label: 'SEO Bridgend' },
+  { href: '/seo-aberdare/',             label: 'SEO Aberdare' },
+  { href: '/seo-south-wales/',          label: 'SEO South Wales' },
 ];
 ---
-<style>
-  .footer-link {
-    color: var(--text-muted);
-    font-size: 0.9375rem;
-    transition: color 0.25s ease;
-  }
-  .footer-link:hover {
-    color: var(--white);
-  }
 
-  .footer-social {
-    color: var(--text-muted);
+<style>
+  .footer-social-icon {
     display: flex;
     align-items: center;
-    transition: color 0.25s ease, transform 0.25s ease;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    background: var(--bg-3);
+    border: 1px solid var(--border-2);
+    border-radius: 6px;
+    color: var(--text-muted);
+    transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
   }
-  .footer-social:hover {
+  .footer-social-icon:hover {
+    background: rgba(135, 80, 247, 0.12);
+    border-color: rgba(135, 80, 247, 0.4);
     color: var(--purple);
     transform: translateY(-2px);
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+    padding: 3rem 0;
+  }
+
+  .footer-contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .footer-link-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.375rem 1rem;
+  }
+
+  .footer-grid-link {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.4;
+    transition: color 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .footer-grid-link:hover { color: var(--white); }
+
+  .footer-nav-link {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    transition: color 0.2s;
+  }
+  .footer-nav-link:hover { color: var(--white); }
+
+  .footer-section-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--purple-light);
+    margin-bottom: 0.75rem;
+  }
+
+  @media (max-width: 900px) {
+    .footer-top {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .footer-link-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (max-width: 560px) {
+    .footer-contact-grid { grid-template-columns: 1fr; }
+    .footer-link-grid { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 
 <footer style="background:var(--bg-2); border-top:1px solid var(--border); margin-top:5rem;">
-  <div class="container site-pad" style="padding-top:3.5rem; padding-bottom:3.5rem;">
+  <div class="container site-pad">
 
-    <div class="layout-footer-grid" style="margin-bottom:3rem;">
+    <!-- Top: logo/about/ + contact/nav -->
+    <div class="footer-top">
+
+      <!-- Left: brand -->
       <div>
         <a href="/" aria-label="NC Digital — Home" style="display:inline-block; margin-bottom:1rem;">
-          <Image src={logo} alt="NC Digital" height={36} style="display:block; height:36px; width:auto;" />
+          <Image src={logo} alt="NC Digital" height={38} densities={[1, 2, 3]} quality={100} style="display:block; height:38px; width:auto;" />
         </a>
-        <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.7; max-width:280px; margin-bottom:1.25rem;">
+        <p style="color:var(--text-muted); font-size:0.875rem; line-height:1.75; max-width:300px; margin-bottom:1.5rem;">
           Affordable web design and local SEO for South Wales small businesses.
-          Based in Merthyr Tydfil, serving clients across Wales.
+          Based in Merthyr Tydfil, serving clients across Wales. Founded in 2025 by Nathan Constance — a professional web developer since 2015 who built his first website in 2008.
         </p>
-        <div style="display:flex; gap:0.875rem; align-items:center;">
+        <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;">
           {socials.map(({ href, label, icon }) => (
             <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
-              class="footer-social"
-              set:html={icon} />
+              class="footer-social-icon" set:html={icon} />
           ))}
         </div>
       </div>
 
-      <div>
-        <h4 style="font-size:0.75rem; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; color:var(--purple); margin-bottom:1rem;">
-          Services
-        </h4>
-        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.625rem;">
-          {services.map(({ href, label }) => (
-            <li><a href={href} class="footer-link">{label}</a></li>
-          ))}
-        </ul>
-      </div>
+      <!-- Right: contact + quick links -->
+      <div class="footer-contact-grid">
 
-      <div>
-        <h4 style="font-size:0.75rem; font-weight:600; letter-spacing:0.15em; text-transform:uppercase; color:var(--purple); margin-bottom:1rem;">
-          Areas We Cover
-        </h4>
-        <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.625rem;">
-          {locations.map(({ href, label }) => (
-            <li><a href={href} class="footer-link">{label}</a></li>
-          ))}
-        </ul>
+        <div>
+          <p class="footer-section-label">Contact</p>
+          <p style="color:var(--white); font-size:0.875rem; font-weight:600; margin-bottom:0.375rem;">NC Digital</p>
+          <p style="color:var(--text-muted); font-size:0.8125rem; line-height:1.7; margin-bottom:0.75rem;">
+            70 Brynhyfryd St<br>
+            Merthyr Tydfil<br>
+            CF47 9YW
+          </p>
+          <a href="mailto:info@nc-digital.co.uk" style="color:var(--purple-light); font-size:0.8125rem; transition:color 0.2s;">
+            info@nc-digital.co.uk
+          </a>
+        </div>
+
+        <div>
+          <p class="footer-section-label">Company</p>
+          <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.5rem;">
+            <li><a href="/about/" class="footer-nav-link">About Us</a></li>
+            <li><a href="/services/" class="footer-nav-link">Services</a></li>
+            <li><a href="/portfolio/" class="footer-nav-link">Portfolio</a></li>
+            <li><a href="/blog/" class="footer-nav-link">Blog</a></li>
+            <li><a href="/contact/" class="footer-nav-link">Contact</a></li>
+            <li><a href="/sitemap/" class="footer-nav-link">Sitemap</a></li>
+            <li><a href="/free-website-plan/" style="color:var(--purple-light); font-size:0.875rem; font-weight:600;">Free Website Plan</a></li>
+            <li><a href="/website-cost-calculator/" style="color:var(--purple-light); font-size:0.875rem; font-weight:600;">Website Cost Calculator</a></li>
+          </ul>
+        </div>
+
       </div>
     </div>
 
     <hr class="divider" />
 
-    <div style="display:flex; align-items:center; justify-content:space-between; padding-top:1.5rem; flex-wrap:wrap; gap:1rem;">
-      <p style="color:var(--text-muted); font-size:0.875rem;">© {year} NC Digital. All rights reserved.</p>
-      <a href="/privacy-policy" style="color:var(--text-muted); font-size:0.875rem;">Privacy Policy</a>
+    <!-- Link grid: web design -->
+    <div style="padding:2rem 0 0.75rem;">
+      <p class="footer-section-label">Web Design Areas</p>
+      <div class="footer-link-grid">
+        {webDesignLinks.map(({ href, label }) => (
+          <a href={href} class="footer-grid-link">{label}</a>
+        ))}
+      </div>
+    </div>
+
+    <!-- Link grid: SEO -->
+    <div style="padding:1.25rem 0 2rem;">
+      <p class="footer-section-label">SEO Areas</p>
+      <div class="footer-link-grid">
+        {seoLinks.map(({ href, label }) => (
+          <a href={href} class="footer-grid-link">{label}</a>
+        ))}
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:1.25rem 0; flex-wrap:wrap; gap:0.75rem;">
+      <p style="color:var(--text-muted); font-size:0.8125rem;">© {year} NC Digital. All rights reserved.</p>
+      <div style="display:flex; gap:1.5rem; align-items:center;">
+        <a href="/privacy-policy/" style="color:var(--text-muted); font-size:0.8125rem; transition:color 0.2s;">Privacy Policy</a>
+        <a href="/sitemap/" style="color:var(--text-muted); font-size:0.8125rem; transition:color 0.2s;">Sitemap</a>
+      </div>
     </div>
 
   </div>
