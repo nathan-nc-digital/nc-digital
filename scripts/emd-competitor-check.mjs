@@ -1,11 +1,28 @@
 /**
  * EMD competitor check — SERP + referring-domain analysis for EMD Finder domains.
- * Run: node scripts/emd-competitor-check.mjs [--limit=N] [--force]
+ * Run: node scripts/emd-competitor-check.mjs [--limit=N] [--top-volume=N] [--top-job-cost=N]
+ *        [--domains=a.co.uk,b.co.uk] [--min-volume=N] [--min-job-cost=N]
+ *        [--unknown-volume-min-job-cost=N] [--force]
  *
  * Checks every domain marked available in scripts/emd-finder-cache.json
  * whose volume isn't a confirmed 0 (a null volume reading is a
  * DataForSEO data gap, not proof of zero demand, so it's still worth
- * checking). By default, skips combos that already have a check in a
+ * checking).
+ *
+ * The value gate narrows that further so credit goes on combos worth
+ * winning. All three flags are optional and off by default:
+ *   --min-volume=200                  keep only a confirmed volume ABOVE 200
+ *   --min-job-cost=150                keep only an average job value ABOVE £150
+ *   --unknown-volume-min-job-cost=1000
+ *                                     for combos with NO reported volume, keep
+ *                                     only those whose average job value is AT
+ *                                     LEAST this much. Small-town phrases often
+ *                                     go unreported by DataForSEO despite real
+ *                                     demand, so rather than binning them
+ *                                     wholesale this checks them blind only when
+ *                                     a single job would justify the domain.
+ *
+ * By default, skips combos that already have a check in a
  * COMPLETED scripts/emd-competitor-check-cache.json and only checks
  * what's new, merging the results with what's already there. Pass
  * --force to re-check everything from scratch.
@@ -55,7 +72,31 @@ const args = Object.fromEntries(
   })
 );
 const LIMIT = args.limit ? Number(args.limit) : null;
+const TOP_VOLUME_LIMIT = args['top-volume'] ? Number(args['top-volume']) : null;
+const TOP_JOB_COST_LIMIT = args['top-job-cost'] ? Number(args['top-job-cost']) : null;
+const DOMAIN_FILTER = args.domains
+  ? new Set(String(args.domains).split(',').map((domain) => domain.trim().toLowerCase()).filter(Boolean))
+  : null;
+const MIN_VOLUME = args['min-volume'] ? Number(args['min-volume']) : null;
+const MIN_JOB_COST = args['min-job-cost'] ? Number(args['min-job-cost']) : null;
+const UNKNOWN_VOLUME_MIN_JOB_COST = args['unknown-volume-min-job-cost']
+  ? Number(args['unknown-volume-min-job-cost'])
+  : null;
 const FORCE = Boolean(args.force);
+
+// Is this combo worth spending a SERP + backlink lookup on?
+// A reported volume is judged on volume first, then job value. A null volume is
+// judged on job value alone, because null means "DataForSEO reported nothing",
+// which for town-level phrases is a data gap rather than evidence of no demand.
+function meetsValueGate(combo) {
+  const jobCost = combo.avgJobCost ?? 0;
+  if (combo.volume === null) {
+    return UNKNOWN_VOLUME_MIN_JOB_COST === null || jobCost >= UNKNOWN_VOLUME_MIN_JOB_COST;
+  }
+  if (MIN_VOLUME !== null && !(combo.volume > MIN_VOLUME)) return false;
+  if (MIN_JOB_COST !== null && !(jobCost > MIN_JOB_COST)) return false;
+  return true;
+}
 
 function parseEnvFile() {
   if (!fs.existsSync(ENV_PATH)) return {};
@@ -92,12 +133,12 @@ function loadCombosToCheck() {
   // search volume — a null volume reading is a DataForSEO data gap, not
   // proof there's no real competition worth scoring. A confirmed 0 is
   // excluded (genuinely zero demand, not worth checking).
-  const available = combos.filter((c) => c.available === true && c.volume !== 0);
+  let available = combos.filter((c) => c.available === true && c.volume !== 0);
   if (available.length === 0) {
     console.error('No checkable domains found in scripts/emd-finder-cache.json (need available === true and volume !== 0).');
     process.exit(1);
   }
-  return LIMIT ? available.slice(0, LIMIT) : available;
+  return available;
 }
 
 function loadDirectoryList() {
@@ -114,14 +155,14 @@ function loadDirectoryList() {
 }
 
 function loadExistingChecks() {
-  if (FORCE || !fs.existsSync(CACHE_PATH)) return [];
+  if (!fs.existsSync(CACHE_PATH)) return [];
   try {
     const existing = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
-    // Only trust a run that actually finished — an interrupted run's
-    // checkpoint can have incomplete backlink data for combos that were
-    // "SERP-fetched" before the kill but never got their referring-domain
-    // lookups finished, which would silently poison their floor/verdict.
-    if (existing.complete !== true) return [];
+    // Every check is now written only once its SERP and all its non-directory
+    // backlink counts are in hand, so individual checks are trustworthy even
+    // when the run as a whole was cut short. That replaces the old run-level
+    // `complete` gate, which threw away hundreds of good checks whenever a
+    // single lookup failed. `complete` is still recorded, as a run summary.
     return existing.checks ?? [];
   } catch {
     return [];
@@ -164,6 +205,16 @@ async function postTask(authHeader, endpoint, tasks) {
   return json;
 }
 
+// A failed call and a successful call that found nothing used to both come back
+// as null/[], so an outage looked identical to a wide-open SERP — and an empty
+// SERP or an all-null floor scores as 'Soft', the most attractive verdict. This
+// sentinel keeps the two apart so failures are never cached or scored.
+const FETCH_FAILED = Symbol('fetch-failed');
+
+// Stop the run rather than grinding through hundreds of doomed calls when the
+// account runs out of credit or the API goes down mid-run.
+const CONSECUTIVE_FAILURE_ABORT = 10;
+
 async function fetchSerp(authHeader, phrase) {
   try {
     const json = await postTask(authHeader, 'serp/google/organic/live/advanced', [
@@ -173,7 +224,7 @@ async function fetchSerp(authHeader, phrase) {
     return mapSerpItems(items, SERP_LIMIT);
   } catch (err) {
     console.warn(`SERP fetch failed for "${phrase}": ${err.message}`);
-    return [];
+    return FETCH_FAILED;
   }
 }
 
@@ -184,7 +235,7 @@ async function fetchReferringDomains(authHeader, domain) {
     return result?.referring_domains ?? null;
   } catch (err) {
     console.warn(`Backlinks summary failed for "${domain}": ${err.message}`);
-    return null;
+    return FETCH_FAILED;
   }
 }
 
@@ -216,14 +267,72 @@ function writeCache(checks, complete) {
 const PROGRESS_INTERVAL = 25;
 
 async function main() {
+  if (!process.argv.includes('--legacy-unbounded')) {
+    console.log('Use https://nc-digital.co.uk/admin/emd-finder/ for capped scans with bulk checks. The legacy per-domain paid scanner is disabled by default; existing caches remain intact.');
+    return;
+  }
   const availableCombos = loadCombosToCheck();
   const directoryList = loadDirectoryList();
   const existingChecks = loadExistingChecks();
-  const existingKeys = new Set(existingChecks.map((c) => `${c.trade}|${c.town}`));
-  const toCheck = availableCombos.filter((combo) => !existingKeys.has(`${combo.trade}|${combo.town}`));
+  const existingKeys = FORCE ? new Set() : new Set(existingChecks.map((c) => `${c.trade}|${c.town}`));
+  let toCheck = availableCombos.filter((combo) => !existingKeys.has(`${combo.trade}|${combo.town}`));
+
+  if (MIN_VOLUME !== null || MIN_JOB_COST !== null || UNKNOWN_VOLUME_MIN_JOB_COST !== null) {
+    const before = toCheck.length;
+    const excluded = toCheck.filter((combo) => !meetsValueGate(combo));
+    toCheck = toCheck.filter(meetsValueGate);
+    // Attribute each exclusion to exactly one reason, in the order the gate applies.
+    let lowVolume = 0;
+    let lowValue = 0;
+    let unknownLowValue = 0;
+    for (const combo of excluded) {
+      if (combo.volume === null) unknownLowValue++;
+      else if (MIN_VOLUME !== null && !(combo.volume > MIN_VOLUME)) lowVolume++;
+      else lowValue++;
+    }
+    console.log(`Value gate: ${before} -> ${toCheck.length} combo(s) worth checking.
+  excluded ${lowVolume} with reported volume at/below ${MIN_VOLUME}
+  excluded ${lowValue} clearing volume but with average job value at/below £${MIN_JOB_COST}
+  excluded ${unknownLowValue} with no reported volume and job value under £${UNKNOWN_VOLUME_MIN_JOB_COST}`);
+  }
+
+  if (DOMAIN_FILTER) {
+    toCheck = toCheck.filter((combo) => DOMAIN_FILTER.has(combo.domain.toLowerCase()));
+  }
+  if (TOP_VOLUME_LIMIT) {
+    toCheck = toCheck
+      .filter((combo) => combo.volume > 0)
+      .toSorted((a, b) => {
+        if (a.volume !== b.volume) return b.volume - a.volume;
+        return a.domain.localeCompare(b.domain);
+      })
+      .slice(0, TOP_VOLUME_LIMIT);
+  }
+  if (TOP_JOB_COST_LIMIT) {
+    toCheck = toCheck
+      .filter((combo) => combo.avgJobCost !== null && combo.avgJobCost !== undefined)
+      .toSorted((a, b) => {
+        if (a.avgJobCost !== b.avgJobCost) return b.avgJobCost - a.avgJobCost;
+        const aVolume = a.volume ?? -1;
+        const bVolume = b.volume ?? -1;
+        if (aVolume !== bVolume) return bVolume - aVolume;
+        return a.domain.localeCompare(b.domain);
+      })
+      .slice(0, TOP_JOB_COST_LIMIT);
+  }
+  if (LIMIT) {
+    toCheck = toCheck.slice(0, LIMIT);
+  }
 
   if (toCheck.length === 0) {
-    console.log(`All ${availableCombos.length} available combo(s) already have a competitor check. Nothing to do — pass --force to re-check everything.`);
+    const qualifier = DOMAIN_FILTER
+      ? ' selected available unchecked domain(s)'
+      : TOP_VOLUME_LIMIT
+        ? ` available positive-volume unchecked combo(s) in the top ${TOP_VOLUME_LIMIT} selection`
+        : TOP_JOB_COST_LIMIT
+          ? ` available unchecked combo(s) in the top ${TOP_JOB_COST_LIMIT} average job cost selection`
+          : ` available combo(s)`;
+    console.log(`No${qualifier} need a competitor check. Nothing to do — pass --force to re-check everything.`);
     return;
   }
 
@@ -237,15 +346,30 @@ async function main() {
   console.log(`Running competitor check for ${toCheck.length} available combo(s) (${existingChecks.length} already finalized, ${alreadyCached} already have raw SERP data cached from a prior run)...`);
 
   let serpFetchedThisRun = 0;
+  let serpFailures = 0;
+  let consecutiveSerpFailures = 0;
+  let aborted = false;
   for (let i = 0; i < toCheck.length; i++) {
     const combo = toCheck[i];
     const key = `${combo.trade}|${combo.town}`;
-    if (serpByComboKey.has(key)) continue;
+    if (!FORCE && serpByComboKey.has(key)) continue;
     const phrase = `${combo.trade} ${combo.town.replace(/-/g, ' ')}`;
     const serp = await fetchSerp(authHeader, phrase);
+    await sleep(REQUEST_DELAY_MS);
+    if (serp === FETCH_FAILED) {
+      // Leave the key absent so a later run retries it.
+      serpFailures++;
+      consecutiveSerpFailures++;
+      if (consecutiveSerpFailures >= CONSECUTIVE_FAILURE_ABORT) {
+        console.error(`\nAborting SERP fetch after ${consecutiveSerpFailures} consecutive failures — check your DataForSEO balance and re-run.`);
+        aborted = true;
+        break;
+      }
+      continue;
+    }
+    consecutiveSerpFailures = 0;
     serpByComboKey.set(key, serp);
     serpFetchedThisRun++;
-    await sleep(REQUEST_DELAY_MS);
     if (serpFetchedThisRun % RAW_CACHE_SAVE_INTERVAL === 0) {
       saveRawCache(SERP_RAW_CACHE_PATH, serpByComboKey);
     }
@@ -274,13 +398,28 @@ async function main() {
   console.log(`Looking up referring domains for ${domainList.length} unique real-business domain(s) (${alreadyLookedUp} already cached from a prior run)...`);
 
   let lookedUpThisRun = 0;
+  let lookupFailures = 0;
+  let consecutiveLookupFailures = 0;
   for (let i = 0; i < domainList.length; i++) {
     const domain = domainList[i];
     if (referringDomainsByDomain.has(domain)) continue;
     const count = await fetchReferringDomains(authHeader, domain);
+    await sleep(REQUEST_DELAY_MS);
+    if (count === FETCH_FAILED) {
+      // Leave the domain out of the cache entirely. Caching a null here would
+      // make `has(domain)` true and permanently skip the retry.
+      lookupFailures++;
+      consecutiveLookupFailures++;
+      if (consecutiveLookupFailures >= CONSECUTIVE_FAILURE_ABORT) {
+        console.error(`\nAborting backlinks lookup after ${consecutiveLookupFailures} consecutive failures — check your DataForSEO balance and re-run.`);
+        aborted = true;
+        break;
+      }
+      continue;
+    }
+    consecutiveLookupFailures = 0;
     referringDomainsByDomain.set(domain, count);
     lookedUpThisRun++;
-    await sleep(REQUEST_DELAY_MS);
     if (lookedUpThisRun % RAW_CACHE_SAVE_INTERVAL === 0) {
       saveRawCache(REFERRING_RAW_CACHE_PATH, referringDomainsByDomain);
     }
@@ -290,9 +429,35 @@ async function main() {
   }
   saveRawCache(REFERRING_RAW_CACHE_PATH, referringDomainsByDomain);
 
-  const newChecks = buildChecks(toCheck, serpByComboKey, referringDomainsByDomain, directoryList);
-  const checks = [...existingChecks, ...newChecks];
-  writeCache(checks, true);
+  // Only finalize combos backed by complete data. A combo whose SERP never
+  // landed, or whose competitors are missing backlink counts, would be scored
+  // from a partial picture — and a missing floor scores 'Soft'. Leaving them
+  // out means a later run redoes them properly instead of baking in a guess.
+  const completeCombos = [];
+  let skippedIncomplete = 0;
+  for (const combo of toCheck) {
+    const serp = serpByComboKey.get(`${combo.trade}|${combo.town}`);
+    if (!serp) {
+      skippedIncomplete++;
+      continue;
+    }
+    const missingBacklinks = serp.some(
+      (result) => !isDirectoryDomain(result.domain, directoryList) && !referringDomainsByDomain.has(result.domain)
+    );
+    if (missingBacklinks) {
+      skippedIncomplete++;
+      continue;
+    }
+    completeCombos.push(combo);
+  }
+
+  const newChecks = buildChecks(completeCombos, serpByComboKey, referringDomainsByDomain, directoryList);
+  const newKeys = new Set(newChecks.map((check) => `${check.trade}|${check.town}`));
+  const checks = FORCE
+    ? [...existingChecks.filter((check) => !newKeys.has(`${check.trade}|${check.town}`)), ...newChecks]
+    : [...existingChecks, ...newChecks];
+  const runComplete = !aborted && serpFailures === 0 && lookupFailures === 0 && skippedIncomplete === 0;
+  writeCache(checks, runComplete);
 
   const verdictCounts = checks.reduce((acc, c) => {
     acc[c.verdict] = (acc[c.verdict] ?? 0) + 1;
@@ -300,7 +465,7 @@ async function main() {
   }, {});
 
   console.log(`
-Done.
+${runComplete ? 'Done.' : 'Done (INCOMPLETE — see warnings below).'}
   New combos checked: ${newChecks.length}
   Total combos in cache: ${checks.length}
   Unique competitor domains looked up this run: ${lookedUpThisRun}
@@ -308,6 +473,16 @@ Done.
 
 Cache saved to: scripts/emd-competitor-check-cache.json
 `);
+
+  if (!runComplete) {
+    console.warn(`Run did not fully complete:
+  SERP fetch failures: ${serpFailures}
+  Backlinks lookup failures: ${lookupFailures}
+  Combos held back for incomplete data: ${skippedIncomplete}${aborted ? '\n  Run aborted early after consecutive failures.' : ''}
+
+Failed lookups were NOT written to the caches, so re-running picks them up.
+No partial-data combo was scored, so nothing was recorded as a false 'Soft'.`);
+  }
 }
 
 main().catch((err) => {

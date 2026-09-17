@@ -1,0 +1,2 @@
+import {defineConfig} from '@playwright/test';
+export default defineConfig({testDir:'.',testMatch:['crm-workspace.spec.ts','admin-crm.spec.ts'],outputDir:'test-results/crm-workspace',workers:1,use:{baseURL:'http://127.0.0.1:4350',timezoneId:'Europe/London',trace:'retain-on-failure'},timeout:30000,webServer:{command:'node scripts/crm-dev.mjs',cwd:'..',url:'http://127.0.0.1:4350/admin/crm/',reuseExistingServer:false,timeout:30000}});

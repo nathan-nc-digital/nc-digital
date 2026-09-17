@@ -1,0 +1,240 @@
+[
+  {
+    "topic": "DS Carpentry: Google search clicks up 90%",
+    "domain": "ds-carpentry.com",
+    "property": "properties/508203399",
+    "retrievedAt": "2026-09-10T09:27:11.820Z",
+    "periods": {
+      "current": {
+        "startDate": "2026-06-01",
+        "endDate": "2026-08-31"
+      },
+      "previous": {
+        "startDate": "2026-03-01",
+        "endDate": "2026-05-31"
+      }
+    },
+    "scope": "Web traffic, all countries. Organic Search includes all search engines.",
+    "websiteSessions": {
+      "current": 405,
+      "previous": 219
+    },
+    "organicSearchSessions": {
+      "current": 178,
+      "previous": 73
+    },
+    "googleClicks": {
+      "current": 152,
+      "previous": 80
+    },
+    "googleImpressions": {
+      "current": 6429,
+      "previous": 2138
+    },
+    "limitations": "Traffic changes do not establish causation or count confirmed leads."
+  },
+  {
+    "topic": "NC Digital: growing our own site",
+    "domain": "nc-digital.co.uk",
+    "property": "properties/487409990",
+    "retrievedAt": "2026-09-10T09:27:14.420Z",
+    "periods": {
+      "current": {
+        "startDate": "2026-06-01",
+        "endDate": "2026-08-31"
+      },
+      "previous": {
+        "startDate": "2026-03-01",
+        "endDate": "2026-05-31"
+      }
+    },
+    "scope": "Web traffic, all countries. Organic Search includes all search engines.",
+    "websiteSessions": {
+      "current": 3194,
+      "previous": 1638
+    },
+    "organicSearchSessions": {
+      "current": 303,
+      "previous": 146
+    },
+    "googleClicks": {
+      "current": 173,
+      "previous": 72
+    },
+    "googleImpressions": {
+      "current": 133693,
+      "previous": 36991
+    },
+    "limitations": "Traffic changes do not establish causation or count confirmed leads."
+  },
+  {
+    "topic": "M&J Roofing: more recorded visits and Google clicks",
+    "domain": "mj-roofing.co.uk",
+    "property": "properties/498875227",
+    "retrievedAt": "2026-09-10T09:27:10.325Z",
+    "periods": {
+      "current": {
+        "startDate": "2026-06-01",
+        "endDate": "2026-08-31"
+      },
+      "previous": {
+        "startDate": "2026-03-01",
+        "endDate": "2026-05-31"
+      }
+    },
+    "scope": "Web traffic, all countries. Organic Search includes all search engines.",
+    "websiteSessions": {
+      "current": 966,
+      "previous": 629
+    },
+    "organicSearchSessions": {
+      "current": 503,
+      "previous": 434
+    },
+    "googleClicks": {
+      "current": 413,
+      "previous": 334
+    },
+    "googleImpressions": {
+      "current": 76851,
+      "previous": 55911
+    },
+    "limitations": "Traffic changes do not establish causation or count confirmed leads."
+  },
+  {
+    "topic": "K Williams Roofing: organic-search traffic",
+    "domain": "kwilliams-roofing.co.uk",
+    "property": "properties/515550167",
+    "retrievedAt": "2026-09-10T09:27:13.130Z",
+    "periods": {
+      "current": {
+        "startDate": "2026-06-01",
+        "endDate": "2026-08-31"
+      },
+      "previous": {
+        "startDate": "2026-03-01",
+        "endDate": "2026-05-31"
+      }
+    },
+    "scope": "Web traffic, all countries. Organic Search includes all search engines.",
+    "websiteSessions": {
+      "current": 293,
+      "previous": 189
+    },
+    "organicSearchSessions": {
+      "current": 146,
+      "previous": 85
+    },
+    "googleClicks": {
+      "current": 94,
+      "previous": 57
+    },
+    "googleImpressions": {
+      "current": 12566,
+      "previous": 5522
+    },
+    "limitations": "Traffic changes do not establish causation or count confirmed leads."
+  },
+  {
+    "topic": "IR Energy: more clicks from Google Search",
+    "domain": "ir-energy.co.uk",
+    "property": "properties/518780602",
+    "retrievedAt": "2026-09-10T09:27:08.911Z",
+    "periods": {
+      "current": {
+        "startDate": "2026-06-01",
+        "endDate": "2026-08-31"
+      },
+      "previous": {
+        "startDate": "2026-03-01",
+        "endDate": "2026-05-31"
+      }
+    },
+    "scope": "Web traffic, all countries. Organic Search includes all search engines.",
+    "websiteSessions": {
+      "previous": 1610,
+      "current": 849
+    },
+    "organicSearchSessions": {
+      "previous": 844,
+      "current": 388
+    },
+    "googleClicks": {
+      "current": 490,
+      "previous": 404
+    },
+    "googleImpressions": {
+      "current": 73793,
+      "previous": 42273
+    },
+    "limitations": "Overall GA4 visits fell in this comparison. The public post is specifically about GSC clicks."
+  },
+  {
+    "topic": "DS Carpentry: measuring organic-search visits",
+    "domain": "ds-carpentry.com",
+    "property": "properties/508203399",
+    "retrievedAt": "2026-09-10T09:27:11.820Z",
+    "periods": {
+      "current": {
+        "startDate": "2026-06-01",
+        "endDate": "2026-08-31"
+      },
+      "previous": {
+        "startDate": "2026-03-01",
+        "endDate": "2026-05-31"
+      }
+    },
+    "scope": "Web traffic, all countries. Organic Search includes all search engines.",
+    "websiteSessions": {
+      "current": 405,
+      "previous": 219
+    },
+    "organicSearchSessions": {
+      "current": 178,
+      "previous": 73
+    },
+    "googleClicks": {
+      "current": 152,
+      "previous": 80
+    },
+    "googleImpressions": {
+      "current": 6429,
+      "previous": 2138
+    },
+    "limitations": "Traffic changes do not establish causation or count confirmed leads."
+  },
+  {
+    "topic": "NC Digital: more clicks from Google Search",
+    "domain": "nc-digital.co.uk",
+    "property": "properties/487409990",
+    "retrievedAt": "2026-09-10T09:27:14.420Z",
+    "periods": {
+      "current": {
+        "startDate": "2026-06-01",
+        "endDate": "2026-08-31"
+      },
+      "previous": {
+        "startDate": "2026-03-01",
+        "endDate": "2026-05-31"
+      }
+    },
+    "scope": "Web traffic, all countries. Organic Search includes all search engines.",
+    "websiteSessions": {
+      "current": 3194,
+      "previous": 1638
+    },
+    "organicSearchSessions": {
+      "current": 303,
+      "previous": 146
+    },
+    "googleClicks": {
+      "current": 173,
+      "previous": 72
+    },
+    "googleImpressions": {
+      "current": 133693,
+      "previous": 36991
+    },
+    "limitations": "Traffic changes do not establish causation or count confirmed leads."
+  }
+]

@@ -1,0 +1,238 @@
+---
+import ArrowIcon from './ArrowIcon.astro';
+interface Props {
+  id?: string;
+  subject?: string;
+  compact?: boolean;
+  websiteOffer?: boolean;
+}
+const {
+  id = 'enquiry-form',
+  subject = 'New enquiry from NC Digital website',
+  compact = false,
+  websiteOffer = false,
+} = Astro.props;
+const successId = `${id}-success`;
+const errorId   = `${id}-error`;
+const nameId    = `${id}-name`;
+const emailId   = `${id}-email`;
+const phoneId   = `${id}-phone`;
+const serviceId = `${id}-service`;
+const messageId = `${id}-message`;
+---
+
+<form id={id} class={compact ? 'enq-form enq-form--compact' : 'enq-form'} data-success={successId} data-error={errorId} data-website-offer={websiteOffer || undefined}>
+  <input type="hidden" name="access_key" value="623d4393-90f3-4de8-b0c0-646e1d8ff1c3" />
+  <input type="hidden" name="subject"    value={subject} />
+  <div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;"><label>Leave this field empty<input type="text" name="botcheck" tabindex="-1" autocomplete="off" /></label></div>
+
+  <div class="enq-field">
+    <label for={nameId}>Name</label>
+    <input id={nameId} type="text" name="name" placeholder="Your name" autocomplete="name" required />
+  </div>
+  <div class="enq-field">
+    <label for={emailId}>Email</label>
+    <input id={emailId} type="email" name="email" placeholder="you@yourbusiness.co.uk" autocomplete="email" required />
+  </div>
+  <div class="enq-field">
+    <label for={phoneId}>Phone number{websiteOffer && <span> (optional)</span>}</label>
+    <input id={phoneId} type="tel" name="phone" placeholder="07700 000000" autocomplete="tel" />
+  </div>
+  {websiteOffer ? <>
+    <input type="hidden" name="service" value="Website enquiry" />
+    <div class="enq-field">
+      <label for={serviceId}>What are you looking for? (optional)</label>
+      <select id={serviceId} name="website_type">
+        <option value="Not sure — help me choose">Not sure — help me choose</option>
+        <option value="Multi-page business website">A multi-page business website</option>
+        <option value="One-page starter website">A one-page starter website</option>
+        <option value="Online shop or extra features">An online shop or extra features</option>
+      </select>
+    </div>
+  </> : <div class="enq-field">
+    <label for={serviceId}>Service</label>
+    <select id={serviceId} name="service">
+      <option value="new-website">New website</option>
+      <option value="logo-design">Logo design &amp; branding</option>
+      <option value="seo">Local SEO</option>
+      <option value="maintenance">Website maintenance</option>
+      <option value="other">Something else</option>
+    </select>
+  </div>}
+  <div class="enq-field">
+    <label for={messageId}>{websiteOffer ? 'What does your business do? (optional)' : 'Message'}</label>
+    <textarea id={messageId} name="message" rows={websiteOffer ? 2 : compact ? 3 : 4} placeholder={websiteOffer ? 'e.g. We’re a building company and want to showcase our services and projects.' : 'Tell us about your project...'} required={!websiteOffer}></textarea>
+  </div>
+
+  <button type="submit" class="btn-primary enq-submit">{websiteOffer ? <>Get my free website quote <ArrowIcon direction="right" /></> : 'Send message →'}</button>
+</form>
+
+<div id={successId} class="enq-success" style="display:none;" role="status" tabindex="-1">
+  <p class="enq-success-icon">✓</p>
+  <p class="enq-success-title">{websiteOffer ? 'Thanks — your enquiry is with Nathan.' : 'Message sent!'}</p>
+  <p class="enq-success-body">{websiteOffer ? 'I’ll get back to you to talk through your website and confirm the details. Keep an eye on your inbox, including your junk folder.' : "Thanks for getting in touch — we'll get back to you shortly."}</p>
+</div>
+
+<p id={errorId} class="enq-error" style="display:none;" role="alert">Something went wrong. Please try again or email us directly at <a href="mailto:info@nc-digital.co.uk">info@nc-digital.co.uk</a>.</p>
+
+<style>
+  .enq-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.125rem;
+  }
+
+  .enq-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .enq-field label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .enq-field input,
+  .enq-field select,
+  .enq-field textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    color: var(--white);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.9375rem;
+    outline: none;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+
+  .enq-field input:focus,
+  .enq-field select:focus,
+  .enq-field textarea:focus {
+    border-color: var(--purple);
+  }
+
+  .enq-field input::placeholder,
+  .enq-field textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+  }
+
+  .enq-field select option {
+    background: var(--bg-2);
+    color: var(--white);
+  }
+
+  .enq-field textarea {
+    resize: vertical;
+    min-height: 90px;
+  }
+
+  .enq-submit {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .enq-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* Compact variant (sidebar) */
+  .enq-form--compact .enq-field input,
+  .enq-form--compact .enq-field select,
+  .enq-form--compact .enq-field textarea {
+    font-size: 0.875rem;
+    padding: 0.625rem 0.875rem;
+  }
+
+  .enq-success {
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+
+  .enq-success-icon  { font-size: 2rem; margin-bottom: 0.5rem; color: var(--purple); }
+  .enq-success-title { color: var(--white); font-size: 1.125rem; font-weight: 600; margin-bottom: 0.375rem; }
+  .enq-success-body  { color: var(--text-muted); font-size: 0.9375rem; margin: 0; }
+
+  .enq-error {
+    margin-top: 0.75rem;
+    color: #fca5a5;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .enq-error a { color: #fca5a5; }
+</style>
+
+<script is:inline>
+(function () {
+  document.querySelectorAll('form.enq-form:not([data-init])').forEach(function (form) {
+    form.setAttribute('data-init', '1');
+    var successEl = document.getElementById(form.dataset.success);
+    var errorEl   = document.getElementById(form.dataset.error);
+    var submissionKey = crypto.randomUUID();
+    form.addEventListener('input', function () { submissionKey = crypto.randomUUID(); });
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      errorEl.style.display = 'none';
+
+      var btn = form.querySelector('button[type="submit"]');
+      var originalContents = Array.from(btn.childNodes).map(function (node) { return node.cloneNode(true); });
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      try {
+        var data = new FormData(form);
+        var requestKey = submissionKey;
+        data.set('from_page', window.location.pathname);
+        if (form.dataset.websiteOffer) {
+          var params = new URLSearchParams(window.location.search);
+          ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(function (key) {
+            if (params.has(key)) data.set(key, params.get(key).slice(0, 500));
+          });
+        }
+
+        var configRes = await fetch('/api/enquiries/config', { cache: 'no-store' });
+        if (!configRes.ok) throw new Error('Could not check enquiry availability.');
+        var config = await configRes.json();
+        var res;
+        if (config.enabled) {
+          var payload = Object.fromEntries(data.entries());
+          delete payload.access_key;
+          payload.submission_key = requestKey;
+          res = await fetch('/api/enquiries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        } else {
+          res = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: data });
+        }
+        var json = await res.json();
+
+        if (res.ok && json.success) {
+          // Let pages hook into a successful submit (e.g. ad landing pages firing
+          // a Meta Pixel Lead event). Other pages simply ignore this event.
+          document.dispatchEvent(new CustomEvent('nc-enquiry-success', { detail: { formId: form.id } }));
+          if (form.dataset.websiteOffer) {
+            form.style.display = 'none';
+            successEl.style.display = 'block';
+            successEl.focus();
+          } else {
+            window.location.href = '/thank-you/';
+          }
+        } else {
+          throw new Error(json.error || json.message || 'Submission failed');
+        }
+      } catch (err) {
+        errorEl.style.display = 'block';
+        btn.disabled    = false;
+        btn.replaceChildren.apply(btn, originalContents);
+      }
+    });
+  });
+})();
+</script>

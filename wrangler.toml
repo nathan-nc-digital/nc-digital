@@ -2,6 +2,12 @@ name = "nc-digital"
 compatibility_date = "2026-04-21"
 main = "src/worker.js"
 
+[vars]
+CRM_ENABLED = "true"
+
+[triggers]
+crons = ["* * * * *"]
+
 # Routes (nc-digital.co.uk/* and www.nc-digital.co.uk/*) are managed in the
 # Cloudflare dashboard. Kept out of this file because the deploy API token
 # lacks the "Zone > Workers Routes > Edit" permission, which made
@@ -16,3 +22,11 @@ run_worker_first = true
 binding = "JOBS_DB"
 database_name = "nc-digital-jobs"
 database_id = "8a6427e5-41b2-4453-9f75-4f765e9d8bfa"
+
+[[r2_buckets]]
+binding = "SOCIAL_MEDIA"
+bucket_name = "nc-digital-social-media"
+
+[[r2_buckets]]
+binding = "CRM_BACKUPS"
+bucket_name = "nc-digital-crm-backups"

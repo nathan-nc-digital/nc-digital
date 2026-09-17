@@ -1,0 +1,188 @@
+{
+  "timezone": "Europe/London",
+  "startDate": "2026-09-10",
+  "posts": [
+    {
+      "topic": "The mobile enquiry check",
+      "link": "https://nc-digital.co.uk/services/web-design/",
+      "linkedin": "A quick check for your business website: try sending yourself an enquiry from your phone.\n\nCan you find the right service, see where the business works and get to the contact form without hunting through the menu? Does the enquiry actually arrive?\n\nIt's a useful exercise because you already know your business. A first-time visitor has to work all of that out from the page.\n\nAt NC Digital, we build websites around those practical details: clear services, layouts that work on mobile and an obvious next step.\n\nIf your website makes getting in touch harder than it should be, we can help.",
+      "googlebusiness": "How easy is it to enquire through your website on a phone?\n\nTry finding a service and sending a test message. Check the buttons, the form and whether the enquiry reaches your inbox.\n\nNC Digital builds websites for businesses in Merthyr Tydfil and across South Wales, with clear service pages and straightforward ways to get in touch. Find out more about our web design service.",
+      "twitter": "Try sending an enquiry through your website on your phone. Can you find the service, use the form and get a reply in your inbox? Small details worth checking before your next customer visits. Web design by NC Digital:",
+      "id": "a3709dae-bb87-4e11-94d6-2c7a28ceafee",
+      "dueAt": "2026-09-10T14:30:00.000Z",
+      "body": {
+        "id": "a3709dae-bb87-4e11-94d6-2c7a28ceafee",
+        "caption": "A quick check for your business website: try sending yourself an enquiry from your phone.\n\nCan you find the right service, see where the business works and get to the contact form without hunting through the menu? Does the enquiry actually arrive?\n\nIt's a useful exercise because you already know your business. A first-time visitor has to work all of that out from the page.\n\nAt NC Digital, we build websites around those practical details: clear services, layouts that work on mobile and an obvious next step.\n\nIf your website makes getting in touch harder than it should be, we can help.",
+        "overrides": {
+          "googlebusiness": "How easy is it to enquire through your website on a phone?\n\nTry finding a service and sending a test message. Check the buttons, the form and whether the enquiry reaches your inbox.\n\nNC Digital builds websites for businesses in Merthyr Tydfil and across South Wales, with clear service pages and straightforward ways to get in touch. Find out more about our web design service.",
+          "twitter": "Try sending an enquiry through your website on your phone. Can you find the service, use the form and get a reply in your inbox? Small details worth checking before your next customer visits. Web design by NC Digital:"
+        },
+        "link": "https://nc-digital.co.uk/services/web-design/",
+        "images": [],
+        "channelIds": [
+          "6a9fd176cd8b9c702c2b67c2",
+          "6a9f533ccd8b9c702c28163d",
+          "6a9fd147cd8b9c702c2b66b8"
+        ],
+        "mode": "schedule",
+        "dueAt": "2026-09-10T14:30:00.000Z"
+      }
+    },
+    {
+      "topic": "Start SEO with the services you want enquiries for",
+      "link": "https://nc-digital.co.uk/services/local-seo-google-ranking/",
+      "linkedin": "Before choosing keywords for a local business, start with the work you actually want more of.\n\nA plumber offering bathroom installations has a different priority from one focused on emergency call-outs. The website should explain those services clearly, along with the areas the business genuinely covers.\n\nThat's why our local SEO work includes keyword research, page content and Google Business Profile optimisation. The aim is to connect the services you offer with the searches your potential customers make.\n\nBased in Merthyr Tydfil, we help businesses across South Wales plan that work. Get in touch if you'd like to discuss yours.",
+      "googlebusiness": "Looking for local SEO support in South Wales?\n\nNC Digital helps with keyword research, service page content and Google Business Profile optimisation. We start with what your business offers and the areas you cover, then plan the work around that.\n\nFind out more about our local SEO service and how we can help your business.",
+      "twitter": "Which jobs do you want more enquiries for? That's a useful starting point for local SEO. Build your content around the services you offer and the areas you genuinely cover. Explore NC Digital's local SEO service:",
+      "id": "930afb37-ee6c-458f-8a37-f57fe6fe45c7",
+      "dueAt": "2026-09-11T11:05:00.000Z",
+      "body": {
+        "id": "930afb37-ee6c-458f-8a37-f57fe6fe45c7",
+        "caption": "Before choosing keywords for a local business, start with the work you actually want more of.\n\nA plumber offering bathroom installations has a different priority from one focused on emergency call-outs. The website should explain those services clearly, along with the areas the business genuinely covers.\n\nThat's why our local SEO work includes keyword research, page content and Google Business Profile optimisation. The aim is to connect the services you offer with the searches your potential customers make.\n\nBased in Merthyr Tydfil, we help businesses across South Wales plan that work. Get in touch if you'd like to discuss yours.",
+        "overrides": {
+          "googlebusiness": "Looking for local SEO support in South Wales?\n\nNC Digital helps with keyword research, service page content and Google Business Profile optimisation. We start with what your business offers and the areas you cover, then plan the work around that.\n\nFind out more about our local SEO service and how we can help your business.",
+          "twitter": "Which jobs do you want more enquiries for? That's a useful starting point for local SEO. Build your content around the services you offer and the areas you genuinely cover. Explore NC Digital's local SEO service:"
+        },
+        "link": "https://nc-digital.co.uk/services/local-seo-google-ranking/",
+        "images": [],
+        "channelIds": [
+          "6a9fd176cd8b9c702c2b67c2",
+          "6a9f533ccd8b9c702c28163d",
+          "6a9fd147cd8b9c702c2b66b8"
+        ],
+        "mode": "schedule",
+        "dueAt": "2026-09-11T11:05:00.000Z"
+      }
+    },
+    {
+      "topic": "Make buying from your online shop straightforward",
+      "link": "https://nc-digital.co.uk/services/ecommerce-development/",
+      "linkedin": "Before launching an online shop, walk through an order as if you've never bought from the business before.\n\nCan you find the right product? Are the options and delivery details clear? Can you finish the checkout comfortably on a phone?\n\nThen look at your side of the process. You need to be able to update products and manage orders without getting stuck every time something changes.\n\nNC Digital builds online shops using Shopify, WooCommerce and SureCart, with the setup planned around the business.\n\nIf you're ready to sell online, we'd be happy to talk through what you need.",
+      "googlebusiness": "Ready to sell online? NC Digital builds ecommerce websites for businesses across South Wales using Shopify, WooCommerce and SureCart.\n\nWe help with the design, product management and checkout setup, with layouts that work on mobile.\n\nWhether you're planning your first online shop or replacing an existing one, explore our ecommerce service to find out more.",
+      "twitter": "Test your online shop as a new customer: find a product, check the delivery details and complete checkout on your phone. Looking to build a shop? NC Digital works with Shopify, WooCommerce and SureCart:",
+      "id": "60a859b8-904f-42f7-bc77-72afe37cd0ed",
+      "dueAt": "2026-09-12T14:00:00.000Z",
+      "body": {
+        "id": "60a859b8-904f-42f7-bc77-72afe37cd0ed",
+        "caption": "Before launching an online shop, walk through an order as if you've never bought from the business before.\n\nCan you find the right product? Are the options and delivery details clear? Can you finish the checkout comfortably on a phone?\n\nThen look at your side of the process. You need to be able to update products and manage orders without getting stuck every time something changes.\n\nNC Digital builds online shops using Shopify, WooCommerce and SureCart, with the setup planned around the business.\n\nIf you're ready to sell online, we'd be happy to talk through what you need.",
+        "overrides": {
+          "googlebusiness": "Ready to sell online? NC Digital builds ecommerce websites for businesses across South Wales using Shopify, WooCommerce and SureCart.\n\nWe help with the design, product management and checkout setup, with layouts that work on mobile.\n\nWhether you're planning your first online shop or replacing an existing one, explore our ecommerce service to find out more.",
+          "twitter": "Test your online shop as a new customer: find a product, check the delivery details and complete checkout on your phone. Looking to build a shop? NC Digital works with Shopify, WooCommerce and SureCart:"
+        },
+        "link": "https://nc-digital.co.uk/services/ecommerce-development/",
+        "images": [],
+        "channelIds": [
+          "6a9fd176cd8b9c702c2b67c2",
+          "6a9f533ccd8b9c702c28163d",
+          "6a9fd147cd8b9c702c2b66b8"
+        ],
+        "mode": "schedule",
+        "dueAt": "2026-09-12T14:00:00.000Z"
+      }
+    },
+    {
+      "topic": "Keeping a website current after launch",
+      "link": "https://nc-digital.co.uk/services/website-maintenance-packages/",
+      "linkedin": "When did you last check the details on your own website?\n\nAn old service description, an out-of-date email address or a form that no longer reaches the right inbox can be easy to miss when you're busy running the business.\n\nIt's worth checking those alongside the work behind the scenes: software updates, backups and security monitoring.\n\nOur website maintenance packages cover updates, backups, monitoring and content changes, so you have someone to turn to after launch.\n\nIf you've got a website but need help keeping it looked after, take a look at our maintenance service.",
+      "googlebusiness": "Need help looking after your website?\n\nNC Digital's website maintenance packages include updates, backups, security monitoring and content changes. We help businesses keep their websites maintained after launch.\n\nIf your services or contact details have changed, it's a good time to check that your website is up to date too. Explore our maintenance service.",
+      "twitter": "When did you last check your website's contact details and test its enquiry form? Keeping the content current matters alongside updates and backups. NC Digital offers ongoing website maintenance:",
+      "id": "1abc4a3f-e0fd-4934-a0ef-fe46d96e4fc3",
+      "dueAt": "2026-09-13T08:15:00.000Z",
+      "body": {
+        "id": "1abc4a3f-e0fd-4934-a0ef-fe46d96e4fc3",
+        "caption": "When did you last check the details on your own website?\n\nAn old service description, an out-of-date email address or a form that no longer reaches the right inbox can be easy to miss when you're busy running the business.\n\nIt's worth checking those alongside the work behind the scenes: software updates, backups and security monitoring.\n\nOur website maintenance packages cover updates, backups, monitoring and content changes, so you have someone to turn to after launch.\n\nIf you've got a website but need help keeping it looked after, take a look at our maintenance service.",
+        "overrides": {
+          "googlebusiness": "Need help looking after your website?\n\nNC Digital's website maintenance packages include updates, backups, security monitoring and content changes. We help businesses keep their websites maintained after launch.\n\nIf your services or contact details have changed, it's a good time to check that your website is up to date too. Explore our maintenance service.",
+          "twitter": "When did you last check your website's contact details and test its enquiry form? Keeping the content current matters alongside updates and backups. NC Digital offers ongoing website maintenance:"
+        },
+        "link": "https://nc-digital.co.uk/services/website-maintenance-packages/",
+        "images": [],
+        "channelIds": [
+          "6a9fd176cd8b9c702c2b67c2",
+          "6a9f533ccd8b9c702c28163d",
+          "6a9fd147cd8b9c702c2b66b8"
+        ],
+        "mode": "schedule",
+        "dueAt": "2026-09-13T08:15:00.000Z"
+      }
+    },
+    {
+      "topic": "Give your website redesign a clear brief",
+      "link": "https://nc-digital.co.uk/services/web-design/",
+      "linkedin": "Thinking about a website redesign? Start with a short list of what needs to change.\n\nPerhaps your main service is buried in the menu. Maybe the site still describes the business as it was five years ago. Or you've added new services that customers can't find anywhere on it.\n\nWrite those things down before getting into colours and layouts. They give the project a clear brief and something practical to check the finished website against.\n\nAt NC Digital, we plan the structure and content around your business before moving into the build. Get in touch if you're considering a change.",
+      "googlebusiness": "Has your business outgrown its website?\n\nIf your services have changed or your website no longer reflects what you do, NC Digital can help plan a redesign. We work through the structure, content and layout around your business and the customers you want to reach.\n\nFind out more about our web design service for Merthyr Tydfil and South Wales businesses.",
+      "twitter": "Before a website redesign, list what needs to change: missing services, confusing navigation or content that no longer fits the business. A clear brief makes the project easier to plan. Explore NC Digital's web design service:",
+      "id": "6db1a411-317a-4fd3-bcdc-6f559a217fad",
+      "dueAt": "2026-09-14T08:40:00.000Z",
+      "body": {
+        "id": "6db1a411-317a-4fd3-bcdc-6f559a217fad",
+        "caption": "Thinking about a website redesign? Start with a short list of what needs to change.\n\nPerhaps your main service is buried in the menu. Maybe the site still describes the business as it was five years ago. Or you've added new services that customers can't find anywhere on it.\n\nWrite those things down before getting into colours and layouts. They give the project a clear brief and something practical to check the finished website against.\n\nAt NC Digital, we plan the structure and content around your business before moving into the build. Get in touch if you're considering a change.",
+        "overrides": {
+          "googlebusiness": "Has your business outgrown its website?\n\nIf your services have changed or your website no longer reflects what you do, NC Digital can help plan a redesign. We work through the structure, content and layout around your business and the customers you want to reach.\n\nFind out more about our web design service for Merthyr Tydfil and South Wales businesses.",
+          "twitter": "Before a website redesign, list what needs to change: missing services, confusing navigation or content that no longer fits the business. A clear brief makes the project easier to plan. Explore NC Digital's web design service:"
+        },
+        "link": "https://nc-digital.co.uk/services/web-design/",
+        "images": [],
+        "channelIds": [
+          "6a9fd176cd8b9c702c2b67c2",
+          "6a9f533ccd8b9c702c28163d",
+          "6a9fd147cd8b9c702c2b66b8"
+        ],
+        "mode": "schedule",
+        "dueAt": "2026-09-14T08:40:00.000Z"
+      }
+    },
+    {
+      "topic": "Business email that matches your domain",
+      "link": "https://nc-digital.co.uk/services/professional-mailboxes-email-setup/",
+      "linkedin": "Your business email address is part of what customers see when you send a quote, an invoice or a reply.\n\nAn address using your own domain keeps that correspondence consistent with your website and business name.\n\nAt NC Digital, we can help set up your business email, configure it on your devices and handle a move from an existing mailbox. It's one of those jobs that often sits on the to-do list while you're dealing with everything else.\n\nIf you'd like help getting it sorted, you can find out more about our professional email setup service below.",
+      "googlebusiness": "Get your business email set up with NC Digital.\n\nWe help businesses use email addresses on their own domain, set up their devices and move from existing mailboxes.\n\nIf you need help making the change or setting up email for a new business, find out more about our professional email service.",
+      "twitter": "Does your business email match your website domain? NC Digital can help set up your mailbox, configure your devices and move your existing email. One less setup job on your list:",
+      "id": "8e3435fc-ff05-4fd1-87d8-b4590c9d1e04",
+      "dueAt": "2026-09-15T12:25:00.000Z",
+      "body": {
+        "id": "8e3435fc-ff05-4fd1-87d8-b4590c9d1e04",
+        "caption": "Your business email address is part of what customers see when you send a quote, an invoice or a reply.\n\nAn address using your own domain keeps that correspondence consistent with your website and business name.\n\nAt NC Digital, we can help set up your business email, configure it on your devices and handle a move from an existing mailbox. It's one of those jobs that often sits on the to-do list while you're dealing with everything else.\n\nIf you'd like help getting it sorted, you can find out more about our professional email setup service below.",
+        "overrides": {
+          "googlebusiness": "Get your business email set up with NC Digital.\n\nWe help businesses use email addresses on their own domain, set up their devices and move from existing mailboxes.\n\nIf you need help making the change or setting up email for a new business, find out more about our professional email service.",
+          "twitter": "Does your business email match your website domain? NC Digital can help set up your mailbox, configure your devices and move your existing email. One less setup job on your list:"
+        },
+        "link": "https://nc-digital.co.uk/services/professional-mailboxes-email-setup/",
+        "images": [],
+        "channelIds": [
+          "6a9fd176cd8b9c702c2b67c2",
+          "6a9f533ccd8b9c702c28163d",
+          "6a9fd147cd8b9c702c2b66b8"
+        ],
+        "mode": "schedule",
+        "dueAt": "2026-09-15T12:25:00.000Z"
+      }
+    },
+    {
+      "topic": "Plan your next website",
+      "link": "https://nc-digital.co.uk/free-website-plan/",
+      "linkedin": "Planning a new website is easier when you've worked out what it needs to do for the business.\n\nWhat do you sell? Who do you want to reach? Should visitors request a quote, book an appointment or buy online?\n\nThose answers help shape the pages, content and features you need.\n\nIf you're at that stage, our free website planner is a useful place to start. Tell us about your business and what you're looking for, and we'll follow up with a personalised website and SEO plan.\n\nYou can get started through the link below.",
+      "googlebusiness": "Thinking about a new website for your business?\n\nStart with NC Digital's free website planner. Tell us about your business and what you need, and we'll follow up with a personalised website and SEO plan.\n\nWhether you're starting out or considering a redesign, it's a way to put your requirements together. Get started using the link.",
+      "twitter": "Planning a new website? Tell us about your business and what you need through NC Digital's free website planner. We'll follow up with a personalised website and SEO plan. Start here:",
+      "id": "a89d9dbb-94ee-43f6-b8f6-3e7513a2ec0f",
+      "dueAt": "2026-09-16T09:10:00.000Z",
+      "body": {
+        "id": "a89d9dbb-94ee-43f6-b8f6-3e7513a2ec0f",
+        "caption": "Planning a new website is easier when you've worked out what it needs to do for the business.\n\nWhat do you sell? Who do you want to reach? Should visitors request a quote, book an appointment or buy online?\n\nThose answers help shape the pages, content and features you need.\n\nIf you're at that stage, our free website planner is a useful place to start. Tell us about your business and what you're looking for, and we'll follow up with a personalised website and SEO plan.\n\nYou can get started through the link below.",
+        "overrides": {
+          "googlebusiness": "Thinking about a new website for your business?\n\nStart with NC Digital's free website planner. Tell us about your business and what you need, and we'll follow up with a personalised website and SEO plan.\n\nWhether you're starting out or considering a redesign, it's a way to put your requirements together. Get started using the link.",
+          "twitter": "Planning a new website? Tell us about your business and what you need through NC Digital's free website planner. We'll follow up with a personalised website and SEO plan. Start here:"
+        },
+        "link": "https://nc-digital.co.uk/free-website-plan/",
+        "images": [],
+        "channelIds": [
+          "6a9fd176cd8b9c702c2b67c2",
+          "6a9f533ccd8b9c702c28163d",
+          "6a9fd147cd8b9c702c2b66b8"
+        ],
+        "mode": "schedule",
+        "dueAt": "2026-09-16T09:10:00.000Z"
+      }
+    }
+  ]
+}

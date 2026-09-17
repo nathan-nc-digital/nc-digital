@@ -1,0 +1,28 @@
+{
+  "campaignDates": ["2026-09-10", "2026-09-16"],
+  "newDailyPosts": 7,
+  "existingDailyPostsPreserved": 7,
+  "platforms": ["linkedin", "googlebusiness", "twitter"],
+  "minimumSameDayGapHours": 2,
+  "savedBufferAcceptanceReceipts": 9,
+  "deliveriesHeldInAdmin": 12,
+  "bufferApiRetryAt": "2026-09-10T22:44:23.000Z",
+  "bufferApiRetryTimeUK": "10 September 2026, 23:44 BST",
+  "workerDeployment": "2b96f7d1635e4cf18b137b5a5c589217",
+  "unitTestsPassed": 156,
+  "verification": [
+    "All 14 posts retain exact saved captions, platform overrides and publishing times.",
+    "Every post has LinkedIn, Google Business Profile and X deliveries.",
+    "First three additional daily posts have provider acceptance receipts for all platforms.",
+    "Remaining four additional daily posts are queued in D1, with retries deferred until the provider reset.",
+    "Live account-discovery response displays the persisted API cooldown.",
+    "Once-per-minute Worker cron remains configured.",
+    "Queue tests cover shared snapshots, capacity reservations, concurrent claims, cancellations, expiry, provider rate limits and ambiguous submission protection.",
+    "Full caption display and mobile layout were verified on the preceding deployment; this deployment changes only server queue handling."
+  ],
+  "limitations": [
+    "Provider acceptance is not confirmation of public publication.",
+    "Buffer was not queried again during the active API cooldown.",
+    "Further transfers depend on available Buffer queue space and API allowance."
+  ]
+}

@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS emd_cache (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS emd_watchlist (domain TEXT PRIMARY KEY, status TEXT NOT NULL DEFAULT 'new', job_value REAL, commission REAL NOT NULL DEFAULT 10, notes TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS emd_scans (id TEXT PRIMARY KEY, state TEXT NOT NULL, status TEXT NOT NULL, budget REAL NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS emd_spend (scan_id TEXT NOT NULL, step TEXT NOT NULL, reserve REAL NOT NULL, cost REAL, status TEXT NOT NULL, PRIMARY KEY(scan_id, step));
+CREATE TABLE IF NOT EXISTS emd_lock (id INTEGER PRIMARY KEY, owner TEXT, expires_at TEXT NOT NULL);
+INSERT OR IGNORE INTO emd_lock (id, owner, expires_at) VALUES (1, NULL, '2000-01-01');

@@ -98,8 +98,8 @@ describe('computeFloor', () => {
 });
 
 describe('computeVerdict', () => {
-  test('returns Soft when there is no real-business floor', () => {
-    assert.equal(computeVerdict(0.8, null), 'Soft');
+  test('returns Unverified when there is no real-business floor', () => {
+    assert.equal(computeVerdict(0.8, null), 'Unverified');
   });
 
   test('returns Defended for a low directory ratio and a high floor', () => {

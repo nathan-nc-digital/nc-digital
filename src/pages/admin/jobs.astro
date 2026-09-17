@@ -33,6 +33,13 @@
     .jb-card-title-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
     .jb-card-title { font-size: 1.0625rem; font-weight: 700; color: #f8fafc; }
     .jb-card-notes { font-size: 0.9375rem; color: #b4bcc9; }
+    .jb-card-notes-input {
+      font: inherit; font-size: 0.9375rem; color: #b4bcc9; background: transparent; border: 1px solid transparent;
+      border-radius: 6px; padding: 0.3rem 0.4rem; margin: -0.3rem -0.4rem; resize: vertical; width: 100%; min-height: 2.4rem;
+      font-family: inherit;
+    }
+    .jb-card-notes-input:hover { border-color: #3a3a52; }
+    .jb-card-notes-input:focus { outline: none; border-color: #7c3aed; background: #0d0d14; }
     .jb-card-assignee { font-size: 0.75rem; font-weight: 700; color: #d8c4ff; background: #7c3aed3d; padding: 0.2rem 0.55rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; flex-shrink: 0; }
     .jb-card-assignee.assignee-ben { color: #7dd3fc; background: #0891b23d; }
     .jb-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.1rem; flex-wrap: wrap; }
@@ -44,6 +51,17 @@
     .jb-card-delete { background: transparent; border: 1px solid #ef4444; color: #f87171; border-radius: 6px; padding: 0.45rem 0.7rem; font-size: 0.875rem; cursor: pointer; }
     .jb-card-delete:hover { background: #ef444422; }
     .jb-empty { font-size: 0.9375rem; color: #6b7280; font-style: italic; padding: 0.5rem 0.25rem; }
+
+    .jb-log { display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid #34344c; padding-top: 0.6rem; margin-top: 0.1rem; }
+    .jb-log-entry { font-size: 0.875rem; color: #b4bcc9; display: flex; align-items: baseline; gap: 0.4rem; }
+    .jb-log-entry-text { flex: 1; }
+    .jb-log-meta { font-size: 0.75rem; color: #7c839a; font-weight: 600; }
+    .jb-log-delete { background: transparent; border: none; color: #7c839a; cursor: pointer; font-size: 0.9375rem; line-height: 1; padding: 0.1rem 0.3rem; flex-shrink: 0; }
+    .jb-log-delete:hover { color: #f87171; }
+    .jb-log-add { display: flex; gap: 0.4rem; }
+    .jb-log-add input { flex: 1; background: #0d0d14; border: 1px solid #3a3a52; color: #e2e8f0; border-radius: 6px; padding: 0.4rem 0.6rem; font: inherit; font-size: 0.875rem; }
+    .jb-log-add button { background: #34344c; color: #e2e8f0; border: none; border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
+    .jb-log-add button:hover { opacity: 0.9; }
 
     .jb-error { margin: 1rem 1.5rem; padding: 0.75rem 1rem; background: #ef444422; border: 1px solid #ef444455; border-radius: 8px; color: #fca5a5; font-size: 0.9375rem; }
 
@@ -232,12 +250,25 @@
     }
     card.appendChild(titleRow);
 
-    if (job.notes) {
+    if (state.role === 'nathan') {
+      const notesInput = document.createElement('textarea');
+      notesInput.className = 'jb-card-notes-input';
+      notesInput.rows = 1;
+      notesInput.value = job.notes || '';
+      notesInput.placeholder = 'Add a description…';
+      notesInput.addEventListener('change', async () => {
+        if (notesInput.value === (job.notes || '')) return;
+        await updateJob(job.id, { notes: notesInput.value || null });
+      });
+      card.appendChild(notesInput);
+    } else if (job.notes) {
       const notes = document.createElement('div');
       notes.className = 'jb-card-notes';
       notes.textContent = job.notes;
       card.appendChild(notes);
     }
+
+    card.appendChild(renderNotesLog(job));
 
     const foot = document.createElement('div');
     foot.className = 'jb-card-foot';
@@ -297,6 +328,76 @@
     if (foot.childNodes.length) card.appendChild(foot);
 
     return card;
+  }
+
+  function renderNotesLog(job) {
+    const log = document.createElement('div');
+    log.className = 'jb-log';
+
+    (job.notes_log || []).forEach(note => {
+      const entry = document.createElement('div');
+      entry.className = 'jb-log-entry';
+      const text = document.createElement('span');
+      text.className = 'jb-log-entry-text';
+      const meta = document.createElement('span');
+      meta.className = 'jb-log-meta';
+      const when = new Date(note.created_at);
+      meta.textContent = `${note.author} · ${when.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}:`;
+      text.appendChild(meta);
+      text.append(' ' + note.text);
+      entry.appendChild(text);
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'jb-log-delete';
+      del.textContent = '×';
+      del.title = 'Delete note';
+      del.addEventListener('click', async () => {
+        try {
+          await api('/admin/jobs/api/notes/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: note.id }),
+          });
+          await load();
+        } catch (err) {
+          state.error = err.message;
+          render();
+        }
+      });
+      entry.appendChild(del);
+
+      log.appendChild(entry);
+    });
+
+    const addRow = document.createElement('form');
+    addRow.className = 'jb-log-add';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Add a note…';
+    const btn = document.createElement('button');
+    btn.type = 'submit';
+    btn.textContent = 'Add';
+    addRow.appendChild(input);
+    addRow.appendChild(btn);
+    addRow.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!input.value.trim()) return;
+      try {
+        await api('/admin/jobs/api/notes/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id: job.id, text: input.value.trim() }),
+        });
+        await load();
+      } catch (err) {
+        state.error = err.message;
+        render();
+      }
+    });
+    log.appendChild(addRow);
+
+    return log;
   }
 
   async function updateJob(id, fields) {

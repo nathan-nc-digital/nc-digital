@@ -70,6 +70,16 @@ Create it with "trades" and "towns" arrays, e.g.:
   return { trades, towns, tradeCosts };
 }
 
+function loadPreviousAvailability() {
+  if (!fs.existsSync(CACHE_PATH)) return new Map();
+  try {
+    const cache = JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8'));
+    return new Map((cache.combos ?? []).map((combo) => [combo.domain, combo.available]));
+  } catch {
+    return new Map();
+  }
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -125,15 +135,21 @@ async function fetchKeywordOverview(authHeader, phrases) {
 }
 
 async function main() {
+  if (!process.argv.includes('--legacy-unbounded')) {
+    console.log('Use https://nc-digital.co.uk/admin/emd-finder/ for budgeted scans. The legacy full-catalog scanner is disabled by default to prevent unexpected spend. Existing caches are preserved.');
+    return;
+  }
   const { trades, towns, tradeCosts } = loadSeed();
   const { login, password } = loadConfig();
   const authHeader = buildAuthHeader(login, password);
   const combos = buildCombos(trades, towns);
+  const previousAvailability = loadPreviousAvailability();
 
   console.log(`Checking ${combos.length} trade/town combo(s)...`);
 
   for (const combo of combos) {
-    combo.available = await checkAvailability(combo.domain);
+    const availability = await checkAvailability(combo.domain);
+    combo.available = availability ?? previousAvailability.get(combo.domain) ?? null;
     await sleep(RDAP_DELAY_MS);
   }
 

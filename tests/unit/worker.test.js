@@ -1,6 +1,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveRole, listJobs, createJob, updateJob, deleteJob } from '../../src/worker.js';
+import worker, { resolveRole, listJobs, createJob, updateJob, deleteJob, runScheduledJobs } from '../../src/worker.js';
+
+const authEnv = { ADMIN_PASSWORD: 'test-admin-password', BEN_PASSWORD: 'test-ben-password' };
 
 function basicAuthHeader(user, pass) {
   return 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64');
@@ -50,35 +52,55 @@ function makeFakeDb(initialRows = []) {
   };
 }
 
-describe('resolveRole', () => {
-  test('nathan credentials work on any /admin path', () => {
-    const header = basicAuthHeader('nathan', 'NC-Digital2026');
-    assert.equal(resolveRole('/admin/backlinks', header), 'nathan');
-    assert.equal(resolveRole('/admin/jobs', header), 'nathan');
+describe('resolveRole', async () => {
+  test('missing or empty secrets fail closed and rotated secrets take effect', async () => {
+    const header = basicAuthHeader('nathan', authEnv.ADMIN_PASSWORD);
+    assert.equal(await resolveRole('/admin/crm/', header), null);
+    assert.equal(await resolveRole('/admin/crm/', basicAuthHeader('nathan', ''), { ADMIN_PASSWORD: '' }), null);
+    assert.equal(await resolveRole('/admin/crm/', header, { ADMIN_PASSWORD: 'rotated-test-password' }), null);
+    assert.equal(await resolveRole('/admin/crm/', basicAuthHeader('nathan', 'rotated-test-password'), { ADMIN_PASSWORD: 'rotated-test-password' }), 'nathan');
   });
 
-  test('ben credentials work only on /admin/jobs paths', () => {
-    const header = basicAuthHeader('ben', 'B1E2N3!');
-    assert.equal(resolveRole('/admin/jobs', header), 'ben');
-    assert.equal(resolveRole('/admin/jobs/api/list', header), 'ben');
-    assert.equal(resolveRole('/admin/backlinks', header), null);
-    assert.equal(resolveRole('/admin/gsc', header), null);
+  test('Worker enforces secret-backed authentication for CRM pages and API', async () => {
+    let assets = 0;
+    const env = { ...authEnv, ASSETS: { async fetch() { assets++; return new Response('CRM'); } } };
+    for (const path of ['/admin/crm/', '/admin/crm/api/setup']) {
+      for (const headers of [{}, { Authorization: basicAuthHeader('ben', authEnv.BEN_PASSWORD) }, { Authorization: basicAuthHeader('nathan', 'wrong') }]) {
+        assert.equal((await worker.fetch(new Request('https://nc-digital.co.uk' + path, { headers }), env)).status, 401);
+      }
+      assert.equal((await worker.fetch(new Request('https://nc-digital.co.uk' + path, { headers: { Authorization: basicAuthHeader('nathan', authEnv.ADMIN_PASSWORD) } }), env)).status, 200);
+    }
+    assert.equal(assets, 1);
   });
 
-  test('wrong password is rejected', () => {
+  test('nathan credentials work on any /admin path', async () => {
+    const header = basicAuthHeader('nathan', authEnv.ADMIN_PASSWORD);
+    assert.equal(await resolveRole('/admin/backlinks', header, authEnv), 'nathan');
+    assert.equal(await resolveRole('/admin/jobs', header, authEnv), 'nathan');
+  });
+
+  test('ben credentials work only on /admin/jobs paths', async () => {
+    const header = basicAuthHeader('ben', authEnv.BEN_PASSWORD);
+    assert.equal(await resolveRole('/admin/jobs', header, authEnv), 'ben');
+    assert.equal(await resolveRole('/admin/jobs/api/list', header, authEnv), 'ben');
+    assert.equal(await resolveRole('/admin/backlinks', header, authEnv), null);
+    assert.equal(await resolveRole('/admin/gsc', header, authEnv), null);
+  });
+
+  test('wrong password is rejected', async () => {
     const header = basicAuthHeader('nathan', 'wrong-password');
-    assert.equal(resolveRole('/admin/jobs', header), null);
+    assert.equal(await resolveRole('/admin/jobs', header, authEnv), null);
   });
 
-  test('missing or malformed Authorization header is rejected', () => {
-    assert.equal(resolveRole('/admin/jobs', null), null);
-    assert.equal(resolveRole('/admin/jobs', 'Bearer sometoken'), null);
+  test('missing or malformed Authorization header is rejected', async () => {
+    assert.equal(await resolveRole('/admin/jobs', null, authEnv), null);
+    assert.equal(await resolveRole('/admin/jobs', 'Bearer sometoken', authEnv), null);
   });
 
-  test('ben is rejected on paths that merely share the /admin/jobs prefix', () => {
-    const header = basicAuthHeader('ben', 'B1E2N3!');
-    assert.equal(resolveRole('/admin/jobsecrets', header), null);
-    assert.equal(resolveRole('/admin/jobs-report', header), null);
+  test('ben is rejected on paths that merely share the /admin/jobs prefix', async () => {
+    const header = basicAuthHeader('ben', authEnv.BEN_PASSWORD);
+    assert.equal(await resolveRole('/admin/jobsecrets', header, authEnv), null);
+    assert.equal(await resolveRole('/admin/jobs-report', header, authEnv), null);
   });
 });
 
@@ -236,3 +258,30 @@ describe('deleteJob', () => {
     assert.equal((await listJobs(env, 'nathan')).length, 1);
   });
 });
+
+describe('scheduled jobs', () => {
+  test('one failing job never stops the others, and each failure is logged by name', async () => {
+    const ran = [];
+    const logged = [];
+    const original = console.error;
+    console.error = (line) => logged.push(JSON.parse(line));
+    try {
+      await runScheduledJobs({}, {
+        meta: async () => { ran.push('meta'); },
+        crm: async () => { throw new Error('provider down'); },
+        workspace: () => { throw new TypeError('sync throw'); },
+        backup: async () => { await new Promise(r => setTimeout(r, 20)); ran.push('backup'); },
+      });
+    } finally { console.error = original; }
+    assert.deepEqual(ran.sort(), ['backup', 'meta']);
+    assert.deepEqual(logged.map(l => l.job).sort(), ['crm', 'workspace']);
+    assert(logged.every(l => l.event === 'scheduled_job_failed'));
+    assert(!JSON.stringify(logged).includes('provider down'), 'error messages are not logged');
+  });
+
+  test('the Worker scheduled handler resolves even when every job fails', async () => {
+    const original = console.error; console.error = () => {};
+    try { await worker.scheduled({}, {}); } finally { console.error = original; }
+  });
+});
+

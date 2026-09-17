@@ -1,0 +1,59 @@
+import {dataForSeo} from './keyword-research.js';
+import {readLimitedBody} from './social-http.js';
+import {parseGapInput,gapSteps,gapRequest,requestKey,mapGapResult,buildGapReport,directoryDomains,domain,excluded,RESERVE} from './competitor-gaps.js';
+const now=()=>new Date().toISOString(),ago=days=>new Date(Date.now()-days*86400000).toISOString();
+const fail=(message,status=400)=>Object.assign(new Error(message),{status});
+const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store, private','X-Robots-Tag':'noindex'}});
+const DAILY=2;
+async function exclusions(db){const r=await db.prepare('SELECT domain FROM gap_exclusions ORDER BY domain').all();return r.results.map(x=>x.domain);}
+async function row(db,id){const r=await db.prepare('SELECT * FROM gap_reports WHERE id=?').bind(id).first();if(!r)throw fail('Report not found.',404);return r;}
+async function view(db,r){const ledger=await db.prepare('SELECT step,reserve,cost,status FROM gap_spend WHERE report_id=? ORDER BY step').bind(r.id).all(),state=JSON.parse(r.state),saved=r.report?JSON.parse(r.report):null;const report=saved?{...buildGapReport(state.input,saved.datasets,saved.warnings,await exclusions(db)),generatedAt:saved.generatedAt}:null;return {id:r.id,title:r.title,status:r.status,createdAt:r.created_at,...state,report,ledger:ledger.results,actual:ledger.results.reduce((n,x)=>n+(x.cost??0),0),committed:ledger.results.reduce((n,x)=>n+(x.cost??x.reserve),0),uncertain:ledger.results.filter(x=>x.cost===null).length};}
+async function lock(db,fn){const owner=crypto.randomUUID();const r=await db.prepare('UPDATE gap_lock SET owner=?,expires_at=? WHERE id=1 AND expires_at<?').bind(owner,new Date(Date.now()+120000).toISOString(),now()).run();if(!r.meta.changes)throw fail('Another comparison step is running. Please wait a moment.',409);try{return await fn();}finally{await db.prepare('UPDATE gap_lock SET expires_at=? WHERE id=1 AND owner=?').bind('2000-01-01',owner).run();}}
+async function cached(db,key){const r=await db.prepare('SELECT data,updated_at FROM gap_cache WHERE key=? AND updated_at>?').bind(key,ago(30)).first();return r?{...JSON.parse(r.data),cached:true}:null;}
+async function daily(db){const r=await db.prepare('SELECT COALESCE(SUM(COALESCE(cost,reserve)),0) AS spend FROM gap_spend WHERE created_at>?').bind(ago(1)).first();return {used:r.spend,limit:DAILY,remaining:Math.max(0,DAILY-r.spend)};}
+async function preview(db,input){const steps=gapSteps(input),availability=[];for(const step of steps)availability.push(!input.refresh&&!!await cached(db,requestKey(input,step)));const paid=availability.filter(x=>!x).length;return {steps:steps.length,cached:steps.length-paid,paid,reserve:Math.round(paid*RESERVE*100)/100,perLookupReserve:RESERVE,daily:await daily(db)};}
+async function saveStep(db,id,state,data,extra=[]){await db.batch([...extra,db.prepare('INSERT INTO gap_data(report_id,step,data) VALUES(?,?,?) ON CONFLICT(report_id,step) DO UPDATE SET data=excluded.data').bind(id,state.index,JSON.stringify(data)),db.prepare('UPDATE gap_reports SET state=?,updated_at=? WHERE id=?').bind(JSON.stringify({...state,index:state.index+1}),now(),id)]);}
+async function advance(env,id){return lock(env.JOBS_DB,async()=>{
+ const db=env.JOBS_DB,r=await row(db,id);if(r.status!=='running')return view(db,r);const state=JSON.parse(r.state),step=state.steps[state.index],extra=await exclusions(db);
+ if(!step){const chunks=await db.prepare('SELECT data FROM gap_data WHERE report_id=? ORDER BY step').bind(id).all(),report=buildGapReport(state.input,chunks.results.map(x=>JSON.parse(x.data)),state.warnings,extra);await db.prepare("UPDATE gap_reports SET status='complete',report=?,updated_at=? WHERE id=?").bind(JSON.stringify(report),now(),id).run();return view(db,await row(db,id));}
+ const key=requestKey(state.input,step),empty={...step,items:[],returned:0,total:null,fetchedAt:now()};
+ if(excluded(step.competitor,extra)||excluded(state.input.client,extra)){state.warnings.push(`${step.competitor}: excluded as a directory or platform; no paid request was sent.`);await saveStep(db,id,state,{...empty,error:'Excluded directory or platform.'});return view(db,await row(db,id));}
+ const reservation=await db.prepare('SELECT status FROM gap_spend WHERE report_id=? AND step=?').bind(id,state.index).first();
+ if(reservation){state.warnings.push(`${step.competitor} / ${step.kind}: an earlier request had an uncertain result. It was not repeated and its allowance remains counted.`);await saveStep(db,id,state,{...empty,error:'Earlier paid request outcome is uncertain.'});return view(db,await row(db,id));}
+ const cache=!state.input.refresh&&await cached(db,key);if(cache){await saveStep(db,id,state,cache);return view(db,await row(db,id));}
+ const uncertain=await db.prepare("SELECT report_id FROM gap_spend WHERE request_key=? AND status='uncertain' AND created_at>? LIMIT 1").bind(key,ago(1)).first();if(uncertain){state.warnings.push(`${step.competitor} / ${step.kind}: a matching request has an uncertain charge within the last 24 hours. No duplicate paid request was sent.`);await saveStep(db,id,state,{...empty,error:'Matching request outcome is uncertain; retry after 24 hours.'});return view(db,await row(db,id));}
+ const scan=await view(db,r),day=await daily(db);if(scan.committed+RESERVE>state.input.budget+1e-8||day.remaining+1e-8<RESERVE){state.warnings.push('The comparison or daily spending allowance was reached. Remaining uncached lookups were skipped.');await saveStep(db,id,state,{...empty,error:'Spending allowance reached.'});return view(db,await row(db,id));}
+ // Reserve before dispatch. A crash or timeout leaves the reservation durable.
+ await db.prepare("INSERT INTO gap_spend(report_id,step,request_key,reserve,status,created_at) VALUES(?,?,?,?,'uncertain',?)").bind(id,state.index,key,RESERVE,now()).run();
+ let result;
+ try{result=await dataForSeo(env,'dataforseo_labs/google/domain_intersection/live',gapRequest(state.input,step));if(!result.costReported||!Number.isFinite(result.cost)||result.cost<0)throw fail('The provider did not confirm a valid charge.',502);}
+ catch(e){state.warnings.push(`${step.competitor} / ${step.kind}: ${e.status?e.message:'The lookup did not complete.'} The $${RESERVE.toFixed(2)} allowance remains reserved; no automatic retry.`);await saveStep(db,id,state,{...empty,error:'Lookup unavailable; charge uncertain.'});return view(db,await row(db,id));}
+ const data=mapGapResult(state.input,step,result.result,extra);if(result.cost>RESERVE){state.warnings.push('The provider charge exceeded the conservative allowance. Further paid requests were stopped.');state.input.budget=0;}
+ await saveStep(db,id,state,data,[db.prepare("UPDATE gap_spend SET cost=?,status='complete' WHERE report_id=? AND step=?").bind(result.cost,id,state.index),db.prepare('INSERT INTO gap_cache(key,data,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at').bind(key,JSON.stringify(data),now())]);
+ return view(db,await row(db,id));
+});}
+export async function handleCompetitorGaps(request,env){try{
+ const u=new URL(request.url),route=u.pathname.replace('/admin/competitor-gaps/api/','').replace(/\/$/,'');if(!['GET','POST'].includes(request.method))throw fail('Method not allowed.',405);if(request.method==='POST'&&request.headers.get('Origin')!==u.origin)throw fail('Refresh the admin page and try again.',403);const db=env.JOBS_DB;if(!db)throw fail('Research storage is unavailable.',503);
+ let body={};if(request.method==='POST')try{body=JSON.parse(new TextDecoder().decode(await readLimitedBody(request,15000)));if(!body||typeof body!=='object'||Array.isArray(body))throw Error();}catch{throw fail('Invalid request.');}
+ if(route==='status'&&request.method==='GET')return json({connected:!!(env.DATAFORSEO_LOGIN&&env.DATAFORSEO_PASSWORD),directories:directoryDomains,customExclusions:await exclusions(db),daily:await daily(db)});
+ if(route==='history'&&request.method==='GET'){const r=await db.prepare('SELECT id,title,status,created_at FROM gap_reports ORDER BY created_at DESC LIMIT 50').all();return json({reports:r.results});}
+ if(route==='report'&&request.method==='GET')return json(await view(db,await row(db,u.searchParams.get('id'))));
+ if(['preview','start'].includes(route)&&request.method==='POST'){
+  let input;try{input=parseGapInput(body,await exclusions(db));}catch(e){throw fail(e.message);}
+  if(route==='preview')return json(await preview(db,input));
+  if(!env.DATAFORSEO_LOGIN||!env.DATAFORSEO_PASSWORD)throw fail('Connect DataForSEO before starting research.',503);
+  return json(await lock(db,async()=>{
+   const active=await db.prepare("SELECT * FROM gap_reports WHERE status='running' ORDER BY created_at DESC LIMIT 1").first();if(active)return {...await view(db,active),resumed:true};
+   const fingerprint=JSON.stringify({...input,budget:null,refresh:false}),saved=await db.prepare("SELECT * FROM gap_reports WHERE fingerprint=? AND status='complete' AND created_at>? ORDER BY created_at DESC LIMIT 1").bind(fingerprint,ago(7)).first();if(saved&&!input.refresh)return {...await view(db,saved),cached:true};
+   const p=await preview(db,input);if(p.reserve>input.budget+1e-8)throw fail(`This comparison needs a $${p.reserve.toFixed(2)} allowance. Raise the limit or use fewer competitors.`);if(p.reserve>p.daily.remaining+1e-8)throw fail('The rolling 24-hour comparison allowance has been reached. Open saved reports or try later.',429);
+   const recent=await db.prepare('SELECT COUNT(*) AS n FROM gap_reports WHERE created_at>?').bind(ago(1/24)).first();if(recent.n>=10)throw fail('Ten comparisons have been started this hour. Open saved research or try later.',429);
+   const id=crypto.randomUUID(),state={input,steps:gapSteps(input),index:0,warnings:[]};await db.prepare("INSERT INTO gap_reports(id,fingerprint,title,created_at,updated_at,status,state) VALUES(?,?,?,?,?,'running',?)").bind(id,fingerprint,input.client+' vs '+input.competitors.join(', '),now(),now(),JSON.stringify(state)).run();return view(db,await row(db,id));
+  }));
+ }
+ if(route==='advance'&&request.method==='POST')return json(await advance(env,body.id));
+ if(route==='stop'&&request.method==='POST')return json(await lock(db,async()=>{const r=await row(db,body.id);if(r.status==='running')await db.prepare("UPDATE gap_reports SET status='stopped',updated_at=? WHERE id=?").bind(now(),body.id).run();return view(db,await row(db,body.id));}));
+ if(route==='exclude'&&request.method==='POST'){let d;try{d=domain(body.domain);}catch(e){throw fail(e.message);}await db.prepare('INSERT OR IGNORE INTO gap_exclusions(domain,created_at) VALUES(?,?)').bind(d,now()).run();return json({ok:true,domain:d});}
+ if(route==='tasks'&&request.method==='GET'){const r=await db.prepare('SELECT keyword,status,notes FROM gap_tasks WHERE client=?').bind(u.searchParams.get('client')).all();return json({tasks:r.results});}
+ if(route==='task'&&request.method==='POST'){const r=await view(db,await row(db,body.id));if(!r.report?.opportunities.some(o=>o.keyword===body.keyword)||!['to-do','in-progress','done','dismissed'].includes(body.status))throw fail('Choose an opportunity from this report.');await db.prepare('INSERT INTO gap_tasks(client,keyword,status,notes,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(client,keyword) DO UPDATE SET status=excluded.status,notes=excluded.notes,updated_at=excluded.updated_at').bind(r.input.client,body.keyword,body.status,String(body.notes||'').slice(0,3000),now()).run();return json({ok:true});}
+ throw fail('Not found.',404);
+}catch(e){return json({error:e.status?e.message:'The comparison step could not be saved. Open saved research before continuing; paid calls will not be repeated automatically.'},e.status||500);}}

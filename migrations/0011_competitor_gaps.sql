@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS gap_reports(id TEXT PRIMARY KEY,fingerprint TEXT NOT NULL,title TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,status TEXT NOT NULL,state TEXT NOT NULL,report TEXT);
+CREATE INDEX IF NOT EXISTS gap_report_fingerprint ON gap_reports(fingerprint,created_at);
+CREATE TABLE IF NOT EXISTS gap_cache(key TEXT PRIMARY KEY,data TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS gap_data(report_id TEXT NOT NULL,step INTEGER NOT NULL,data TEXT NOT NULL,PRIMARY KEY(report_id,step));
+CREATE TABLE IF NOT EXISTS gap_spend(report_id TEXT NOT NULL,step INTEGER NOT NULL,request_key TEXT NOT NULL,reserve REAL NOT NULL,cost REAL,status TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(report_id,step));
+CREATE INDEX IF NOT EXISTS gap_spend_request ON gap_spend(request_key,created_at);
+CREATE TABLE IF NOT EXISTS gap_exclusions(domain TEXT PRIMARY KEY,created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS gap_tasks(client TEXT NOT NULL,keyword TEXT NOT NULL,status TEXT NOT NULL,notes TEXT NOT NULL DEFAULT '',updated_at TEXT NOT NULL,PRIMARY KEY(client,keyword));
+CREATE TABLE IF NOT EXISTS gap_lock(id INTEGER PRIMARY KEY,owner TEXT,expires_at TEXT NOT NULL);
+INSERT OR IGNORE INTO gap_lock(id,expires_at) VALUES(1,'2000-01-01');

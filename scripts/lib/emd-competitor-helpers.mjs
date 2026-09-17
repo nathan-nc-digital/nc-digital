@@ -21,7 +21,7 @@ export function computeFloor(competitors) {
 }
 
 export function computeVerdict(directoryRatio, floor) {
-  if (floor === null) return 'Soft';
+  if (floor === null) return 'Unverified';
   if (directoryRatio <= 0.3 && floor >= 30) return 'Defended';
   if (directoryRatio >= 0.5 || floor < 15) return 'Soft';
   return 'Moderate';

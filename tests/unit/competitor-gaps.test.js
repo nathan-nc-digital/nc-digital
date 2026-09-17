@@ -1,0 +1,50 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {DatabaseSync} from 'node:sqlite';
+import {domain,excluded,parseGapInput,gapRequest,gapSteps,mapGapResult,buildGapReport,requestKey} from '../../src/lib/competitor-gaps.js';
+import {handleCompetitorGaps} from '../../src/lib/competitor-gaps-api.js';
+const client='client.co.uk',competitor='business.co.uk',input=parseGapInput({client,competitors:[competitor]});
+const serp=(host,rank,path='/boiler-repair/',title='Boiler repair service')=>({type:'organic',rank_group:rank,url:'https://'+host+path,title});
+const item=(keyword='boiler repair merthyr',rank=null,host=competitor)=>({keyword_data:{keyword,keyword_info:{search_volume:200,cpc:4.5,last_updated_time:'2026-09-01 00:00:00 +00:00'},keyword_properties:{keyword_difficulty:15},search_intent_info:{main_intent:'commercial'}},first_domain_serp_element:serp(host,3),second_domain_serp_element:rank?serp(client,rank):null});
+test('directory inputs and subdomains are blocked before research; domains normalize safely',()=>{
+ assert.equal(domain('https://WWW.business.co.uk/service/'),competitor);for(const d of ['yell.com','www.checkatrade.com','profiles.mybuilder.com','clutch.co','thomsonlocal.com']){assert.equal(excluded(domain(d)),true);assert.throws(()=>parseGapInput({client,competitors:[d]}),/directory|platform/);}
+ assert.throws(()=>parseGapInput({client,competitors:['customdirectory.co.uk']},['customdirectory.co.uk']),/excluded/);assert.throws(()=>parseGapInput({client,competitors:[competitor,'sub.business.co.uk']}),/separate competing/);assert.equal(excluded('charity.org.uk'),false);
+ for(const value of ['javascript:alert(1)','http://user:secret@site.co.uk','127.0.0.1','site.local','https://site.co.uk:3000','user site.co.uk'])assert.throws(()=>domain(value));
+});
+test('bounded UK organic requests have optional focus filters and separate cache keys',()=>{
+ const i=parseGapInput({client,competitors:[competitor],focus:'plumber, boiler',limit:50});const steps=gapSteps(i),a=gapRequest(i,steps[0]),b=gapRequest(i,steps[1]);assert.equal(a.target1,competitor);assert.equal(a.target2,client);assert.equal(a.intersections,false);assert.equal(b.intersections,true);assert.deepEqual(a.item_types,['organic']);assert.equal(a.limit,50);assert.equal(a.location_code,2826);assert.ok(JSON.stringify(a.filters).includes('%boiler%'));assert.notEqual(requestKey(i,steps[0]),requestKey(i,steps[1]));
+});
+test('provider results discard directory URLs, wrong hosts, paid results and invalid shared evidence',()=>{
+ const bad=item('directory term',null,'yell.com'),paid=item('paid term');paid.first_domain_serp_element.type='paid';const d=mapGapResult(input,gapSteps(input)[0],{items:[item(),bad,paid],items_count:3});assert.equal(d.items.length,1);assert.equal(d.discarded,2);assert.equal(mapGapResult(input,gapSteps(input)[1],{items:[item()]}).items.length,0);
+});
+test('keywords deduplicate without summing volume, stronger observed client evidence overrides absence',()=>{
+ const i=parseGapInput({client,competitors:[competitor,'other.co.uk']}),a=mapGapResult(i,{competitor,kind:'missing'},{items:[item()]}),b=mapGapResult(i,{competitor:'other.co.uk',kind:'shared'},{items:[item('boiler repair merthyr',12,'other.co.uk')]});const r=buildGapReport(i,[a,b]);assert.equal(r.opportunities.length,1);const o=r.opportunities[0];assert.equal(o.volume,200);assert.equal(o.type,'improve');assert.equal(o.client.rank,12);assert.equal(o.competitorCount,2);assert.equal(o.mixedSnapshots,true);assert.equal(o.suggestedPage,'https://client.co.uk/boiler-repair/');assert.equal(o.action,'Improve existing page');
+});
+test('close ranks are not gaps, missing difficulty stays unknown, and related pages are labelled as heuristic',()=>{
+ const rows=[item('boiler repair',4),item('boiler repair merthyr')];rows[1].keyword_data.keyword_properties=null;const shared=mapGapResult(input,{competitor,kind:'shared'},{items:[rows[0]]}),missing=mapGapResult(input,{competitor,kind:'missing'},{items:[rows[1]]});const r=buildGapReport(input,[shared,missing]);assert.equal(r.opportunities.length,1);assert.equal(r.opportunities[0].difficulty,null);assert.equal(r.opportunities[0].suggestionHeuristic,true);assert.equal(r.opportunities[0].action,'Review a related page first');
+});
+test('new directory exclusions remove all evidence, coverage and raw datasets from saved report views',()=>{
+ const d=mapGapResult(input,gapSteps(input)[0],{items:[item()]});const r=buildGapReport(input,[d],[],[competitor]);assert.equal(r.opportunities.length,0);assert.equal(r.datasets.length,0);assert.equal(r.coverage.length,0);assert.deepEqual(r.input.competitors,[]);assert.match(r.warnings[0],/exclusions/);
+});
+function database(t){const sqlite=new DatabaseSync(':memory:');sqlite.exec(fs.readFileSync('migrations/0011_competitor_gaps.sql','utf8'));t.after(()=>sqlite.close());return {sqlite,prepare(sql){const stmt=sqlite.prepare(sql);return {args:[],bind(...args){this.args=args;return this;},async first(){return stmt.get(...this.args)||null;},async all(){return {results:stmt.all(...this.args)};},async run(){return {meta:stmt.run(...this.args)};}};},async batch(items){sqlite.exec('BEGIN');try{const r=[];for(const x of items)r.push(await x.run());sqlite.exec('COMMIT');return r;}catch(e){sqlite.exec('ROLLBACK');throw e;}}};}
+const request=(route,body)=>new Request('https://nc-digital.co.uk/admin/competitor-gaps/api/'+route,{method:body?'POST':'GET',headers:{Origin:'https://nc-digital.co.uk','Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+async function api(env,route,body){const r=await handleCompetitorGaps(request(route,body),env),d=await r.json();assert.equal(r.status,200,JSON.stringify(d));return d;}
+function provider(t,{timeout=false,excess=false}={}){const calls=[];t.mock.method(globalThis,'fetch',async(url,opts)=>{const q=JSON.parse(opts.body)[0];calls.push(q);assert.ok(url.endsWith('/dataforseo_labs/google/domain_intersection/live'));if(timeout)throw Error('timeout');return Response.json({status_code:20000,cost:excess?.2:.0101,tasks:[{status_code:20000,result:[{total_count:1,items_count:1,items:[item('boiler repair merthyr',q.intersections?12:null,q.target1)]}]}]});});return calls;}
+function environment(t){return {JOBS_DB:database(t),DATAFORSEO_LOGIN:'test',DATAFORSEO_PASSWORD:'private'};}
+async function finish(env,r){for(let n=0;r.status==='running'&&n<10;n++)r=await api(env,'advance',{id:r.id});assert.equal(r.status,'complete');return r;}
+test('free previews, cached reruns and shared caches avoid duplicate spending; work notes persist',async t=>{
+ const env=environment(t),calls=provider(t);const p=await api(env,'preview',input);assert.equal(p.reserve,.1);assert.equal(calls.length,0);const r=await finish(env,await api(env,'start',input));assert.equal(calls.length,2);assert.equal(r.actual,.0202);assert.equal(r.uncertain,0);assert.equal(r.report.opportunities.length,1);const again=await api(env,'start',input);assert.equal(again.cached,true);assert.equal(again.id,r.id);assert.equal(calls.length,2);const next=await finish(env,await api(env,'start',{...input,brands:'unrelated'}));assert.equal(next.actual,0);assert.equal(calls.length,2);await api(env,'task',{id:r.id,keyword:'boiler repair merthyr',status:'in-progress',notes:'Improve the service page.'});assert.equal((await api(env,'tasks?client='+client)).tasks[0].notes,'Improve the service page.');
+});
+test('timeouts retain reservations and matching refresh requests are not resent',async t=>{
+ const env=environment(t),calls=provider(t,{timeout:true});const r=await finish(env,await api(env,'start',input));assert.equal(calls.length,2);assert.equal(r.actual,0);assert.equal(r.committed,.1);assert.equal(r.uncertain,2);const fresh=await finish(env,await api(env,'start',{...input,refresh:true}));assert.equal(calls.length,2);assert.equal(fresh.report.opportunities.length,0);assert.ok(fresh.report.warnings.some(w=>w.includes('uncertain charge')));
+});
+test('crash after dispatch cannot cause a duplicate paid call on resume',async t=>{
+ const env=environment(t),calls=provider(t),r=await api(env,'start',input),original=env.JOBS_DB.batch;let failed=false;env.JOBS_DB.batch=async function(items){if(!failed){failed=true;throw Error('D1 write interrupted');}return original.call(this,items);};const first=await handleCompetitorGaps(request('advance',{id:r.id}),env);assert.equal(first.status,500);assert.equal(calls.length,1);const resumed=await api(env,'advance',{id:r.id});assert.equal(calls.length,1);assert.equal(resumed.index,1);assert.equal(resumed.uncertain,1);
+});
+test('budget and directory checks prevent dispatch, exclusions update saved results, and origins are enforced',async t=>{
+ const env=environment(t),calls=provider(t);assert.equal((await handleCompetitorGaps(request('start',{...input,budget:.05}),env)).status,400);assert.equal((await handleCompetitorGaps(request('start',{client,competitors:['profiles.yell.com']}),env)).status,400);assert.equal(calls.length,0);const r=await finish(env,await api(env,'start',input));await api(env,'exclude',{domain:competitor});const filtered=await api(env,'report?id='+r.id);assert.equal(filtered.report.opportunities.length,0);assert.equal(filtered.report.datasets.length,0);assert.equal((await handleCompetitorGaps(new Request('https://nc-digital.co.uk/admin/competitor-gaps/api/start',{method:'POST',headers:{Origin:'https://other.co.uk'},body:'{}'}),env)).status,403);
+});
+test('concurrent starts serialize, and excess provider charges stop further paid calls',async t=>{
+ const env=environment(t),calls=provider(t,{excess:true});const responses=await Promise.all([handleCompetitorGaps(request('start',input),env),handleCompetitorGaps(request('start',input),env)]);assert.deepEqual(responses.map(r=>r.status).sort(),[200,409]);const r=await finish(env,await responses.find(r=>r.status===200).json());assert.equal(calls.length,1);assert.equal(r.actual,.2);assert.ok(r.report.warnings.some(w=>w.includes('exceeded')));
+});
