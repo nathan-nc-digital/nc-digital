@@ -3,7 +3,21 @@ dist/
 .astro/
 .env
 .env.*
+.dev.vars
+.dev.vars.*
+.tmp/social-upload-*.json
+.tmp/crm-zoho-credentials*.xml
+.tmp/
+.wrangler/
+output/
+test-results/
+playwright-report/
 !.env.example
+scripts/gsc-credentials.json
+scripts/gsc-token.json
+scripts/ga-token.json
+.tmp/ga-auth-url.txt
+scripts/gsc-indexing-cache.json
 *.tsbuildinfo
 .DS_Store
 .superpowers/
@@ -16,3 +30,14 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# local Claude Code settings (permission strings can embed tokens)
+.claude/settings.local.json
+
+# generated caches, logs and crawler reports
+.issue-reports/
+debug.log
+scripts/*-cache.json
+scripts/emd-competitor-check-run.log
+scripts/gsc-report.json
+scripts/gsc-report.md
