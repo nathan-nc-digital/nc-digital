@@ -1,0 +1,80 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Plain-English terms for NC Digital's services. Commercial specifics (payment split, ownership
+// transfer, 30-day notice, 99.9% hosting uptime) mirror what the service pages and cost calculator
+// already publish — keep them in sync if pricing or policies change.
+const sections = [
+  {
+    heading: 'Who we are',
+    body: `<p>NC Digital is a web design, development and SEO business based at 70 Brynhyfryd Street, Merthyr Tydfil, CF47 9YW, run by Nathan Constance. Our website is nc-digital.co.uk and you can reach us at <a href="mailto:info@nc-digital.co.uk">info@nc-digital.co.uk</a>. These terms apply to any work we carry out for you and to your use of this website. By accepting a quote or instructing us to start work, you agree to them.</p>`,
+  },
+  {
+    heading: 'Quotes and scope',
+    body: `<p>Every project starts with a written quote or proposal setting out what is included: the pages or features to be built, the services provided (for example design, WordPress build, ecommerce setup, hosting or SEO) and the price. Anything not listed in the quote is outside the agreed scope. If you ask for additional pages, features or changes after work has started, we will let you know if there is an extra cost before doing them.</p>`,
+  },
+  {
+    heading: 'Payment',
+    body: `<p>For one-off website builds, payment is split in two: a 50% deposit to start the build and the remaining 50% before the website goes live. Hosting and domain services, where selected, are also paid before launch. Managed starter websites, hosting and maintenance packages are billed monthly or annually in advance as set out in your quote. Prices are shown in pounds sterling and all invoices are payable by the date shown on them. We may pause work or suspend a hosted service where an invoice remains unpaid after a reminder.</p>`,
+  },
+  {
+    heading: 'Your content and feedback',
+    body: `<p>You are responsible for supplying the text, images, logos and other material you want on your website, and for making sure you have the right to use them. Project timescales depend on receiving this content and your feedback promptly; where they are delayed, the launch date moves accordingly. Design work includes revisions as described in your quote, and we will always tell you if a request falls outside what was agreed.</p>`,
+  },
+  {
+    heading: 'Ownership and intellectual property',
+    body: `<p>For one-off builds and logo design, full ownership of the finished website files and designs transfers to you once the final invoice has been paid. Your domain name is registered in your name or transferred to you so that you own and control it. Until final payment is received, the work remains the property of NC Digital. Third-party items such as premium plugins, themes, fonts or stock images remain subject to their own licences.</p><p style="margin-top:0.75rem;">Managed starter websites are built, hosted and managed by NC Digital as an ongoing service; the arrangements for the site and domain if you later cancel are set out in your quote.</p><p style="margin-top:0.75rem;">We may show completed work in our portfolio and case studies unless you ask us in writing not to.</p>`,
+  },
+  {
+    heading: 'Hosting, maintenance and SEO',
+    body: `<p>Hosting includes UK-based servers, an SSL certificate, daily backups and security monitoring, with a 99.9% uptime target. Maintenance packages cover the updates, backups and small content changes described on the relevant service page. Ongoing services can be cancelled with 30 days' written notice after any initial period stated in your quote.</p><p style="margin-top:0.75rem;">SEO work is carried out to recognised good practice, but search engines control their own results. We report honestly on what has been done and what has changed, and we do not guarantee any particular ranking, traffic level or number of enquiries.</p>`,
+  },
+  {
+    heading: 'Cancellation',
+    body: `<p>If you cancel a one-off project after work has started, the deposit covers the work carried out to that point and is non-refundable. Where work completed exceeds the deposit, we will invoice for the additional time at the rate in your quote. Ongoing services are cancelled by giving 30 days' notice by email, after which no further payments are taken.</p>`,
+  },
+  {
+    heading: 'Liability',
+    body: `<p>We take care to build websites that work well and are secure, but no website or online service can be guaranteed to be error-free or available at all times. We are not liable for loss of business, profit or data arising from downtime, third-party services, or changes made to a site by you or others after handover. Our total liability in connection with any project is limited to the amount you have paid us for that project. Nothing in these terms limits liability that cannot be limited by law.</p>`,
+  },
+  {
+    heading: 'Use of this website',
+    body: `<p>The content of nc-digital.co.uk is provided for general information and is the copyright of NC Digital unless otherwise stated. You may not copy or reuse it commercially without permission. Details of the personal data we collect through this website are in our <a href="/privacy-policy/">Privacy Policy</a>.</p>`,
+  },
+  {
+    heading: 'Governing law and changes to these terms',
+    body: `<p>These terms are governed by the law of England and Wales. We may update them from time to time; the version published on this page at the date you accept a quote is the one that applies to that work. If you have any questions, email <a href="mailto:info@nc-digital.co.uk">info@nc-digital.co.uk</a>.</p>`,
+  },
+];
+---
+
+<BaseLayout
+  title="Terms of Service | NC Digital"
+  description="The terms on which NC Digital provides web design, WordPress development, ecommerce, hosting, maintenance and SEO services to businesses across South Wales."
+>
+
+  <section style="padding:4rem 0 5rem;">
+    <div class="container site-pad" style="max-width:800px;">
+      <h1 data-animate="fade-up" style="margin-bottom:0.5rem;">Terms of Service</h1>
+      <p style="color:var(--text-muted); margin-bottom:3rem;">Last updated: September 2026</p>
+
+      <div data-animate="stagger" class="terms-body" style="color:var(--text); line-height:1.85; font-size:1rem; display:flex; flex-direction:column; gap:2rem;">
+        {sections.map(({ heading, body }) => (
+          <div>
+            <h2 style="font-size:1.25rem; margin-bottom:0.75rem;">{heading}</h2>
+            <div set:html={body} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .terms-body a {
+      color: var(--purple);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  </style>
+
+</BaseLayout>

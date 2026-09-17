@@ -22,7 +22,7 @@ const included = [
   { number: '06', title: 'Someone to guide you.', text: 'Work directly with Nathan from the first conversation to launch, with a walkthrough so you know how to use your new site.' },
 ];
 const faqs = [
-  { q: 'What does the “from £170 + VAT” price cover?', a: 'The starting price covers a one-page WordPress website: a mobile-friendly design, full WordPress setup, a contact form and a premium plugin package worth £300 installed and configured. That’s £170 + VAT (£204 including VAT) for the one-page build. Larger websites are quoted separately around your pages and features. Any hosting, domain or ongoing costs are confirmed before work starts.' },
+  { q: 'What does the “from £199” price cover?', a: 'The starting price covers a one-page WordPress website: a mobile-friendly design, full WordPress setup, a contact form and a premium plugin package worth £300 installed and configured. That’s from £199 for the one-page build. Larger websites are quoted separately around your pages and features. Any hosting, domain or ongoing costs are confirmed before work starts.' },
   { q: 'What if I need a larger website?', a: 'That’s exactly what the free quote is for. We can plan separate pages for your services, an about page, a project gallery, testimonials and contact details, plus any extra features you need. Tell me about your business and I’ll recommend a structure and give you a clear quote for the full build.' },
   { q: 'What is a one-page website?', a: 'It’s one scrolling page with sections for your business, services, work, reviews and contact details. Visitors can find the essentials in one place. It’s a good starting point for a small business that needs a professional online presence and a way to receive enquiries.' },
   { q: 'What about hosting, a domain and plugin renewals?', a: 'I’ll confirm your hosting and domain arrangements, exactly which premium plugins are included, and any ongoing licence or renewal costs before you decide to go ahead. If you already have a domain or hosting, mention it when we speak.' },
@@ -33,7 +33,7 @@ const faqs = [
 ];
 ---
 
-<OfferLayout title="Websites from £170 + VAT | WordPress Web Design | NC Digital" description="WordPress websites for South Wales businesses, from £170 + VAT for one page. Larger business websites quoted to your needs. Get your free quote from Nathan.">
+<OfferLayout title="Websites from £199 | WordPress Web Design | NC Digital" description="WordPress websites for South Wales businesses, from £199 for one page. Larger business websites quoted to your needs. Get your free quote from Nathan.">
   <section class="offer-hero">
     <div class="container site-pad hero-grid">
       <div class="hero-copy">
@@ -41,7 +41,7 @@ const faqs = [
         <h1>Your business.<br />Your new website.<br /><span>Ready for enquiries.</span></h1>
         <p class="hero-intro">Professional WordPress websites built around your business — with space to showcase your services, your work and what makes you different.</p>
         <p class="price-from">Websites from</p>
-        <div class="hero-price"><strong>£170</strong><span>+ VAT<small>From £204 including VAT</small></span></div>
+        <div class="hero-price"><strong>£199</strong><span>from<small>One-page WordPress website</small></span></div>
         <p class="price-scope">Starting price is for a one-page site. Larger websites quoted to your needs.</p>
         <div class="plugin-note"><span class="plugin-icon" aria-hidden="true">+</span><div><strong>Premium plugins worth £300 included</strong><span>Full WordPress setup. Installed and configured for you.</span></div></div>
         <p class="price-note">Hosting, domain and any ongoing costs confirmed before we start.</p>
@@ -53,7 +53,7 @@ const faqs = [
           <div class="quote-kicker"><span aria-hidden="true"><ArrowIcon /></span> YOUR WEBSITE STARTS HERE</div>
           <h2>Let’s talk about<br />your new website.</h2>
           <p class="quote-intro">Tell me about your business. I’ll help you choose the right pages and give you a clear quote.</p>
-          <EnquiryForm id="lp-web-design-form" subject="New website enquiry — websites from £170 + VAT (Meta)" websiteOffer />
+          <EnquiryForm id="lp-web-design-form" subject="New website enquiry — websites from £199 (Meta)" websiteOffer />
           <p class="form-reassurance">Free quote. No obligation. You’ll speak directly to Nathan.</p>
           <p class="form-privacy">Your details are used to respond to your enquiry. <a href="/privacy-policy/">Privacy policy</a></p>
         </div>
@@ -65,7 +65,7 @@ const faqs = [
   <section class="website-options section-space"><div class="container site-pad">
     <div class="section-heading"><div><p class="eyebrow">Start with what your business needs</p><h2>More to offer?<br />Give it room to shine.</h2></div><p>If you have several services, a portfolio of work or a story to tell, a larger website gives each one the space it deserves.</p></div>
     <div class="options-grid">
-      <article class="website-option starter-option"><p class="option-label">A simple starting point</p><h3>One-page starter site</h3><p>Your business essentials on one scrolling page. A straightforward way to introduce yourself and let customers get in touch.</p><p class="option-price">From £170 <span>+ VAT</span></p><p class="option-price-note">From £204 including VAT · One-page build</p><a href="#quote" class="text-link" data-website-type="One-page starter website">Ask about a starter site <span aria-hidden="true"><ArrowIcon /></span></a></article>
+      <article class="website-option starter-option"><p class="option-label">A simple starting point</p><h3>One-page starter site</h3><p>Your business essentials on one scrolling page. A straightforward way to introduce yourself and let customers get in touch.</p><p class="option-price">From £199</p><p class="option-price-note">One-page build</p><a href="#quote" class="text-link" data-website-type="One-page starter website">Ask about a starter site <span aria-hidden="true"><ArrowIcon /></span></a></article>
       <article class="website-option business-option"><p class="option-label">For businesses with more to show</p><h3>A complete business website</h3><p>A website with dedicated pages that help customers explore your services, see the quality of your work and feel confident contacting you.</p><ul><li>Separate pages for your key services</li><li>Space for your projects, reviews and team</li><li>A clear journey from first visit to enquiry</li><li>Room for extra features as your business grows</li></ul><p class="business-price">Quoted around your pages, features and goals.</p><a href="#quote" class="offer-button" data-website-type="Multi-page business website">Get a quote for my business <span aria-hidden="true"><ArrowIcon /></span></a></article>
     </div>
   </div></section>
@@ -82,7 +82,7 @@ const faqs = [
   <section class="included-section section-space"><div class="container site-pad">
     <div class="section-heading"><div><p class="eyebrow">More than just good looks</p><h2>Everything to make<br />your first impression count.</h2></div><p>A clear, professional home for your business online, with the WordPress setup handled for you.</p></div>
     <div class="included-grid">{included.map(item => <article class="included-item"><span class="item-number">{item.number}</span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
-    <div class="package-summary"><div><strong>Your business. The right website.</strong><span>One-page sites from £170 + VAT. Larger websites quoted individually.</span></div><a class="offer-button" href="#quote">Let’s talk about my website <span aria-hidden="true"><ArrowIcon /></span></a></div>
+    <div class="package-summary"><div><strong>Your business. The right website.</strong><span>One-page sites from £199. Larger websites quoted individually.</span></div><a class="offer-button" href="#quote">Let’s talk about my website <span aria-hidden="true"><ArrowIcon /></span></a></div>
   </div></section>
 
   <section class="personal-section section-space"><div class="container site-pad personal-grid">
@@ -92,12 +92,12 @@ const faqs = [
 
   <section class="faq-section section-space"><div class="container site-pad faq-grid"><div><p class="eyebrow">A few things you might be wondering</p><h2>Before you<br />get in touch.</h2><p class="faq-aside">Not sure if one page is enough?<br />Tell me what you need and I’ll help you work it out.</p><a href="#quote" class="text-link">Ask Nathan <span aria-hidden="true"><ArrowIcon /></span></a></div><div class="faq-list">{faqs.map(({ q, a }) => <details><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div></div></section>
 
-  <section class="closing-section"><div class="container site-pad"><p class="eyebrow">Let’s make it happen</p><h2>Your next customer<br />could start with your website.</h2><p>Websites from £170 + VAT for a one-page site.<br />Let’s talk about the right website for your business.</p><a class="offer-button" href="#quote">Get my free website quote <span aria-hidden="true"><ArrowIcon /></span></a><span class="closing-note">A friendly conversation. No obligation.</span></div></section>
+  <section class="closing-section"><div class="container site-pad"><p class="eyebrow">Let’s make it happen</p><h2>Your next customer<br />could start with your website.</h2><p>Websites from £199 for a one-page site.<br />Let’s talk about the right website for your business.</p><a class="offer-button" href="#quote">Get my free website quote <span aria-hidden="true"><ArrowIcon /></span></a><span class="closing-note">A friendly conversation. No obligation.</span></div></section>
 
   <script is:inline>
     document.addEventListener('nc-enquiry-success', function (event) {
       if (event.detail && event.detail.formId === 'lp-web-design-form' && typeof window.fbq === 'function') {
-        window.fbq('track', 'Lead', { content_name: 'Websites from £170 + VAT (Meta)' });
+        window.fbq('track', 'Lead', { content_name: 'Websites from £199 (Meta)' });
       }
     });
     document.querySelectorAll('[data-website-type]').forEach(function (link) {
