@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import JsonLD from '../components/JsonLD.astro';
 import { Image } from 'astro:assets';
 import nathanImg from '../assets/nathan.webp';
 import { createReader } from '@keystatic/core/reader';
@@ -58,6 +59,9 @@ function getPortfolioImage(slug: string) {
   return null;
 }
 
+// Figures are genuine measured results. Clicks/impressions come from Google Search Console for the
+// stated period; enquiry counts are website enquiries over the same period. Do not change values here
+// without updating the matching case study.
 const seoResults = [
   {
     slug: 'ir-energy',
@@ -65,6 +69,8 @@ const seoResults = [
     href: '/portfolio/ir-energy/',
     service: 'Local SEO Campaign',
     period: 'Last 3 months vs previous 3 months',
+    context: 'A South Wales renewable energy installer who wanted more local enquiries. NC Digital redesigned the homepage, then ran a three-month local SEO campaign building 20 service and location pages across South Wales.',
+    alt: 'IR Energy website — homepage redesign and local SEO campaign for a South Wales renewable energy installer',
     stats: [
       { value: '+76%', label: 'Clicks from Google' },
       { value: '+164%', label: 'Search impressions' },
@@ -77,6 +83,8 @@ const seoResults = [
     href: '/portfolio/mj-roofing/',
     service: 'Local SEO Campaign',
     period: 'Last 3 months vs previous 3 months',
+    context: 'A South Wales roofing contractor who had relied entirely on word of mouth. NC Digital designed and built a new website with local SEO in place from day one, then ran an ongoing local SEO campaign.',
+    alt: 'M&J Roofing website — lead-generating website and local SEO for a South Wales roofing contractor',
     stats: [
       { value: '+101%', label: 'Clicks from Google' },
       { value: '+745%', label: 'Search impressions' },
@@ -89,6 +97,8 @@ const seoResults = [
     href: '/portfolio/ds-carpentry/',
     service: 'Local SEO Campaign',
     period: 'Last 3 months vs previous 3 months',
+    context: 'A local carpentry business in South Wales competing with larger firms. NC Digital built a mobile-first website with dedicated service pages and a portfolio gallery, then ran a local SEO campaign.',
+    alt: 'DS Carpentry website — mobile-first website and local SEO for a South Wales carpentry business',
     stats: [
       { value: '+300%', label: 'Clicks from Google' },
       { value: '+384%', label: 'Search impressions' },
@@ -101,6 +111,8 @@ const seoResults = [
     href: '/portfolio/ak-promotions/',
     service: 'Web Design & Build',
     period: '15 Aug 2025 – 30 Apr 2026',
+    context: 'A South Wales promotions and events company. NC Digital designed and built their website from scratch; these figures cover the period from launch to the end of April 2026.',
+    alt: 'AK Promotions website — web design and build for a South Wales promotions and events company',
     stats: [
       { value: '2,800+', label: 'Visits since launch' },
       { value: '75', label: 'Enquiry forms submitted' },
@@ -126,7 +138,7 @@ const services = [
     num: '01',
     icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`,
     title: 'Web Design',
-    desc: 'Custom website designs, logo design, branding, colour schemes, and layouts built around your business. Mobile-first and built to make a strong first impression.',
+    desc: 'Professional web design for small businesses: custom layouts, branding and colour schemes designed around how your customers actually buy. Mobile-first, fast, and built to make a strong first impression.',
     href: '/services/web-design/',
   },
   {
@@ -140,44 +152,170 @@ const services = [
     num: '03',
     icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
     title: 'Web Development',
-    desc: 'Custom-coded websites built for speed, performance, and SEO. No page builders, no templates. Clean, fast code that scores well on Google and works on every device.',
+    desc: 'Custom-coded WordPress websites built for speed, performance, and SEO. No page builders, no templates. Clean, fast code that scores well on Google, works on every device, and is straightforward for you to update.',
     href: '/services/web-development/',
   },
   {
     num: '04',
+    icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>`,
+    title: 'Ecommerce & WooCommerce Development',
+    desc: 'Online shops for South Wales businesses that need to take orders, not just enquiries. Built on WooCommerce, Shopify or SureCart and designed from scratch around your brand — from £800.',
+    href: '/services/ecommerce-development/',
+  },
+  {
+    num: '05',
     icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>`,
     title: 'Managed Starter Websites',
     desc: 'A fully managed website from £20/month inc. VAT — domain, hosting, and management included, with 5, 10, or unlimited new pages added monthly depending on your tier.',
     href: '/services/managed-starter-websites/',
   },
   {
-    num: '05',
+    num: '06',
     icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
     title: 'Website Hosting & Security',
-    desc: 'Fast, UK-based web hosting with free SSL certificates, daily backups, and security monitoring. Your site stays safe and online.',
+    desc: 'Fast, UK-based website hosting with free SSL certificates, daily backups, and security monitoring, so your WordPress site stays safe, quick and online.',
     href: '/services/website-hosting-security/',
   },
   {
-    num: '06',
+    num: '07',
     icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>`,
     title: 'Website Maintenance Packages',
-    desc: 'Ongoing support to keep your site updated, secure, and running well. Regular updates, backups, and small content changes handled for you.',
+    desc: 'Ongoing website support and maintenance after launch: WordPress and plugin updates, backups, security checks, and small content changes handled for you.',
     href: '/services/website-maintenance-packages/',
   },
   {
-    num: '07',
+    num: '08',
     icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
     title: 'Local SEO & Google Ranking',
-    desc: 'SEO foundations built into your site, plus targeted strategies to help you appear higher in local search results and maps.',
+    desc: 'Local SEO for South Wales businesses. SEO foundations built into every site, plus dedicated service and location pages, Google Business Profile optimisation and monthly plain-English reporting to help nearby customers find you in Google Search and Maps.',
     href: '/services/local-seo-google-ranking/',
   },
 ];
+
+// Short, plain answers to the questions people actually ask before getting in touch. Every fact here
+// (pricing, timescales, platforms) is already published on the linked service pages — keep them in sync.
+const faqs = [
+  {
+    q: 'How much does a website cost?',
+    a: 'It depends on what you need. A one-page WordPress website starts from £199, a fully managed starter website is from £20/month inc. VAT with domain and hosting included, and ecommerce websites start from £800. Larger multi-page sites are quoted around your brief. Try the <a href="/website-cost-calculator/">website cost calculator</a> for an instant estimate, or see <a href="/services/web-design/">web design pricing</a>.',
+  },
+  {
+    q: 'How long does it take to build a website?',
+    a: 'Managed starter websites are typically live within five to seven working days of receiving your content. Custom-designed websites take longer depending on the number of pages and any bespoke functionality, and ecommerce builds longer still. The biggest factor is usually how quickly content and feedback come back from your side. Read <a href="/blog/what-happens-during-a-website-design-project-step-by-step/">what happens during a website design project</a>.',
+  },
+  {
+    q: 'Do you build WordPress websites?',
+    a: 'Yes. WordPress is our main platform for small business websites because it is easy for you to update and works well for SEO. Every site is custom-designed around your brand rather than built from an off-the-shelf theme. See our <a href="/services/web-design/">WordPress web design</a> and <a href="/services/web-development/">web development</a> services.',
+  },
+  {
+    q: 'Do you work with businesses outside Merthyr Tydfil?',
+    a: 'Yes. NC Digital is based in Merthyr Tydfil, but we work with small businesses across <a href="/web-design-cardiff/">Cardiff</a>, <a href="/web-design-swansea/">Swansea</a>, <a href="/web-design-newport/">Newport</a>, Caerphilly, Bridgend and the wider <a href="/web-design-south-wales/">South Wales</a> area. Our <a href="/portfolio/">portfolio</a> includes roofers, carpenters, property developers, architects and events companies from across the region.',
+  },
+  {
+    q: 'Can you help with SEO after the website launches?',
+    a: 'Yes. SEO foundations are built into every website, and we also run ongoing <a href="/services/local-seo-google-ranking/">local SEO campaigns</a>: dedicated service and location pages, Google Business Profile optimisation, technical fixes and a plain-English monthly report. The <a href="/portfolio/ir-energy/">IR Energy case study</a> shows what a three-month campaign delivered.',
+  },
+  {
+    q: 'Do you provide website hosting and maintenance?',
+    a: 'Yes. We offer fast, UK-based <a href="/services/website-hosting-security/">website hosting</a> with free SSL, daily backups and security monitoring, plus <a href="/services/website-maintenance-packages/">maintenance packages</a> covering WordPress updates, backups and small content changes. Managed starter websites include domain, hosting and management in the monthly price.',
+  },
+  {
+    q: 'Can you build ecommerce websites with WooCommerce?',
+    a: 'Yes. We build online shops on WooCommerce (which runs on WordPress), Shopify and SureCart, each designed from scratch around your brand rather than a stock theme. <a href="/services/ecommerce-development/">Ecommerce websites start from £800</a>. Not sure which platform suits you? Read our <a href="/blog/shopify-vs-woocommerce-vs-surecart/">Shopify vs WooCommerce vs SureCart comparison</a>.',
+  },
+];
+
+const whyPoints = [
+  {
+    title: 'Built to be found',
+    body: 'Every site is structured for search from the start: clean code, fast load times, mobile-first layouts and individual service pages, so local customers can actually find you. Ongoing <a href="/services/local-seo-google-ranking/">local SEO</a> builds on that foundation.',
+  },
+  {
+    title: 'Built to convert',
+    body: 'A website should generate enquiries, not just look good. Clear service pages, prominent calls to action and simple contact forms turn visitors into quote requests, as the <a href="/portfolio/">case studies</a> show.',
+  },
+  {
+    title: 'Why WordPress?',
+    body: 'WordPress lets you update your own content, add pages as you grow and extend into <a href="/services/ecommerce-development/">WooCommerce</a> if you start selling online. We build it custom, without page builders or off-the-shelf themes, so it stays fast.',
+  },
+  {
+    title: 'One person, start to finish',
+    body: 'You deal directly with <a href="/about/">Nathan</a>, who designs, builds and supports every site personally, with <a href="/services/website-hosting-security/">hosting</a> and <a href="/services/website-maintenance-packages/">maintenance</a> available after launch.',
+  },
+];
+
+// Google reviews (verbatim). Project context is added only where the review links to a case study.
+const reviews = [
+  { name: 'Jake Lewis',       time: '1 hour ago',   href: '',                                        project: '',                            context: '',                                text: 'I couldn\'t be happier with the website that was designed for my business. From the very beginning, the team was professional, responsive, and easy to work with. They took the time to understand exactly what I wanted and turned my ideas into a modern, professional, and user-friendly website that exceeded my expectations. Communication was excellent throughout the entire process, and any questions or changes I had were handled quickly and efficiently. The attention to detail and quality of their work really stands out. I would highly recommend them to anyone looking for a reliable, talented web design company. Thank you for delivering a website I\'m genuinely proud of!' },
+  { name: 'Laura Ann',        time: '2 months ago', href: '/portfolio/ir-energy/',                  project: 'IR Energy',                   context: 'Renewable energy · Homepage redesign & local SEO', text: 'Nathan redesigned our website homepage exactly the way we envisioned it. He was attentive to what we wanted, incredibly helpful throughout the process and very knowledgeable. Nathan made everything smooth and easy, we\'re so happy with the final result. Our team from IR Energy would highly recommend him!' },
+  { name: 'Chris Davies',     time: '1 month ago',  href: '/portfolio/davies-property-development/', project: 'Davies Property Development', context: 'Property · Website redesign',      text: 'I contacted Nathan to redesign my website. Nathan was quick and efficient and explained how to carry on going forward with my new site. Excellent value for money and my new site looks so much more professional.' },
+  { name: 'Kerry Morgan',     time: '4 months ago', href: '/portfolio/ak-promotions/',               project: 'AK Promotions',               context: 'Events · Web design & build',      text: 'Highly recommend Nathan — from start to finish he was very professional, easy to work with and did an excellent job on our website.' },
+  { name: 'Michael Mordecai', time: '3 months ago', href: '/portfolio/pro-tech-plumbing/',           project: 'Pro Tech Plumbing and Bathrooms', context: 'Plumbing · First website',     text: 'Contacted Nathan to build my first website for my company. Nothing was too much to ask of him, his efficiency and attention to detail was amazing throughout. Would highly recommend anyone wanting a website to get in touch.' },
+  { name: 'Stuart Baker',     time: '3 months ago', href: '/portfolio/3d-framing/',                  project: '3D Framing',                  context: 'Framing · Web design & build',     text: 'AMAZING service, so quick and affordable for small start-up companies. Thank you so much Nathan, much more professional look I have now 👍' },
+  { name: 'Sean Hicks',       time: '2 months ago', href: '/portfolio/ds-carpentry/',                project: 'DS Carpentry',                context: 'Carpentry · Web design & local SEO', text: '10/10 for the service provided. Website is outstanding — detail is key and he delivers that. Anyone wanting a website, this is your guy 💯' },
+  { name: 'Jamie Williams',   time: '5 months ago', href: '/portfolio/mj-roofing/',                  project: 'M&J Roofing',                 context: 'Roofing · Web design & local SEO',  text: 'Nathan done the website for us at M&J Roofing. Brilliant service and always keeps contact to see if everything is going well. Thanks Nathan.' },
+  { name: 'Ryan Martin',      time: '5 months ago', href: '/portfolio/creative-redevelopments/',     project: 'Creative Redevelopment',      context: 'Property · Web design & build',    text: 'Top class service, website is quality 👌' },
+];
+
+// Homepage-only structured data. The Organization/ProfessionalService entity lives in BaseHead
+// (@id #localbusiness) on every page, so it is referenced here rather than repeated.
+const siteUrl = 'https://nc-digital.co.uk';
+const businessId = `${siteUrl}/#localbusiness`;
+const stripHtml = (html: string) => html.replace(/<[^>]+>/g, '');
+const homeSchema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}/#website`,
+      url: `${siteUrl}/`,
+      name: 'NC Digital',
+      inLanguage: 'en-GB',
+      publisher: { '@id': businessId },
+    },
+    {
+      '@type': 'WebPage',
+      '@id': `${siteUrl}/#webpage`,
+      url: `${siteUrl}/`,
+      name: 'NC Digital — Web Design & SEO South Wales',
+      description: homeMetaDescription,
+      inLanguage: 'en-GB',
+      isPartOf: { '@id': `${siteUrl}/#website` },
+      about: { '@id': businessId },
+    },
+    ...services.map(({ title, desc, href }) => ({
+      '@type': 'Service',
+      name: title,
+      description: desc,
+      url: `${siteUrl}${href}`,
+      serviceType: title,
+      provider: { '@id': businessId },
+      areaServed: [
+        { '@type': 'AdministrativeArea', name: 'South Wales' },
+        { '@type': 'City', name: 'Merthyr Tydfil' },
+        { '@type': 'City', name: 'Cardiff' },
+        { '@type': 'City', name: 'Swansea' },
+        { '@type': 'City', name: 'Newport' },
+      ],
+    })),
+    {
+      '@type': 'FAQPage',
+      '@id': `${siteUrl}/#faq`,
+      mainEntity: faqs.map(({ q, a }) => ({
+        '@type': 'Question',
+        name: q,
+        acceptedAnswer: { '@type': 'Answer', text: stripHtml(a) },
+      })),
+    },
+  ],
+};
 ---
 
 <BaseLayout
   title="NC Digital — Web Design & SEO South Wales"
   description={homeMetaDescription}
 >
+  <JsonLD slot="head" schema={homeSchema} />
 
   <!-- HERO -->
   <section style="padding:5rem 0 4rem; position:relative; overflow:hidden;">
@@ -193,8 +331,11 @@ const services = [
         <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:2rem; max-width:480px;">
           {settings?.heroSubtext ?? 'Affordable web design and local SEO for South Wales small businesses.'}
         </p>
-        <p data-animate="fade-up" style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin:-1rem 0 2rem; max-width:480px;">
-          Founded in 2025 by <a href="/about/" style="color:var(--purple); text-decoration:underline; text-underline-offset:3px;">Nathan Constance</a> — a professional web developer since 2015, who built and ranked his first website back in 2008.
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin:-1rem 0 1rem; max-width:480px;">
+          NC Digital is a web design and SEO agency based in Merthyr Tydfil, helping small and growing businesses across Cardiff, Swansea, Newport and the wider South Wales area with <a href="/services/web-design/" class="hero-link">WordPress websites</a>, <a href="/services/ecommerce-development/" class="hero-link">WooCommerce online shops</a> and <a href="/services/local-seo-google-ranking/" class="hero-link">local SEO</a>.
+        </p>
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin:0 0 2rem; max-width:480px;">
+          Founded in 2025 by <a href="/about/" class="hero-link">Nathan Constance</a> — a professional web developer since 2015, who built and ranked his first website back in 2008.
         </p>
         <div data-animate="fade-up" style="display:flex; gap:1rem; flex-wrap:wrap;">
           <a href="/contact/" class="btn-primary">
@@ -210,7 +351,7 @@ const services = [
         <div style="position:absolute; inset:-40px; background:radial-gradient(ellipse at center, rgba(135,80,247,0.22) 0%, rgba(135,80,247,0.06) 55%, transparent 75%); pointer-events:none;"></div>
         <Image
           src={nathanImg}
-          alt="Nathan Constance — NC Digital"
+          alt="Nathan Constance, founder and web developer at NC Digital, Merthyr Tydfil"
           width={570}
           data-animate="fade-in"
           class="nathan-photo"
@@ -242,8 +383,8 @@ const services = [
       <div style="text-align:center; margin-bottom:3.5rem;">
         <p class="eyebrow" style="margin-bottom:0.75rem;">What we do</p>
         <h2 data-animate="fade-up" style="margin:0 auto 1rem;">Everything your business needs to grow online</h2>
-        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; margin:0 auto; line-height:1.7;">
-          One agency, every service. No juggling multiple suppliers.
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; margin:0 auto; line-height:1.7; max-width:640px;">
+          Web design, WordPress development, ecommerce, hosting, maintenance and local SEO for small businesses across South Wales. One agency, every service — no juggling multiple suppliers.
         </p>
       </div>
 
@@ -268,6 +409,34 @@ const services = [
     </div>
   </section>
 
+  <!-- WHY A PROFESSIONALLY BUILT WEBSITE -->
+  <section id="why" style="padding:5rem 0; background:var(--bg);">
+    <div class="container site-pad">
+      <div class="why-intro">
+        <div data-animate="fade-up">
+          <p class="eyebrow" style="margin-bottom:0.75rem;">Why it matters</p>
+          <h2 style="margin:0 0 1rem;">How can a professionally built website help your business?</h2>
+        </div>
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; line-height:1.7; margin:0;">
+          Most of our clients are small businesses: roofers, carpenters, plumbers, property developers, architects and events companies who need a website that brings in enquiries from Google rather than just sitting there. Whether it is a first website or a rebuild of one that stopped working for you, every project is designed and built to be fast, easy to find and easy to update.
+        </p>
+      </div>
+
+      <div data-animate="stagger" class="why-grid">
+        {whyPoints.map(({ title, body }) => (
+          <div class="why-card">
+            <h3 class="why-title">{title}</h3>
+            <p class="why-body" set:html={body} />
+          </div>
+        ))}
+      </div>
+
+      <p data-animate="fade-up" class="why-community">
+        Proud to be part of the local community too — NC Digital is <a href="/blog/nc-digital-sponsors-merthyr-town-fc-academy/">sponsoring a Merthyr Town FC Academy goalkeeper</a> for the 2026/27 season.
+      </p>
+    </div>
+  </section>
+
   <!-- PORTFOLIO -->
   <section id="work" style="padding:5rem 0;">
     <div class="container site-pad">
@@ -289,7 +458,7 @@ const services = [
                 {img ? (
                   <Image
                     src={img}
-                    alt={project.data.title}
+                    alt={project.data.imageAlt ?? `${project.data.client} website design project by NC Digital`}
                     width={600}
                     height={375}
                     class="portfolio-img"
@@ -320,24 +489,25 @@ const services = [
       <div style="text-align:center; margin-bottom:3rem;">
         <p class="eyebrow" style="margin-bottom:0.75rem;">Real results</p>
         <h2 data-animate="fade-up">Real results from real clients</h2>
-        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; margin:1rem auto 0; max-width:520px; line-height:1.7;">Real data from live client campaigns. No estimates, no projections.</p>
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; margin:1rem auto 0; max-width:620px; line-height:1.7;">Genuine measured results from live client websites and local SEO campaigns across South Wales. Click and impression figures come from Google Search Console; enquiries are counted from each website's contact forms over the same period. No estimates, no projections.</p>
       </div>
 
       <div class="seo-carousel" id="seoCarousel">
         <div class="seo-viewport">
           <div class="seo-slides" id="seoSlides">
-            {seoResults.map(({ slug, client, href, service, period, stats }) => {
+            {seoResults.map(({ slug, client, href, service, period, context, alt, stats }) => {
               const img = getPortfolioImage(slug);
               return (
                 <div class="seo-slide">
                   <div class="seo-card">
                     <div class="seo-img-wrap">
-                      {img && <Image src={img} alt={client} width={700} height={480} class="seo-img" loading="lazy" />}
+                      {img && <Image src={img} alt={alt} width={700} height={480} class="seo-img" loading="lazy" />}
                     </div>
                     <div class="seo-content">
                       <p class="eyebrow" style="margin-bottom:0.625rem;">{service}</p>
                       <h3 class="seo-client">{client}</h3>
                       <p class="seo-period">{period}</p>
+                      <p class="seo-context">{context}</p>
                       <div class="seo-stats-grid">
                         {stats.map(({ value, label }) => (
                           <div class="seo-stat">
@@ -346,7 +516,7 @@ const services = [
                           </div>
                         ))}
                       </div>
-                      <p style="font-size:0.75rem; color:var(--text-muted); opacity:0.6; margin-top:1.5rem; margin-bottom:0;">Stats taken 30/04/2026</p>
+                      <p style="font-size:0.75rem; color:var(--text-muted); opacity:0.6; margin-top:1.5rem; margin-bottom:0;">Figures recorded 30/04/2026</p>
                       <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-top:0.75rem;">
                         <a href={href} class="btn-outline" style="font-size:0.875rem;">View project →</a>
                         <a href="/contact/" class="btn-primary" style="font-size:0.875rem;">Hire us →</a>
@@ -424,17 +594,7 @@ const services = [
       <div class="reviews-carousel" id="reviewsCarousel">
         <div class="reviews-viewport">
           <div class="reviews-slides">
-            {[
-              { name: 'Jake Lewis',       time: '1 hour ago',   href: '',                                        text: 'I couldn\'t be happier with the website that was designed for my business. From the very beginning, the team was professional, responsive, and easy to work with. They took the time to understand exactly what I wanted and turned my ideas into a modern, professional, and user-friendly website that exceeded my expectations. Communication was excellent throughout the entire process, and any questions or changes I had were handled quickly and efficiently. The attention to detail and quality of their work really stands out. I would highly recommend them to anyone looking for a reliable, talented web design company. Thank you for delivering a website I\'m genuinely proud of!' },
-              { name: 'Laura Ann',        time: '2 months ago', href: '/portfolio/ir-energy/',                  text: 'Nathan redesigned our website homepage exactly the way we envisioned it. He was attentive to what we wanted, incredibly helpful throughout the process and very knowledgeable. Nathan made everything smooth and easy, we\'re so happy with the final result. Our team from IR Energy would highly recommend him!' },
-              { name: 'Chris Davies',     time: '1 month ago',  href: '/portfolio/davies-property-development/', text: 'I contacted Nathan to redesign my website. Nathan was quick and efficient and explained how to carry on going forward with my new site. Excellent value for money and my new site looks so much more professional.' },
-              { name: 'Kerry Morgan',     time: '4 months ago', href: '/portfolio/ak-promotions/',               text: 'Highly recommend Nathan — from start to finish he was very professional, easy to work with and did an excellent job on our website.' },
-              { name: 'Michael Mordecai', time: '3 months ago', href: '/portfolio/pro-tech-plumbing/',           text: 'Contacted Nathan to build my first website for my company. Nothing was too much to ask of him, his efficiency and attention to detail was amazing throughout. Would highly recommend anyone wanting a website to get in touch.' },
-              { name: 'Stuart Baker',     time: '3 months ago', href: '/portfolio/3d-framing/',                  text: 'AMAZING service, so quick and affordable for small start-up companies. Thank you so much Nathan, much more professional look I have now 👍' },
-              { name: 'Sean Hicks',       time: '2 months ago', href: '/portfolio/ds-carpentry/',                text: '10/10 for the service provided. Website is outstanding — detail is key and he delivers that. Anyone wanting a website, this is your guy 💯' },
-              { name: 'Jamie Williams',   time: '5 months ago', href: '/portfolio/mj-roofing/',                  text: 'Nathan done the website for us at M&J Roofing. Brilliant service and always keeps contact to see if everything is going well. Thanks Nathan.' },
-              { name: 'Ryan Martin',      time: '5 months ago', href: '/portfolio/creative-redevelopments/',     text: 'Top class service, website is quality 👌' },
-            ].map(({ name, time, href, text }) => (
+            {reviews.map(({ name, time, href, project, context, text }) => (
               <div class="review-slide">
                 <div class="review-card">
                   <div class="review-stars">★★★★★</div>
@@ -443,6 +603,7 @@ const services = [
                     <span class="review-name">{name}</span>
                     <span class="review-time">{time}</span>
                   </div>
+                  {project && <p class="review-context"><strong>{project}</strong> · {context}</p>}
                   {href && <a href={href} class="review-project-link">View project →</a>}
                 </div>
               </div>
@@ -465,6 +626,35 @@ const services = [
     </div>
   </section>
 
+  <!-- FAQ -->
+  <section id="faq" style="padding:5rem 0;">
+    <div class="container site-pad">
+      <div class="home-faq-layout">
+        <div data-animate="fade-up" class="home-faq-intro">
+          <p class="eyebrow" style="margin-bottom:0.75rem;">Common questions</p>
+          <h2 style="margin:0 0 1rem;">Questions we're asked most often</h2>
+          <p style="color:var(--text-muted); font-size:1.0625rem; line-height:1.7; margin:0 0 1.5rem;">
+            Straight answers on cost, timescales, WordPress, ecommerce, SEO and where we work. Something else on your mind? <a href="/faq/" class="hero-link">See all FAQs</a> or <a href="/contact/" class="hero-link">ask us directly</a>.
+          </p>
+        </div>
+
+        <div class="home-faq-list">
+          {faqs.map(({ q, a }, i) => (
+            <details class="home-faq-item" open={i === 0}>
+              <summary class="home-faq-q">
+                <span>{q}</span>
+                <span class="home-faq-icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                </span>
+              </summary>
+              <div class="home-faq-a" set:html={a} />
+            </details>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CTA BANNER -->
   <section style="padding:5rem 0;">
     <div class="container site-pad" style="text-align:center;">
@@ -473,13 +663,164 @@ const services = [
       <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; margin-bottom:2rem; max-width:500px; margin-left:auto; margin-right:auto;">
         Get a free website plan with no commitment. We'll show you exactly what we'd help you with.
       </p>
-      <a data-animate="fade-up" href="/free-website-plan/" class="btn-primary" style="font-size:1rem; padding:1rem 2rem;">
-        Get your free plan →
-      </a>
+      <div data-animate="fade-up" style="display:flex; gap:1rem; flex-wrap:wrap; justify-content:center;">
+        <a href="/free-website-plan/" class="btn-primary" style="font-size:1rem; padding:1rem 2rem;">
+          Get your free plan →
+        </a>
+        <a href="/contact/" class="btn-outline" style="font-size:1rem; padding:1rem 2rem;">
+          Contact NC Digital
+        </a>
+      </div>
     </div>
   </section>
 
 <style>
+  /* Inline text links in hero / FAQ intro */
+  .hero-link {
+    color: var(--purple);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Why section */
+  .why-intro {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem 4rem;
+    align-items: end;
+    margin-bottom: 2.5rem;
+  }
+  .why-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+  }
+  .why-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-2);
+    padding: 1.5rem;
+    transition: border-color 0.2s;
+  }
+  .why-card:hover { border-color: rgba(135, 80, 247, 0.4); }
+  .why-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--white);
+    margin: 0 0 0.625rem;
+  }
+  .why-body {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+    margin: 0;
+  }
+  .why-body a {
+    color: var(--purple);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .why-community {
+    margin: 2rem 0 0;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .why-community a {
+    color: var(--purple);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  @media (max-width: 1024px) {
+    .why-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 800px) {
+    .why-intro { grid-template-columns: 1fr; gap: 1rem; }
+  }
+  @media (max-width: 560px) {
+    .why-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Results: client context line */
+  .seo-context {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 1.25rem;
+  }
+
+  /* Reviews: project context */
+  .review-context {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin: 0.5rem 0 0;
+    line-height: 1.5;
+  }
+  .review-context strong { color: var(--white); font-weight: 600; }
+
+  /* Homepage FAQ (native details/summary — no JS required) */
+  .home-faq-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 2.5rem 4rem;
+    align-items: start;
+  }
+  .home-faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .home-faq-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-2);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .home-faq-item:hover { border-color: rgba(135, 80, 247, 0.4); }
+  .home-faq-item[open] { border-color: var(--purple); }
+  .home-faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.125rem 1.375rem;
+    cursor: pointer;
+    list-style: none;
+    color: var(--white);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .home-faq-q::-webkit-details-marker { display: none; }
+  .home-faq-q:focus-visible { outline: 2px solid var(--purple); outline-offset: -2px; border-radius: 12px; }
+  .home-faq-icon {
+    flex-shrink: 0;
+    color: var(--purple);
+    display: flex;
+    align-items: center;
+    transition: transform 0.3s ease;
+  }
+  .home-faq-item[open] .home-faq-icon { transform: rotate(180deg); }
+  .home-faq-a {
+    padding: 0 1.375rem 1.25rem;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.75;
+  }
+  .home-faq-a a {
+    color: var(--purple);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  @media (max-width: 860px) {
+    .home-faq-layout { grid-template-columns: 1fr; gap: 1.5rem; }
+  }
+  @media (max-width: 600px) {
+    .home-faq-q { padding: 1rem 1.125rem; font-size: 0.9375rem; }
+    .home-faq-a { padding: 0 1.125rem 1.125rem; }
+  }
+
   /* Nathan photo hover */
   .nathan-photo {
     transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;

@@ -26,6 +26,7 @@ const portfolio = defineCollection({
     industry: z.array(z.string()).optional(),
     order: z.number().optional(),
     summary: z.string(),
+    imageAlt: z.string().optional(), // descriptive alt for the project's lead image (used on the homepage grid)
     siteUrl: z.string().optional(),
     metaTitle: z.string().optional(),
     metaDescription: z.string().optional(),
