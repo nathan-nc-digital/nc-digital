@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Thank You | NC Digital"
+  description="Thank you for your enquiry. We'll be in touch shortly."
+>
+  <meta slot="head" name="robots" content="noindex, nofollow" />
+
+  <section style="padding: 6rem 0 5rem; text-align: center; position: relative; overflow: hidden; min-height: 60vh; display: flex; align-items: center;">
+    <div style="position: absolute; top: -80px; left: 50%; transform: translateX(-50%); width: 600px; height: 400px; background: radial-gradient(ellipse at center, rgba(135,80,247,0.18) 0%, transparent 70%); pointer-events: none;"></div>
+    <div class="container site-pad" style="max-width: 620px; position: relative;">
+
+      <div data-animate="fade-up" style="width: 64px; height: 64px; background: rgba(135,80,247,0.15); border: 1px solid rgba(135,80,247,0.35); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.75rem; font-size: 1.75rem;">
+        ✓
+      </div>
+
+      <p data-animate="fade-up" class="eyebrow" style="margin-bottom: 0.75rem;">Enquiry received</p>
+      <h1 data-animate="fade-up" style="margin-bottom: 1.25rem; font-size: clamp(1.75rem, 4vw, 2.5rem);">Thank you for getting in touch</h1>
+      <p data-animate="fade-up" style="color: var(--text-muted); font-size: 1.125rem; line-height: 1.75; margin-bottom: 2.5rem;">
+        I've received your enquiry and will be in touch within one working day. If you need to reach me sooner, email me directly at <a href="mailto:info@nc-digital.co.uk" style="color: var(--purple);">info@nc-digital.co.uk</a>.
+      </p>
+
+      <div data-animate="fade-up" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="/" class="btn-primary">Back to home →</a>
+        <a href="/services/" class="btn-outline">View our services</a>
+      </div>
+
+    </div>
+  </section>
+
+  <section style="padding: 3rem 0 5rem; border-top: 1px solid var(--border);">
+    <div class="container site-pad" style="max-width: 780px;">
+      <p data-animate="fade-up" style="text-align: center; color: var(--text-muted); font-size: 0.875rem; margin-bottom: 2rem;">While you wait, here's some useful reading:</p>
+      <div data-animate="stagger" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+        <a href="/services/managed-starter-websites/" style="display: block; padding: 1.25rem; background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; text-decoration: none; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
+          <p style="color: var(--white); font-weight: 600; margin-bottom: 0.375rem; font-size: 0.9375rem;">Managed Starter Websites</p>
+          <p style="color: var(--text-muted); font-size: 0.8125rem; line-height: 1.5;">Everything included from £20/month inc. VAT.</p>
+        </a>
+        <a href="/portfolio/" style="display: block; padding: 1.25rem; background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; text-decoration: none; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
+          <p style="color: var(--white); font-weight: 600; margin-bottom: 0.375rem; font-size: 0.9375rem;">Our Portfolio</p>
+          <p style="color: var(--text-muted); font-size: 0.8125rem; line-height: 1.5;">See the websites we've built for South Wales businesses.</p>
+        </a>
+        <a href="/blog/nc-digital-client-results/" style="display: block; padding: 1.25rem; background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; text-decoration: none; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
+          <p style="color: var(--white); font-weight: 600; margin-bottom: 0.375rem; font-size: 0.9375rem;">Client Results</p>
+          <p style="color: var(--text-muted); font-size: 0.8125rem; line-height: 1.5;">Real numbers from real South Wales businesses.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>

@@ -41,3 +41,8 @@ scripts/*-cache.json
 scripts/emd-competitor-check-run.log
 scripts/gsc-report.json
 scripts/gsc-report.md
+
+# local scratch
+_dbg.jpeg
+whatsapp-images-backup/
+.agents/

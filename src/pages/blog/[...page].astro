@@ -1,33 +1,32 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { BLOG_CATEGORY_META, BLOG_CATEGORY_ORDER, getBlogCategoryLabel } from '../../data/blogCategories';
 
 export const prerender = true;
 
-export async function getStaticPaths({ paginate }: { paginate: Function }) {
-  const allPosts = (await getCollection('blog'))
-    .filter(post => post.data.pubDate)
-    .sort((a, b) =>
-      new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime()
-    );
-  return paginate(allPosts, { pageSize: 12 });
+export async function getStaticPaths() {
+  return [{ params: { page: undefined } }];
 }
 
-const { page } = Astro.props as {
-  page: {
-    data: Array<any>;
-    url: { prev?: string; next?: string };
-    currentPage: number;
-    lastPage: number;
-  }
-};
+const allPosts = (await getCollection('blog'))
+  .filter(post => post.data.pubDate)
+  .sort((a, b) =>
+    new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime()
+  );
 
-const isFirstPage = page.currentPage === 1;
-const pageTitle = isFirstPage ? 'Blog | NC Digital' : `Blog — Page ${page.currentPage} | NC Digital`;
-const pageDesc = 'Web design and SEO tips, guides, and news for South Wales small businesses.';
+const categories = [
+  { value: 'all',        label: `All (${allPosts.length})` },
+  ...BLOG_CATEGORY_ORDER
+    .filter(value => allPosts.some(p => p.data.category === value))
+    .map(value => ({
+      value,
+      label: `${BLOG_CATEGORY_META[value].label} (${allPosts.filter(p => p.data.category === value).length})`,
+    })),
+];
 ---
 
-<BaseLayout title={pageTitle} description={pageDesc}>
+<BaseLayout title="Web Design & SEO Blog | NC Digital" description="Web design and SEO tips, guides, and advice for South Wales small businesses. Helping you get online, get found, and grow.">
 
   <section style="padding:4rem 0 2rem;">
     <div class="container site-pad">
@@ -39,31 +38,158 @@ const pageDesc = 'Web design and SEO tips, guides, and news for South Wales smal
     </div>
   </section>
 
-  <section style="padding:2rem 0 4rem;">
+  <section style="padding:0 0 4rem;">
     <div class="container site-pad">
-      <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:1.5rem; margin-bottom:3rem;">
-        {page.data.map((post) => (
-          <a href={`/blog/${post.id.replace('/index.mdoc', '')}`} class="card" style="display:block; text-decoration:none;">
-            <p style="font-size:0.75rem; color:var(--purple); font-weight:600; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.1em;">
-              {post.data.category?.replace('-', ' ')}
-            </p>
-            <h2 style="font-size:1rem; font-weight:600; color:var(--white); margin-bottom:0.625rem; line-height:1.4;">{post.data.title}</h2>
-            <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin:0;">{post.data.description}</p>
-          </a>
+
+      <!-- Category filter -->
+      <div class="filter-bar" data-animate="fade-up">
+        {categories.map(({ value, label }) => (
+          <button class={`filter-btn${value === 'all' ? ' active' : ''}`} data-filter={value}>
+            {label}
+          </button>
         ))}
       </div>
 
-      {(page.url.prev || page.url.next) && (
-        <div style="display:flex; justify-content:center; gap:1rem;">
-          {page.url.prev && (
-            <a href={page.url.prev} class="btn-outline">← Newer posts</a>
-          )}
-          {page.url.next && (
-            <a href={page.url.next} class="btn-outline">Older posts →</a>
-          )}
-        </div>
-      )}
+      <div class="blog-grid">
+        {allPosts.map((post) => (
+          <a
+            href={`/blog/${post.id.replace('/index.mdoc', '')}/`}
+            class="blog-card"
+            data-category={post.data.category || ''}
+          >
+            <p class="blog-cat">{getBlogCategoryLabel(post.data.category) || ' '}</p>
+            <h2 class="blog-title">{post.data.title}</h2>
+            <div class="blog-desc-wrap">
+              <p class="blog-desc">{post.data.description}</p>
+            </div>
+            <span class="blog-read">Read post →</span>
+          </a>
+        ))}
+      </div>
     </div>
   </section>
+
+  <style>
+    .filter-bar {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .filter-btn {
+      font-family: 'Sora', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      padding: 0.4375rem 1rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-2);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .filter-btn:hover {
+      border-color: var(--purple);
+      color: var(--white);
+    }
+    .filter-btn.active {
+      background: var(--purple);
+      border-color: var(--purple);
+      color: var(--white);
+    }
+
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .blog-card {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .blog-card:hover {
+      border-color: var(--purple);
+      transform: translateY(-2px);
+    }
+    .blog-card.hidden {
+      display: none;
+    }
+
+    .blog-cat {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--purple);
+      margin: 0 0 0.625rem;
+    }
+
+    .blog-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.45;
+      margin: 0 0 0.625rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .blog-desc-wrap {
+      flex: 1;
+      margin-bottom: 1rem;
+    }
+    .blog-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .blog-read {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--purple);
+      margin-top: auto;
+    }
+
+    @media (max-width: 900px) {
+      .blog-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .blog-grid { grid-template-columns: 1fr; }
+      .filter-bar { gap: 0.375rem; }
+    }
+  </style>
+
+  <script>
+    const buttons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+    const cards   = document.querySelectorAll<HTMLElement>('.blog-card');
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.dataset.filter;
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        cards.forEach(card => {
+          const show = filter === 'all' || card.dataset.category === filter;
+          card.classList.toggle('hidden', !show);
+        });
+      });
+    });
+  </script>
 
 </BaseLayout>

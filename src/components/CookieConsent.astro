@@ -1,0 +1,133 @@
+---
+---
+
+<div id="nc-cookie-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999; background:var(--bg-2); border-top:2px solid rgba(135,80,247,0.35); padding:1rem 1.5rem; box-shadow:0 -4px 24px rgba(0,0,0,0.35);">
+  <div style="max-width:1280px; margin:0 auto; display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; justify-content:space-between;">
+    <p style="color:var(--text-muted); font-size:0.875rem; line-height:1.65; margin:0; flex:1; min-width:220px;">
+      We use cookies for analytics (Google Analytics, Microsoft Clarity) and live chat (Tawk.to) to understand how visitors use our site and provide support. <a href="/privacy-policy/" style="color:var(--purple); text-decoration:underline; text-underline-offset:2px;">Privacy policy</a>
+    </p>
+    <div style="display:flex; gap:0.625rem; flex-shrink:0; flex-wrap:wrap;">
+      <button id="nc-cookie-decline" style="padding:0.625rem 1.125rem; background:transparent; border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-family:inherit; font-size:0.875rem; cursor:pointer; transition:border-color 0.2s, color 0.2s;">
+        Essential only
+      </button>
+      <button id="nc-cookie-accept" style="padding:0.625rem 1.125rem; background:var(--purple); border:1px solid transparent; border-radius:6px; color:#fff; font-family:inherit; font-size:0.875rem; font-weight:600; cursor:pointer; transition:opacity 0.2s;">
+        Accept all
+      </button>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+(function () {
+  var CONSENT_KEY = 'nc_consent';
+
+  function appendScript(script) {
+    var parent = document.head || document.body || document.documentElement;
+    if (parent) parent.appendChild(script);
+  }
+
+  function loadGTM() {
+    window.dataLayer = window.dataLayer || [];
+    var gtmLoaded = false;
+    function _load() {
+      if (gtmLoaded) return;
+      gtmLoaded = true;
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        appendScript(j);
+      })(window, document, 'script', 'dataLayer', 'GTM-WZHL5QW3');
+    }
+    var t = setTimeout(_load, 4000);
+    ['scroll', 'mousemove', 'touchstart', 'keydown'].forEach(function (e) {
+      window.addEventListener(e, function h() {
+        clearTimeout(t); _load();
+        ['scroll', 'mousemove', 'touchstart', 'keydown'].forEach(function (ev) { window.removeEventListener(ev, h); });
+      }, { once: true, passive: true });
+    });
+  }
+
+  function loadMicrosoftClarity() {
+    (function(c,l,a,r,i,t){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        appendScript(t);
+    })(window, document, "clarity", "script", "wjsnhc5fib");
+  }
+
+  function loadTawk() {
+    var loaded = false;
+    function _load() {
+      if (loaded || window.__ncTawkLoaded || document.querySelector('script[data-nc-tawk]')) return;
+      loaded = true;
+      window.__ncTawkLoaded = true;
+      var s1 = document.createElement('script');
+      s1.async = true;
+      s1.src = 'https://embed.tawk.to/681f5e1182f1331910514963/1iqt8ests';
+      s1.charset = 'UTF-8';
+      s1.setAttribute('crossorigin', '*');
+      s1.setAttribute('data-nc-tawk', '');
+      appendScript(s1);
+    }
+    var t = setTimeout(_load, 5000);
+    ['scroll', 'mousemove', 'touchstart', 'keydown'].forEach(function (e) {
+      window.addEventListener(e, function handler() {
+        clearTimeout(t); _load();
+        ['scroll', 'mousemove', 'touchstart', 'keydown'].forEach(function (ev) { window.removeEventListener(ev, handler); });
+      }, { once: true, passive: true });
+    });
+  }
+
+  function loadAll() {
+    loadGTM();
+    loadMicrosoftClarity();
+    loadTawk();
+  }
+
+  function onAccept() {
+    localStorage.setItem(CONSENT_KEY, 'accepted');
+    var banner = document.getElementById('nc-cookie-banner');
+    if (banner) banner.style.display = 'none';
+    loadAll();
+  }
+
+  function onDecline() {
+    localStorage.setItem(CONSENT_KEY, 'declined');
+    var banner = document.getElementById('nc-cookie-banner');
+    if (banner) banner.style.display = 'none';
+  }
+
+  function showBanner() {
+    function _show() {
+      var banner = document.getElementById('nc-cookie-banner');
+      if (!banner) return;
+      banner.style.display = 'block';
+      var acceptBtn = document.getElementById('nc-cookie-accept');
+      var declineBtn = document.getElementById('nc-cookie-decline');
+      if (acceptBtn) acceptBtn.addEventListener('click', onAccept);
+      if (declineBtn) declineBtn.addEventListener('click', onDecline);
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', _show);
+    } else {
+      _show();
+    }
+  }
+
+  // Called by the "Cookie settings" footer link
+  window.ncShowCookieBanner = function () {
+    localStorage.removeItem(CONSENT_KEY);
+    showBanner();
+  };
+
+  var consent = localStorage.getItem(CONSENT_KEY);
+  if (consent === 'accepted') {
+    loadAll();
+  } else if (!consent) {
+    showBanner();
+  }
+})();
+</script>

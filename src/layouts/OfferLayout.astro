@@ -1,0 +1,53 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import ArrowIcon from '../components/ArrowIcon.astro';
+import Analytics from '../components/Analytics.astro';
+import { Image } from 'astro:assets';
+import logo from '../assets/logo.png';
+import '../styles/global.css';
+interface Props { title: string; description: string; }
+const { title, description } = Astro.props;
+---
+<!doctype html>
+<html lang="en-GB">
+  <head><BaseHead {title} {description} /></head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <header class="offer-header"><div class="container site-pad header-inner">
+      <a href="/" aria-label="NC Digital home"><Image src={logo} alt="NC Digital" width={140} height={40} loading="eager" /></a>
+      <span class="header-location">Your local web designer in South Wales</span>
+      <a href="#quote" class="header-cta">Get my free quote <span aria-hidden="true"><ArrowIcon /></span></a>
+    </div></header>
+    <main id="main"><slot /></main>
+    <footer class="offer-footer"><div class="container site-pad footer-inner">
+      <div><strong>NC Digital</strong><p>Merthyr Tydfil, South Wales</p></div>
+      <a href="mailto:info@nc-digital.co.uk">info@nc-digital.co.uk</a>
+      <div class="footer-legal"><a href="/privacy-policy/">Privacy policy</a><span>© {new Date().getFullYear()} NC Digital</span></div>
+    </div></footer>
+    <Analytics loadChat={false} />
+  </body>
+</html>
+<style>
+  .offer-header { position: sticky; top: 0; z-index: 20; background: #0c1115f5; border-bottom: 1px solid #283039; backdrop-filter: blur(12px); }
+  .header-inner { min-height: 80px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .header-inner img { display: block; width: 140px; height: auto; }
+  .header-location { font-size: .75rem; color: #aeb7c1; }
+  .header-cta { padding: .65rem 1rem; border: 1px solid #726092; border-radius: 7px; color: #eee6ff; font-size: .8rem; font-weight: 600; display: flex; gap: 1.4rem; align-items: center; }
+  .header-cta:hover { background: #241d33; }
+  .offer-footer { padding: 2.5rem 0; border-top: 1px solid #283039; }
+  .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; font-size: .75rem; color: #aeb7c1; }
+  .footer-inner strong { color: #f5f4f7; }
+  .footer-inner p { margin: .25rem 0 0; }
+  .footer-inner a { color: #c9b2ff; }
+  .footer-legal { display: flex; flex-direction: column; gap: .3rem; }
+  .skip-link { position: fixed; left: 1rem; top: -100px; z-index: 30; padding: 1rem; background: white; color: #221733; }
+  .skip-link:focus { top: 1rem; }
+  @media (max-width: 760px) { .header-location { display: none; } .header-inner { min-height: 70px; } .header-inner img { width: 115px; } .header-cta { font-size: .72rem; gap: .65rem; white-space: nowrap; padding: .65rem .75rem; } .footer-inner { flex-wrap: wrap; } }
+  @media (max-width: 380px) { .header-inner img { width: 108px; } .header-cta { font-size: .7rem; padding: .65rem .75rem; gap: .5rem; } }
+</style>
+<style is:global>
+  body { margin: 0; }
+  :focus-visible { outline: 3px solid #bb98ff; outline-offset: 5px; }
+  [id] { scroll-margin-top: 100px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>

@@ -1,0 +1,130 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const staticPages = [
+  { href: '/', label: 'Home' },
+  { href: '/about/', label: 'About' },
+  { href: '/services/', label: 'Services' },
+  { href: '/portfolio/', label: 'Portfolio' },
+  { href: '/blog/', label: 'Blog' },
+  { href: '/contact/', label: 'Contact' },
+  { href: '/free-website-plan/', label: 'Free Website Plan' },
+  { href: '/privacy-policy/', label: 'Privacy Policy' },
+];
+
+const slugFromId = (id: string) => id.replace('/index.mdoc', '');
+const byLabel = (a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label);
+
+const [servicesCollection, portfolioCollection, blogCollection, locationsCollection] = await Promise.all([
+  getCollection('services'),
+  getCollection('portfolio'),
+  getCollection('blog'),
+  getCollection('locations'),
+]);
+
+const services = servicesCollection
+  .map((entry) => ({ href: `/services/${slugFromId(entry.id)}/`, label: entry.data.title }))
+  .sort(byLabel);
+
+const portfolio = portfolioCollection
+  .map((entry) => ({ href: `/portfolio/${slugFromId(entry.id)}/`, label: entry.data.title }))
+  .sort(byLabel);
+
+const blog = blogCollection
+  .map((entry) => ({ href: `/blog/${slugFromId(entry.id)}/`, label: entry.data.title }))
+  .sort(byLabel);
+
+const locations = locationsCollection
+  .filter((entry) => !entry.data.noindex)
+  .map((entry) => ({ slug: slugFromId(entry.id), label: entry.data.title }))
+  .filter((entry) => entry.slug !== 'seo-services-south-wales')
+  .map((entry) => ({ href: `/${entry.slug}/`, label: entry.label }))
+  .sort(byLabel);
+
+const groups = [
+  { title: 'Main Pages', links: staticPages },
+  { title: 'Services', links: services },
+  { title: 'Portfolio', links: portfolio },
+  { title: 'Location Pages', links: locations },
+  { title: 'Articles', links: blog },
+];
+---
+
+<BaseLayout
+  title="Sitemap | NC Digital"
+  description="HTML sitemap for NC Digital with links to service pages, location pages, portfolio projects, articles and core company pages."
+>
+
+  <section style="padding:5rem 0 3rem;">
+    <div class="container site-pad" style="text-align:center;">
+      <p class="eyebrow" style="margin-bottom:0.75rem;">Sitemap</p>
+      <h1 style="margin-bottom:1rem;">NC Digital sitemap</h1>
+      <p style="color:var(--text-muted); font-size:1.125rem; max-width:620px; line-height:1.7; margin:0 auto;">
+        Browse NC Digital pages, services, portfolio work, location pages and articles.
+      </p>
+    </div>
+  </section>
+
+  <section style="padding:2rem 0 5rem;">
+    <div class="container site-pad">
+      <div class="sitemap-groups">
+        {groups.map((group) => (
+          <section class="sitemap-group" aria-labelledby={`sitemap-${group.title.toLowerCase().replaceAll(' ', '-')}`}>
+            <h2 id={`sitemap-${group.title.toLowerCase().replaceAll(' ', '-')}`}>{group.title}</h2>
+            <ul>
+              {group.links.map((link) => (
+                <li><a href={link.href}>{link.label}</a></li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <style>
+    .sitemap-groups {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2.5rem 3rem;
+    }
+
+    .sitemap-group {
+      min-width: 0;
+    }
+
+    .sitemap-group h2 {
+      font-size: 1.125rem;
+      margin: 0 0 1rem;
+      color: var(--white);
+    }
+
+    .sitemap-group ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .sitemap-group a {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      line-height: 1.45;
+      transition: color 0.2s;
+    }
+
+    .sitemap-group a:hover {
+      color: var(--purple-light);
+    }
+
+    @media (max-width: 760px) {
+      .sitemap-groups {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+    }
+  </style>
+
+</BaseLayout>

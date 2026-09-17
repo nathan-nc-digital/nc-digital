@@ -25,6 +25,11 @@ Sentry.init({
     // POSTs to /cdn-cgi/zaraz/t fail as "TypeError: Load failed" on flaky
     // connections and surface as unhandled rejections from /cdn-cgi/zaraz/s.js.
     /\/cdn-cgi\/zaraz\//i,
+    // Facebook/Instagram Android in-app browser injects its own scripts under
+    // an iabjs:// scheme (e.g. iabjs://navigation_performance_logger_android).
+    // Its sendDataToNative -> Java postMessage bridge throws on beforeunload
+    // ("Java exception was raised during method invocation"). Not our code.
+    /^iabjs:\/\//i,
   ],
   beforeSend(event) {
     // Drop a third-party noise error seen on Mobile Safari: an unhandled
@@ -46,6 +51,18 @@ Sentry.init({
       );
       if (!fromOurCode) return null;
     }
+
+    // Drop errors caused by a browser extension monkey-patching window.fetch
+    // (ad blockers, ad-rewriting extensions, etc.). Seen as "Failed to fetch
+    // (ad.doubleclick.net)" thrown from a chrome-extension:// frame when the
+    // extension's replacement fetch breaks Google's own gtag.js ad ping. Any
+    // frame with a chrome-extension:// origin means the crash is in code we
+    // don't ship and can't fix.
+    const allFrames = event.exception?.values?.flatMap((v) => v.stacktrace?.frames ?? []) ?? [];
+    if (allFrames.some((f) => (f.filename ?? '').startsWith('chrome-extension://'))) {
+      return null;
+    }
+
     return event;
   },
 });

@@ -130,10 +130,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     (function () {
       const PRICING = {
         tiers: [
-          { key: '1',     label: '1 page',      base: 200, homepageOptional: false },
-          { key: '5-10',  label: '5–10 pages',  base: 599, withoutHomepage: 499, homepageOptional: true },
-          { key: '11-20', label: '11–20 pages', base: 699, withoutHomepage: 599, homepageOptional: true },
-          { key: '20+',   label: '20+ pages',   base: 899, withoutHomepage: 799, homepageOptional: true },
+          { key: '1',     label: '1 page',      base: 199, homepageOptional: false },
+          { key: '5-10',  label: '5–10 pages',  base: 699, withoutHomepage: 599, homepageOptional: true },
+          { key: '11-20', label: '11–20 pages', base: 799, withoutHomepage: 699, homepageOptional: true },
+          { key: '20+',   label: '20+ pages',   base: 999, withoutHomepage: 899, homepageOptional: true },
         ],
         addons: [
           { key: 'shop',    label: 'Online shop',        price: 500 },
@@ -141,7 +141,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           { key: 'logo',    label: 'New logo / branding', price: 200 },
         ],
         hosting: {
-          annual:  { label: 'Annual hosting & domain',  price: 240, period: 'year' },
+          annual:  { label: 'Annual hosting & domain',  price: 250, period: 'year' },
           monthly: { label: 'Monthly hosting & domain', price: 25,  period: 'month' },
         },
       };
@@ -193,6 +193,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         isSubmitting: false,
         error: '',
       };
+      const submissionNonce = crypto.randomUUID();
 
       document.addEventListener('click', function (e) {
         document.querySelectorAll('.qcc-info-btn.is-open').forEach(function (btn) {
@@ -419,7 +420,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         const form = document.createElement('div');
         form.className = 'qcc-question-form';
         const options = [
-          { value: 'annual',  label: 'Annual hosting & domain — £240/year' },
+          { value: 'annual',  label: 'Annual hosting & domain — £250/year' },
           { value: 'monthly', label: 'Monthly hosting & domain — £25/month' },
           { value: 'none',    label: "No thanks — I'll sort my own hosting & domain" },
         ];
@@ -622,13 +623,34 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           formData.append('subject', 'New Quote Calculator Lead — £' + breakdown.total + ' website build' + (hosting ? ' + hosting' : '') + ' estimate');
           formData.append('name', state.lead.name);
           formData.append('email', state.lead.email);
+          formData.append('phone', state.lead.phone);
           formData.append('message', message);
           formData.append('from_page', window.location.pathname);
+          formData.append('service', 'Website cost calculator');
+          formData.append('lead_source', 'website-cost-calculator');
+          formData.append('website_type', 'Website build — ' + (getTier(state.answers.pages)?.label || 'custom estimate'));
+          formData.append('calculator_build_total', '£' + breakdown.total + ' inc. VAT');
+          formData.append('calculator_hosting', hosting
+            ? hosting.label + ' — £' + hosting.price + '/' + hosting.period + ' inc. VAT'
+            : 'Not selected');
+          formData.append('calculator_breakdown', messageLines.join(' | '));
 
-          const res = await fetch('https://api.web3forms.com/submit', { method: 'POST', body: formData });
+          const configRes = await fetch('/api/enquiries/config', { cache: 'no-store' });
+          if (!configRes.ok) throw new Error('Could not check enquiry availability.');
+          const captureConfig = await configRes.json();
+          const fingerprint = submissionNonce + JSON.stringify(Object.fromEntries(formData.entries()));
+          const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(fingerprint));
+          const submissionKey = Array.from(new Uint8Array(digest), function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+          const payload = Object.fromEntries(formData.entries());
+          delete payload.access_key;
+          payload.company = state.lead.company || '';
+          payload.submission_key = submissionKey;
+          const res = captureConfig.enabled
+            ? await fetch('/api/enquiries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            : await fetch('https://api.web3forms.com/submit', { method: 'POST', body: formData });
           const data = await res.json();
 
-          if (!res.ok || !data.success) throw new Error(data.message || 'Submission failed.');
+          if (!res.ok || !data.success) throw new Error(data.error || data.message || 'Submission failed.');
 
           window.location.href = '/thank-you/';
           return;

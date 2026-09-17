@@ -1,0 +1,246 @@
+---
+import OfferLayout from '../layouts/OfferLayout.astro';
+import ArrowIcon from '../components/ArrowIcon.astro';
+import EnquiryForm from '../components/EnquiryForm.astro';
+import { Image } from 'astro:assets';
+import nathan from '../assets/nathan.webp';
+import framing from '../assets/portfolio/3d-framing.jpg';
+import davies from '../assets/portfolio/davies-property-development.png';
+import irEnergy from '../assets/portfolio/ir-energy.jpg';
+
+const projects = [
+  { name: '3D Framing', sector: 'Bespoke framing · Merthyr Tydfil', image: framing, slug: '3d-framing' },
+  { name: 'Davies Property Development', sector: 'Property development · South Wales', image: davies, slug: 'davies-property-development' },
+  { name: 'IR Energy', sector: 'Renewable energy · South Wales', image: irEnergy, slug: 'ir-energy' },
+];
+const included = [
+  { number: '01', title: 'Built around your business.', text: 'From a simple starter site to dedicated pages for your services, projects and team, we’ll plan a website that gives customers the information they need.' },
+  { number: '02', title: 'Full WordPress setup.', text: 'Your website designed and built on WordPress, with the setup taken care of. A proper foundation for your business online.' },
+  { number: '03', title: 'Premium plugins included.', text: 'A premium plugin package worth £300, installed and configured as part of your website build. Less setup for you, more value included.' },
+  { number: '04', title: 'Looks the part on every screen.', text: 'A design tailored to your business that works across phones, tablets and computers, so customers can browse wherever they are.' },
+  { number: '05', title: 'An easy way to enquire.', text: 'A contact form and clear contact details make the next step obvious when someone is ready to ask about your services.' },
+  { number: '06', title: 'Someone to guide you.', text: 'Work directly with Nathan from the first conversation to launch, with a walkthrough so you know how to use your new site.' },
+];
+const faqs = [
+  { q: 'What does the “from £170 + VAT” price cover?', a: 'The starting price covers a one-page WordPress website: a mobile-friendly design, full WordPress setup, a contact form and a premium plugin package worth £300 installed and configured. That’s £170 + VAT (£204 including VAT) for the one-page build. Larger websites are quoted separately around your pages and features. Any hosting, domain or ongoing costs are confirmed before work starts.' },
+  { q: 'What if I need a larger website?', a: 'That’s exactly what the free quote is for. We can plan separate pages for your services, an about page, a project gallery, testimonials and contact details, plus any extra features you need. Tell me about your business and I’ll recommend a structure and give you a clear quote for the full build.' },
+  { q: 'What is a one-page website?', a: 'It’s one scrolling page with sections for your business, services, work, reviews and contact details. Visitors can find the essentials in one place. It’s a good starting point for a small business that needs a professional online presence and a way to receive enquiries.' },
+  { q: 'What about hosting, a domain and plugin renewals?', a: 'I’ll confirm your hosting and domain arrangements, exactly which premium plugins are included, and any ongoing licence or renewal costs before you decide to go ahead. If you already have a domain or hosting, mention it when we speak.' },
+  { q: 'Do I need to supply the words and photos?', a: 'Send over your business details, services, logo and any photos you’d like to use. If you’re missing anything or need help with the wording, let me know and I’ll explain the options before we start.' },
+  { q: 'How long will it take?', a: 'A straightforward starter website is usually ready within 7–14 days once the brief and content are in place. Larger websites depend on the number of pages and features. We’ll agree a realistic timescale before the build starts.' },
+  { q: 'Can I update it or add more pages later?', a: 'Yes. Your website is built on WordPress, and I’ll show you how to manage your content. If you need more pages, an online shop or extra features, I can quote for those separately.' },
+  { q: 'Am I committing to anything by enquiring?', a: 'No. Send a few details and I’ll get back to you to talk through your website, answer your questions and confirm the costs. It’s a free conversation with no obligation to go ahead.' },
+];
+---
+
+<OfferLayout title="Websites from £170 + VAT | WordPress Web Design | NC Digital" description="WordPress websites for South Wales businesses, from £170 + VAT for one page. Larger business websites quoted to your needs. Get your free quote from Nathan.">
+  <section class="offer-hero">
+    <div class="container site-pad hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Small business. Big first impression.</p>
+        <h1>Your business.<br />Your new website.<br /><span>Ready for enquiries.</span></h1>
+        <p class="hero-intro">Professional WordPress websites built around your business — with space to showcase your services, your work and what makes you different.</p>
+        <p class="price-from">Websites from</p>
+        <div class="hero-price"><strong>£170</strong><span>+ VAT<small>From £204 including VAT</small></span></div>
+        <p class="price-scope">Starting price is for a one-page site. Larger websites quoted to your needs.</p>
+        <div class="plugin-note"><span class="plugin-icon" aria-hidden="true">+</span><div><strong>Premium plugins worth £300 included</strong><span>Full WordPress setup. Installed and configured for you.</span></div></div>
+        <p class="price-note">Hosting, domain and any ongoing costs confirmed before we start.</p>
+        <a class="offer-button hero-button" href="#quote">Get my free website quote <span aria-hidden="true"><ArrowIcon /></span></a>
+        <div class="hero-trust"><Image src={nathan} alt="Nathan, your web designer" width={52} height={52} loading="eager" /><div><strong>Built by Nathan. Based in South Wales.</strong><a href="#reviews"><span class="stars" aria-label="Five stars">★★★★★</span> Read what my clients say <span aria-hidden="true"><ArrowIcon /></span></a></div></div>
+      </div>
+      <div class="quote-wrap">
+        <div id="quote" class="quote-card">
+          <div class="quote-kicker"><span aria-hidden="true"><ArrowIcon /></span> YOUR WEBSITE STARTS HERE</div>
+          <h2>Let’s talk about<br />your new website.</h2>
+          <p class="quote-intro">Tell me about your business. I’ll help you choose the right pages and give you a clear quote.</p>
+          <EnquiryForm id="lp-web-design-form" subject="New website enquiry — websites from £170 + VAT (Meta)" websiteOffer />
+          <p class="form-reassurance">Free quote. No obligation. You’ll speak directly to Nathan.</p>
+          <p class="form-privacy">Your details are used to respond to your enquiry. <a href="/privacy-policy/">Privacy policy</a></p>
+        </div>
+        <p class="email-alternative">Prefer email? <a href="mailto:nathan@nc-digital.co.uk?subject=Website%20design%20enquiry">Email Nathan directly <span aria-hidden="true"><ArrowIcon /></span></a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="website-options section-space"><div class="container site-pad">
+    <div class="section-heading"><div><p class="eyebrow">Start with what your business needs</p><h2>More to offer?<br />Give it room to shine.</h2></div><p>If you have several services, a portfolio of work or a story to tell, a larger website gives each one the space it deserves.</p></div>
+    <div class="options-grid">
+      <article class="website-option starter-option"><p class="option-label">A simple starting point</p><h3>One-page starter site</h3><p>Your business essentials on one scrolling page. A straightforward way to introduce yourself and let customers get in touch.</p><p class="option-price">From £170 <span>+ VAT</span></p><p class="option-price-note">From £204 including VAT · One-page build</p><a href="#quote" class="text-link" data-website-type="One-page starter website">Ask about a starter site <span aria-hidden="true"><ArrowIcon /></span></a></article>
+      <article class="website-option business-option"><p class="option-label">For businesses with more to show</p><h3>A complete business website</h3><p>A website with dedicated pages that help customers explore your services, see the quality of your work and feel confident contacting you.</p><ul><li>Separate pages for your key services</li><li>Space for your projects, reviews and team</li><li>A clear journey from first visit to enquiry</li><li>Room for extra features as your business grows</li></ul><p class="business-price">Quoted around your pages, features and goals.</p><a href="#quote" class="offer-button" data-website-type="Multi-page business website">Get a quote for my business <span aria-hidden="true"><ArrowIcon /></span></a></article>
+    </div>
+  </div></section>
+
+  <section id="work" class="work-section section-space"><div class="container site-pad">
+    <div class="section-heading"><div><p class="eyebrow">A feel for what I build</p><h2>Local businesses.<br />Real websites.</h2></div><p>From skilled trades to growing businesses, here’s some of my recent work. Each project has its own brief and budget.</p></div>
+    <div class="project-grid">{projects.map((project) => <a class="project" href={`/portfolio/${project.slug}/`} target="_blank" rel="noopener" aria-label={`${project.name} case study (opens in a new tab)`}>
+      <div class="project-image"><div class="browser-bar" aria-hidden="true"><i></i><i></i><i></i><span>{project.name}</span></div><Image src={project.image} alt={`${project.name} website designed by NC Digital`} width={680} height={425} loading="lazy" /></div>
+      <div class="project-caption"><div><h3>{project.name}</h3><p>{project.sector}</p></div><span aria-hidden="true"><ArrowIcon /></span></div>
+    </a>)}</div>
+    <div id="reviews" class="client-quote"><div><span class="stars" aria-label="Five-star Google review">★★★★★</span><p>Google review</p></div><figure><blockquote>“Nathan was quick and efficient and explained how to carry on going forward with my new site. Excellent value for money and my new site looks so much more professional.”</blockquote><figcaption>Chris Davies <span>— Davies Property Development</span></figcaption></figure></div>
+  </div></section>
+
+  <section class="included-section section-space"><div class="container site-pad">
+    <div class="section-heading"><div><p class="eyebrow">More than just good looks</p><h2>Everything to make<br />your first impression count.</h2></div><p>A clear, professional home for your business online, with the WordPress setup handled for you.</p></div>
+    <div class="included-grid">{included.map(item => <article class="included-item"><span class="item-number">{item.number}</span><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
+    <div class="package-summary"><div><strong>Your business. The right website.</strong><span>One-page sites from £170 + VAT. Larger websites quoted individually.</span></div><a class="offer-button" href="#quote">Let’s talk about my website <span aria-hidden="true"><ArrowIcon /></span></a></div>
+  </div></section>
+
+  <section class="personal-section section-space"><div class="container site-pad personal-grid">
+    <div class="portrait-wrap"><Image src={nathan} alt="Nathan from NC Digital in Merthyr Tydfil" width={560} height={620} loading="lazy" /><div class="portrait-caption"><strong>Nathan</strong><span>Your designer, from hello to launch.</span></div></div>
+    <div class="personal-copy"><p class="eyebrow">A real person behind your website</p><h2>Hi, I’m Nathan.<br />Let’s get your business online.</h2><p>I’m a web designer based in Merthyr Tydfil. I help small businesses across South Wales get a website they’re proud to share — and give their customers an easy way to get in touch.</p><p>You’ll deal directly with me. I’ll help you work out what you need, explain the costs and guide you through the build.</p><ol class="process"><li><span>01</span><div><h3>Tell me about your business</h3><p>A few details are enough to start a conversation.</p></div></li><li><span>02</span><div><h3>We agree the details</h3><p>Your page, content, costs and timescale, all explained before we start.</p></div></li><li><span>03</span><div><h3>I build it. You check it. We launch.</h3><p>Review your new website with me before it goes live.</p></div></li></ol><a class="text-link" href="#quote">Start with a free, no-obligation quote <span aria-hidden="true"><ArrowIcon /></span></a></div>
+  </div></section>
+
+  <section class="faq-section section-space"><div class="container site-pad faq-grid"><div><p class="eyebrow">A few things you might be wondering</p><h2>Before you<br />get in touch.</h2><p class="faq-aside">Not sure if one page is enough?<br />Tell me what you need and I’ll help you work it out.</p><a href="#quote" class="text-link">Ask Nathan <span aria-hidden="true"><ArrowIcon /></span></a></div><div class="faq-list">{faqs.map(({ q, a }) => <details><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div></div></section>
+
+  <section class="closing-section"><div class="container site-pad"><p class="eyebrow">Let’s make it happen</p><h2>Your next customer<br />could start with your website.</h2><p>Websites from £170 + VAT for a one-page site.<br />Let’s talk about the right website for your business.</p><a class="offer-button" href="#quote">Get my free website quote <span aria-hidden="true"><ArrowIcon /></span></a><span class="closing-note">A friendly conversation. No obligation.</span></div></section>
+
+  <script is:inline>
+    document.addEventListener('nc-enquiry-success', function (event) {
+      if (event.detail && event.detail.formId === 'lp-web-design-form' && typeof window.fbq === 'function') {
+        window.fbq('track', 'Lead', { content_name: 'Websites from £170 + VAT (Meta)' });
+      }
+    });
+    document.querySelectorAll('[data-website-type]').forEach(function (link) {
+      link.addEventListener('click', function () {
+        var field = document.querySelector('#lp-web-design-form [name="website_type"]');
+        if (field) field.value = link.dataset.websiteType;
+      });
+    });
+  </script>
+</OfferLayout>
+
+<style>
+  .offer-hero { padding: 4.25rem 0 4rem; background: radial-gradient(ellipse at 16% 0%, #35224555, transparent 60%); }
+  .hero-grid { display: grid; grid-template-columns: 1.13fr 1fr; gap: clamp(2rem, 5vw, 5rem); align-items: start; }
+  .eyebrow { margin: 0 0 1.1rem; font-size: .65rem; letter-spacing: .14em; }
+  .hero-copy > .eyebrow { display: flex; align-items: center; gap: .6rem; }
+  .eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: #bd9bff; box-shadow: 0 0 14px #8750f780; }
+  h1 { font-size: clamp(2.5rem, 4.2vw, 3.6rem); letter-spacing: -.055em; line-height: 1.1; margin: 0 0 1.3rem; }
+  h1 > span { color: #bc9bff; }
+  .hero-intro { max-width: 32rem; color: #b8bfc8; font-size: .95rem; line-height: 1.75; margin: 0 0 1.35rem; }
+  .hero-price { display: flex; align-items: center; gap: .9rem; margin-bottom: 1rem; }
+  .hero-price > strong { font-size: 4.25rem; color: #fff; letter-spacing: -.065em; font-weight: 600; line-height: 1.05; }
+  .hero-price > span { font-size: .85rem; color: #f0edf6; }
+  .hero-price small { display: block; color: #aeb7c1; font-size: .65rem; margin-top: .1rem; }
+  .price-from { margin: 0 0 .3rem; font-size: .92rem; color: #eee7f8; font-weight: 500; }
+  .price-scope { font-size: .72rem; line-height: 1.65; color: #d6c5eb; margin: -.35rem 0 1rem; max-width: 30rem; }
+  .plugin-note { display: flex; align-items: center; gap: .8rem; }
+  .plugin-icon { background: #2d223c; border: 1px solid #654386; border-radius: 9px; width: 36px; height: 36px; display: grid; place-items: center; color: #c7a8ff; font-size: 1.4rem; flex-shrink: 0; }
+  .plugin-note strong { display: block; color: #e4d5ff; font-size: .83rem; }
+  .plugin-note div > span { display: block; color: #afb5c0; font-size: .68rem; margin-top: .2rem; }
+  .price-note { color: #a7aeb9; font-size: .65rem; max-width: 27rem; line-height: 1.7; margin: .9rem 0 1.35rem; }
+  .offer-button { display: inline-flex; align-items: center; justify-content: space-between; gap: 1.5rem; background: #8750f7; color: white; padding: .95rem 1.25rem; border-radius: 7px; font-size: .82rem; font-weight: 600; transition: background .15s; }
+  .offer-button:hover { color: white; background: #743cde; }
+  .offer-button > span { font-size: 1.1rem; }
+  .hero-trust { display: flex; align-items: center; gap: .75rem; margin-top: 1.55rem; }
+  .hero-trust img { width: 44px; height: 44px; object-fit: cover; object-position: center 28%; border-radius: 50%; border: 2px solid #50465e; }
+  .hero-trust strong { display: block; font-size: .65rem; font-weight: 500; color: #d9dce3; }
+  .hero-trust a { display: inline-flex; flex-wrap: wrap; gap: .5rem; color: #aeb7c1; font-size: .63rem; margin-top: .25rem; }
+  .stars { color: #f4c568; letter-spacing: .1em; }
+  .quote-card { background: #f5f2fa; color: #302a3d; border-radius: 14px; padding: 1.9rem; box-shadow: 0 18px 70px #0003; border: 1px solid #fff; --bg: #fff; --white: #211d2a; --text-muted: #5e586b; --border: #d6d0de; --purple: #7442da; --purple-light: #6532c7; }
+  .quote-kicker { font-size: .6rem; font-weight: 600; letter-spacing: .13em; display: flex; gap: .6rem; align-items: center; color: #6d41b1; margin-bottom: .9rem; }
+  .quote-kicker > span { display: grid; place-items: center; border: 1px solid #d5c3ed; width: 27px; height: 27px; border-radius: 50%; font-size: 1rem; }
+  .quote-card h2 { color: #211d2a; font-size: 1.85rem; line-height: 1.17; letter-spacing: -.045em; margin: 0 0 .7rem; }
+  .quote-intro { font-size: .78rem; line-height: 1.65; color: #645c70; margin: 0 0 1.3rem; }
+  .quote-card :global(.enq-form) { gap: .85rem; }
+  .quote-card :global(.enq-field label) { font-size: .7rem; color: #423b4e; }
+  .quote-card :global(.enq-field input), .quote-card :global(.enq-field textarea), .quote-card :global(.enq-field select) { padding: .65rem .8rem; font-size: 16px; border-radius: 6px; }
+  .quote-card :global(.enq-field select option) { background: #fff; color: #211d2a; }
+  .quote-card :global(.enq-field textarea) { min-height: 78px; }
+  .quote-card :global(.enq-field input::placeholder), .quote-card :global(.enq-field textarea::placeholder) { color: #756d80; opacity: 1; font-size: .75rem; }
+  .quote-card :global(.enq-submit) { background: #7442da; color: #fff; font-size: .79rem; padding: .95rem .6rem; margin-top: .25rem; }
+  .quote-card :global(.enq-submit:hover) { background: #6232bf; }
+  .quote-card :global(.enq-error), .quote-card :global(.enq-error a) { color: #9c2337; }
+  .quote-card :global(.enq-success) { padding: 2rem 0; }
+  .form-reassurance { color: #51465f; font-size: .6rem; text-align: center; margin: .85rem 0 .5rem; }
+  .form-privacy { font-size: .57rem; line-height: 1.65; color: #706679; margin: 0; text-align: center; }
+  .form-privacy a { color: #5d329c; text-decoration: underline; text-underline-offset: 2px; }
+  .email-alternative { font-size: .67rem; text-align: center; color: #aeb7c1; margin: 1rem 0 0; }
+  .email-alternative a { color: #cab0ff; }
+  .section-space { padding: 4.75rem 0; border-top: 1px solid #283039; }
+  .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 3rem; margin-bottom: 2.2rem; }
+  .section-heading h2, .personal-copy h2, .faq-grid h2 { margin: 0; font-size: clamp(1.8rem, 3vw, 2.55rem); letter-spacing: -.045em; line-height: 1.15; }
+  .section-heading > p { max-width: 22rem; color: #aeb7c1; font-size: .8rem; line-height: 1.8; margin: 0; }
+  .options-grid { display: grid; grid-template-columns: .85fr 1.15fr; gap: 1.5rem; align-items: stretch; }
+  .website-option { padding: 2rem; border: 1px solid #353b45; border-radius: 12px; }
+  .option-label { color: #b4a5c7; font-size: .65rem; margin: 0 0 1rem; }
+  .website-option h3 { font-size: 1.45rem; margin: 0 0 1rem; line-height: 1.25; }
+  .website-option > p:not([class]) { color: #b8bfc8; font-size: .8rem; line-height: 1.85; margin: 0 0 1.5rem; }
+  .option-price { color: #f1eaf9; font-size: 1.7rem; margin: 1.7rem 0 .25rem; font-weight: 600; }
+  .option-price > span { font-size: .8rem; font-weight: 400; }
+  .option-price-note { color: #aeb7c1; font-size: .65rem; margin: 0 0 1.5rem; }
+  .business-option { background: #211b2d; border-color: #7953a7; }
+  .business-option .option-label { color: #cfb4ff; }
+  .business-option ul { margin: 0 0 1.4rem; padding-left: 1.15rem; color: #e0d5ee; font-size: .78rem; line-height: 1.9; }
+  .business-option li::marker { color: #bc9bff; }
+  .business-price { color: #cbb7e3; font-size: .73rem; margin: 0 0 1rem; }
+  .project-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+  .project-image { background: #1e252c; border: 1px solid #353b45; border-radius: 9px; overflow: hidden; transition: border-color .2s, transform .2s; }
+  .project:hover .project-image { border-color: #bc9bff; transform: translateY(-3px); }
+  .browser-bar { height: 30px; display: flex; gap: 4px; align-items: center; padding: 0 10px; }
+  .browser-bar i { width: 5px; height: 5px; background: #5e6672; border-radius: 50%; }
+  .browser-bar > span { font-size: 8px; color: #bbc1c9; margin-left: 10px; }
+  .project-image img { width: 100%; height: auto; aspect-ratio: 1.6; object-fit: cover; object-position: top; display: block; }
+  .project-caption { display: flex; justify-content: space-between; gap: .5rem; padding-top: 1rem; }
+  .project-caption h3 { font-size: .85rem; line-height: 1.4; letter-spacing: -.02em; margin: 0 0 .25rem; }
+  .project-caption p { color: #aeb7c1; font-size: .6rem; margin: 0; }
+  .project-caption > span { color: #b99af2; font-size: 1.1rem; }
+  .client-quote { display: grid; grid-template-columns: 150px 1fr; gap: 2rem; padding: 2rem 0 0; margin-top: 2.25rem; border-top: 1px solid #283039; }
+  .client-quote > div > p { font-size: .65rem; color: #9ba7b5; margin: .4rem 0 0; }
+  .client-quote figure { margin: 0; }
+  blockquote { margin: 0 0 .8rem; color: #e2dce9; font-size: 1rem; line-height: 1.8; }
+  figcaption { font-size: .65rem; color: #eee9f7; }
+  figcaption > span { color: #aeb7c1; }
+  .included-section { background: #11171d; }
+  .included-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 2.5rem; }
+  .included-item { padding: 1.6rem 0; border-top: 1px solid #33353f; }
+  .item-number { color: #bd9bff; font-size: .65rem; display: block; margin-bottom: 1.2rem; }
+  .included-item h3 { margin: 0 0 .75rem; font-size: .95rem; line-height: 1.4; }
+  .included-item p { margin: 0; color: #aeb7c1; font-size: .77rem; line-height: 1.85; }
+  .package-summary { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; justify-content: space-between; margin-top: 1.5rem; padding: 1.5rem; border-radius: 10px; background: #211b2d; border: 1px solid #4c3a65; }
+  .package-summary strong { display: block; color: #f0e8fd; font-size: .88rem; }
+  .package-summary div > span { display: block; color: #c1addc; font-size: .65rem; margin-top: .3rem; }
+  .package-summary > p { font-size: 1.8rem; color: #f5f0ff; margin: 0; font-weight: 600; letter-spacing: -.04em; }
+  .package-summary > p > span { font-size: .65rem; font-weight: 400; letter-spacing: 0; }
+  .package-summary .offer-button { font-size: .7rem; }
+  .personal-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 4rem; align-items: center; }
+  .portrait-wrap { position: relative; border-radius: 12px; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, #645079, #241d30 75%); }
+  .portrait-wrap > img { width: 100%; height: auto; aspect-ratio: .88; object-fit: cover; object-position: center; display: block; }
+  .portrait-caption { position: absolute; bottom: 0; left: 0; right: 0; padding: 3.5rem 1.5rem 1.5rem; background: linear-gradient(transparent, #08100ce8); color: white; }
+  .portrait-caption strong { display: block; font-size: 1.4rem; }
+  .portrait-caption > span { font-size: .7rem; }
+  .personal-copy > p:not(.eyebrow) { color: #aeb7c1; font-size: .8rem; line-height: 1.85; margin: 1.25rem 0 0; }
+  .process { list-style: none; padding: 0; margin: 1.75rem 0; }
+  .process li { display: flex; align-items: start; gap: 1rem; padding: .85rem 0; border-top: 1px solid #283039; }
+  .process li > span { color: #bd9bff; font-size: .65rem; padding-top: .15rem; }
+  .process h3 { font-size: .8rem; margin: 0 0 .4rem; }
+  .process p { font-size: .7rem; color: #aeb7c1; margin: 0; }
+  .text-link { color: #c4a4ff; font-size: .78rem; font-weight: 600; text-decoration: underline; text-underline-offset: 5px; }
+  .faq-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 4rem; }
+  .faq-aside { color: #aeb7c1; font-size: .8rem; line-height: 1.8; margin: 1.4rem 0; }
+  .faq-list details { border-top: 1px solid #333943; }
+  .faq-list details:last-child { border-bottom: 1px solid #333943; }
+  summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer; list-style: none; font-size: .83rem; font-weight: 500; color: #eee9f7; padding: 1.2rem 0; }
+  summary::-webkit-details-marker { display: none; }
+  summary > span { color: #bd9bff; font-size: 1.2rem; flex-shrink: 0; transition: transform .2s; }
+  details[open] summary > span { transform: rotate(45deg); }
+  details > p { margin: 0 0 1.3rem; font-size: .77rem; color: #aeb7c1; line-height: 1.85; }
+  .closing-section { text-align: center; padding: 4.75rem 0; border-top: 1px solid #3b2a54; background: radial-gradient(ellipse at 50% 100%, #43216d66, transparent 75%), #15121c; }
+  .closing-section h2 { font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1.15; letter-spacing: -.045em; margin: 0 0 1.3rem; }
+  .closing-section p:not(.eyebrow) { font-size: .85rem; line-height: 1.85; color: #c2b6d2; margin: 0 0 1.75rem; }
+  .closing-note { display: block; font-size: .65rem; color: #b5a7c5; margin-top: 1rem; }
+  @media (max-width: 1000px) { .hero-grid { gap: 2rem; grid-template-columns: 1fr 1fr; } h1 { font-size: 2.6rem; } .quote-card { padding: 1.5rem; } .personal-grid, .faq-grid { gap: 2.5rem; } .project-grid { gap: 1rem; } }
+  @media (max-width: 900px) {
+    .options-grid { grid-template-columns: 1fr; } .business-option { grid-row: 1; } .website-option { padding: 1.5rem; }
+    .offer-hero { padding: 2.25rem 0 3rem; } .hero-grid { grid-template-columns: 1fr; gap: 2.5rem; } h1 { font-size: clamp(2.25rem, 6.8vw, 3.25rem); } .hero-intro { max-width: 35rem; } .hero-price > strong { font-size: 3.7rem; } .hero-trust { margin-top: 1.25rem; } .hero-button { width: 100%; max-width: 28rem; } .quote-card { padding: 1.5rem; }
+    .section-space { padding: 3.25rem 0; } .section-heading { display: block; margin-bottom: 1.75rem; } .section-heading > p { margin-top: 1rem; max-width: 32rem; }
+    .project-grid { grid-template-columns: 1fr; gap: 1.8rem; } .project-image img { aspect-ratio: 1.8; } .project-caption h3 { font-size: .95rem; } .project-caption p { font-size: .7rem; }
+    .client-quote { grid-template-columns: 1fr; gap: 1rem; } .client-quote > div { display: flex; gap: .8rem; align-items: center; } .client-quote > div > p { margin: 0; } blockquote { font-size: .9rem; }
+    .included-grid { grid-template-columns: 1fr 1fr; gap: 0 1.5rem; } .package-summary { gap: 1rem; } .package-summary .offer-button { width: 100%; }
+    .personal-grid, .faq-grid { grid-template-columns: 1fr; gap: 2rem; } .portrait-wrap { max-width: 430px; } .portrait-wrap > img { aspect-ratio: 1.1; object-position: center 35%; }
+    .closing-section { padding: 3.5rem 0; }
+  }
+  @media (max-width: 600px) { .offer-hero { padding-top: 1.7rem; } .hero-intro { font-size: .86rem; margin-bottom: 1rem; } h1 { font-size: 2.1rem; margin-bottom: 1rem; } .hero-copy > .eyebrow { margin-bottom: .8rem; } }
+  @media (max-width: 400px) { .quote-card { padding: 1.1rem; } .hero-copy > .eyebrow { font-size: .57rem; } .plugin-note strong { font-size: .73rem; } .included-grid { grid-template-columns: 1fr; } .quote-card h2 { font-size: 1.65rem; } }
+  @media (prefers-reduced-motion: reduce) { .project-image, summary > span { transition: none; } .project:hover .project-image { transform: none; } }
+</style>

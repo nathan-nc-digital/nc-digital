@@ -1,7 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import HeroOrbs from '../../components/HeroOrbs.astro';
+import ReviewsStrip from '../../components/ReviewsStrip.astro';
+import JsonLD from '../../components/JsonLD.astro';
 import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
 
 export const prerender = true;
 
@@ -16,10 +18,124 @@ export async function getStaticPaths() {
 const { service } = Astro.props;
 
 if (!service) {
-  return Astro.redirect('/services');
+  return Astro.redirect('/services/');
 }
 
 const { Content } = await render(service);
+
+// Pull portfolio thumbnails — different set per service
+const portfolioThumbs = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/portfolio/*.{jpg,jpeg,png,webp}',
+  { eager: true }
+);
+const allThumbs = Object.values(portfolioThumbs).map(m => m.default);
+const slug = service.id.replace('/index.mdoc', '');
+const offsets: Record<string, number> = {
+  'web-development':                    0,
+  'web-design':                         4,
+  'local-seo-google-ranking':           7,
+  'website-hosting-security':           2,
+  'website-maintenance-packages':       5,
+  'managed-starter-websites':           1,
+  'logo-design':                        6,
+};
+const offset = offsets[slug] ?? 0;
+const thumbs = [0, 1, 2].map(i => allThumbs[(offset + i) % allThumbs.length]);
+
+const thumbAlts: Record<string, [string, string, string]> = {
+  'web-design':                        ['Custom web design for South Wales small business', 'Professional website design by NC Digital', 'Small business website designed in South Wales'],
+  'web-development':                   ['Custom website development project by NC Digital', 'Bespoke web development for South Wales business', 'Professional website built by NC Digital'],
+  'local-seo-google-ranking':          ['Local SEO results for South Wales business', 'Google ranking improvement for local business', 'SEO campaign results by NC Digital South Wales'],
+  'website-hosting-security':          ['Managed website hosting for South Wales business', 'Secure website hosting and SSL by NC Digital', 'Fast managed hosting for small business website'],
+  'website-maintenance-packages':      ['Website maintenance and updates by NC Digital', 'Ongoing website care for South Wales business', 'Professional website support and maintenance'],
+  'managed-starter-websites':          ['Managed starter website for South Wales business', 'Affordable small business website by NC Digital', 'Managed website with hosting and support included'],
+  'logo-design':                       ['Logo design for South Wales small business', 'Professional brand identity by NC Digital', 'Business logo design and branding South Wales'],
+  'ecommerce-development':             ['Ecommerce website development by NC Digital', 'Online shop built for South Wales business', 'Custom ecommerce store design and development'],
+};
+
+const managedStarterSiteInclusions = [
+  'Professionally built website',
+  'Mobile-responsive design',
+  'Custom domain included',
+  'Fast hosting with SSL',
+  'Daily backups',
+  'Contact & enquiry forms',
+  'Google Maps integration',
+  'Google Analytics setup',
+  'Social media links',
+  'Testimonials section',
+  'Case studies',
+  'Small content changes included',
+  'Ongoing technical management',
+  'SEO foundations on every page',
+];
+
+const managedStarterPlans = [
+  {
+    name: 'Starter',
+    price: '£20',
+    pages: '5 pages',
+    note: 'Best for getting online and growing steadily.',
+  },
+  {
+    name: 'Growth',
+    price: '£35',
+    pages: '10 pages',
+    note: 'Best for service-area growth and regular content.',
+    featured: true,
+  },
+  {
+    name: 'Scale',
+    price: '£50',
+    pages: 'Unlimited',
+    note: 'Best for faster expansion across services and locations.',
+  },
+];
+
+const maintenancePlans = [
+  {
+    name: 'Essential',
+    price: '£50',
+    support: '30 min / month',
+    note: 'Best for small businesses who need reliable maintenance without the hassle.',
+    features: [
+      'Weekly core, theme & plugin updates',
+      'Security scans & vulnerability monitoring',
+      'Daily cloud backups with 1-click restore',
+      'Uptime monitoring',
+      'Link monitoring',
+      'Monthly performance & security report',
+      'Reduced hourly rate for extra work',
+    ],
+  },
+  {
+    name: 'Growth',
+    price: '£75',
+    support: '1 hour / month',
+    note: 'Best for businesses that want their website to grow alongside their business.',
+    featured: true,
+    features: [
+      'Everything in Essential',
+      'Monthly basic SEO checks',
+      'Monthly performance checks & speed optimisation',
+      'Priority support',
+      '1 new page per month',
+      '1 blog post or case study per month',
+    ],
+  },
+  {
+    name: 'Pro',
+    price: '£99',
+    support: '1.5 hours / month',
+    note: 'Best for businesses that depend on their website and want ongoing SEO growth.',
+    features: [
+      'Everything in Essential & Growth',
+      'Monthly advanced SEO health check',
+      '2 new pages per month',
+      '2 blog posts or case studies per month',
+    ],
+  },
+];
 ---
 
 <BaseLayout
@@ -27,33 +143,184 @@ const { Content } = await render(service);
   description={service.data.metaDescription || service.data.description}
 >
 
-  <section style="padding:4rem 0 3rem; position:relative; overflow:hidden;">
-    <HeroOrbs />
-    <div class="container site-pad" style="position:relative; z-index:1;">
-      <a href="/services" style="color:var(--text-muted); font-size:0.875rem; display:inline-flex; align-items:center; gap:0.375rem; margin-bottom:2rem;">
-        ← All services
-      </a>
-      <div style="text-align:center;">
-        <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Our services</p>
-        <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:640px; margin-left:auto; margin-right:auto;">{service.data.headline}</h1>
-        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin:0 auto 2rem;">
-          {service.data.description}
-        </p>
-        <a data-animate="fade-up" href="/contact" class="btn-primary">Get a quote →</a>
+  <JsonLD schema={{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://nc-digital.co.uk/" },
+      { "@type": "ListItem", "position": 2, "name": "Services", "item": "https://nc-digital.co.uk/services/" },
+      { "@type": "ListItem", "position": 3, "name": service.data.title, "item": Astro.url.href }
+    ]
+  }} />
+
+  <JsonLD schema={{
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": service.data.title,
+    "description": service.data.description,
+    "url": Astro.url.href,
+    "provider": {
+      "@type": "LocalBusiness",
+      "@id": "https://nc-digital.co.uk/#localbusiness"
+    },
+    "areaServed": [
+      { "@type": "City", "name": "Merthyr Tydfil" },
+      { "@type": "City", "name": "Cardiff" },
+      { "@type": "City", "name": "Swansea" },
+      { "@type": "City", "name": "Newport" },
+      { "@type": "AdministrativeArea", "name": "South Wales" }
+    ]
+  }} />
+
+  <!-- Hero -->
+  <section class="svc-hero">
+    <div class="container site-pad" style="text-align:center;">
+      <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Our services</p>
+      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:820px; margin-left:auto; margin-right:auto;">{service.data.headline}</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:600px; line-height:1.7; margin:0 auto 2rem;">
+        {service.data.description}
+      </p>
+      <div data-animate="fade-up" style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <a href="/contact/" class="btn-primary">Get a quote →</a>
+        <a href="/portfolio/" class="btn-outline">See our work</a>
       </div>
     </div>
   </section>
 
-  <section style="padding:3rem 0;">
+  <!-- Portfolio image strip -->
+  {thumbs.length > 0 && (
+    <section style="padding:0 0 3rem;">
+      <div class="container site-pad">
+        <div class="thumb-strip">
+          {thumbs.map((img, i) => (
+            <a href="/portfolio/" class="thumb-item">
+              <Image
+                src={img}
+                alt={thumbAlts[slug]?.[i] ?? `NC Digital ${service.data.title} project ${i + 1}`}
+                width={480}
+                height={300}
+                class="thumb-img"
+              />
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {slug === 'managed-starter-websites' && (
+    <section class="pricing-section">
+      <div class="container site-pad">
+        <div class="pricing-header">
+          <p class="eyebrow">Website plans</p>
+          <h2>Choose how quickly you want your website to grow</h2>
+          <p>
+            Every tier includes the full managed website package. The price changes based on how many new pages you want added each month.
+          </p>
+        </div>
+
+        <div class="pricing-grid">
+          {managedStarterPlans.map((plan) => (
+            <article class:list={['pricing-card', plan.featured && 'pricing-card-featured']}>
+              {plan.featured && <span class="pricing-badge">Most popular</span>}
+              <div class="pricing-card-head">
+                <h3>{plan.name}</h3>
+                <div class="pricing-price">
+                  <span>{plan.price}</span>
+                  <small>/month inc. VAT</small>
+                </div>
+                <p>{plan.note}</p>
+              </div>
+
+              <div class="pricing-includes">
+                <p>Included website package</p>
+                <ul>
+                  {managedStarterSiteInclusions.map((item) => (
+                    <li>
+                      <span>✓</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div class="pricing-pages">
+                <span>New pages added each month</span>
+                <strong>{plan.pages}</strong>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <p class="pricing-note">
+          Monthly page additions are included with your Managed Starter Website tier and sit outside any separate local SEO plan.
+        </p>
+      </div>
+    </section>
+  )}
+
+  {slug === 'website-maintenance-packages' && (
+    <section class="pricing-section">
+      <div class="container site-pad">
+        <div class="pricing-header">
+          <p class="eyebrow">Maintenance plans</p>
+          <h2>Choose the right level of cover for your business</h2>
+          <p>
+            All plans include core security, updates, backups, and monitoring. The price changes based on how much support and growth activity you need each month.
+          </p>
+        </div>
+
+        <div class="pricing-grid">
+          {maintenancePlans.map((plan) => (
+            <article class:list={['pricing-card', plan.featured && 'pricing-card-featured']}>
+              {plan.featured && <span class="pricing-badge">Most popular</span>}
+              <div class="pricing-card-head">
+                <h3>{plan.name}</h3>
+                <div class="pricing-price">
+                  <span>{plan.price}</span>
+                  <small>/month</small>
+                </div>
+                <p>{plan.note}</p>
+              </div>
+
+              <div class="pricing-includes">
+                <p>What's included</p>
+                <ul>
+                  {plan.features.map((item) => (
+                    <li>
+                      <span>✓</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div class="pricing-pages">
+                <span>Support time included</span>
+                <strong>{plan.support}</strong>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <p class="pricing-note">
+          All plans are rolling monthly — no long contracts. <a href="/contact/" style="color:var(--purple);">Get in touch</a> to get started or ask any questions.
+        </p>
+      </div>
+    </section>
+  )}
+
+  <!-- Content + sidebar -->
+  <section style="padding:1rem 0 5rem;">
     <div class="container site-pad layout-sidebar">
 
-      <div data-animate="fade-up" style="color:var(--text); line-height:1.8; font-size:1rem;">
+      <div data-animate="fade-up" class="svc-prose">
         <Content />
       </div>
 
       <aside>
-        <div data-animate="fade-in" class="card">
-          <h3 style="font-size:1rem; font-weight:700; color:var(--white); margin-bottom:1rem;">What's included</h3>
+        <div data-animate="fade-in" class="card" style="position:sticky; top:calc(72px + 2rem);">
+          <h3 style="font-size:1rem; font-weight:700; color:var(--white); margin-bottom:1rem;">What we can help with</h3>
           <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.625rem;">
             {service.data.features.map((f: string) => (
               <li style="font-size:0.9375rem; color:var(--text-muted); display:flex; gap:0.625rem; align-items:flex-start;">
@@ -62,13 +329,419 @@ const { Content } = await render(service);
               </li>
             ))}
           </ul>
+          {service.data.relatedServices && service.data.relatedServices.length > 0 && (
+            <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--border);">
+              <p style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin:0 0 0.75rem;">Related services</p>
+              <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:0.5rem;">
+                {service.data.relatedServices.map((s: { label: string; href: string }) => (
+                  <li>
+                    <a href={s.href} style="font-size:0.9rem; color:var(--purple); text-decoration:none; display:flex; align-items:center; gap:0.375rem; transition:color 0.2s;" onmouseover="this.style.color='var(--purple-light)'" onmouseout="this.style.color='var(--purple)'">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                      {s.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--border);">
-            <a href="/free-website-plan" class="btn-primary" style="width:100%; justify-content:center;">Get started →</a>
+            <a href="/contact/" class="btn-primary" style="width:100%; justify-content:center;">Get started →</a>
+          </div>
+          <div style="margin-top:1rem;">
+            <a href="/free-website-plan/" style="display:block; text-align:center; font-size:0.8125rem; color:var(--text-muted); transition:color 0.2s;" onmouseover="this.style.color='var(--white)'" onmouseout="this.style.color='var(--text-muted)'">Or get a free website plan →</a>
           </div>
         </div>
       </aside>
 
     </div>
   </section>
+
+  {service.data.locationLinks && service.data.locationLinks.length > 0 && (
+    <section class="loc-section">
+      <div class="container site-pad">
+        <div class="loc-header">
+          {service.data.locationSectionTitle && (
+            <h2>{service.data.locationSectionTitle}</h2>
+          )}
+          <p>Find out more about our services in your area:</p>
+        </div>
+        <div class="loc-grid">
+          {service.data.locationLinks.map((loc: { label: string; href: string }) => (
+            <a href={loc.href} class="loc-pill">
+              <svg class="loc-pin" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="13" height="13">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
+              </svg>
+              {loc.label}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <ReviewsStrip />
+
+  <style>
+    .svc-hero {
+      padding: 4.5rem 0 3rem;
+    }
+
+    /* Portfolio strip */
+    .thumb-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .thumb-item {
+      display: block;
+      overflow: hidden;
+      height: 380px;
+      position: relative;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-3);
+    }
+
+    .thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      transition: transform 0.5s ease;
+    }
+    .thumb-item:hover .thumb-img { transform: scale(1.03); }
+
+    .thumb-item::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.65) 100%);
+      pointer-events: none;
+    }
+
+    /* Managed Starter pricing */
+    .pricing-section {
+      padding: 1rem 0 4rem;
+    }
+
+    .pricing-header {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 2rem;
+    }
+
+    .pricing-header h2 {
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      margin: 0.35rem 0 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .pricing-header p:not(.eyebrow) {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .pricing-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg-3) 100%);
+    }
+
+    .pricing-card-featured {
+      border-color: color-mix(in srgb, var(--purple) 70%, var(--border));
+      box-shadow: 0 18px 48px rgba(135, 80, 247, 0.16);
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: inline-flex;
+      padding: 0.3rem 0.55rem;
+      border-radius: 999px;
+      background: rgba(135, 80, 247, 0.18);
+      color: var(--purple-light);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .pricing-card-head h3 {
+      font-size: 1.125rem;
+      margin: 0 0 0.75rem;
+    }
+
+    .pricing-price {
+      display: flex;
+      align-items: baseline;
+      gap: 0.35rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .pricing-price span {
+      color: var(--white);
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+
+    .pricing-price small {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .pricing-card-head p {
+      min-height: 3.1rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    .pricing-includes {
+      flex: 1;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .pricing-includes p {
+      margin: 0 0 0.75rem;
+      color: var(--white);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .pricing-includes ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .pricing-includes li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      line-height: 1.45;
+    }
+
+    .pricing-includes li span {
+      color: var(--purple-light);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .pricing-pages {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem;
+      border: 1px solid rgba(135, 80, 247, 0.28);
+      border-radius: 10px;
+      background: rgba(135, 80, 247, 0.1);
+    }
+
+    .pricing-pages span {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      line-height: 1.35;
+    }
+
+    .pricing-pages strong {
+      color: var(--white);
+      font-size: 1rem;
+      white-space: nowrap;
+    }
+
+    .pricing-note {
+      max-width: 760px;
+      margin: 1.25rem auto 0;
+      color: var(--text-muted);
+      text-align: center;
+      font-size: 0.875rem;
+      line-height: 1.6;
+    }
+
+    /* Prose */
+    .svc-prose {
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+    .svc-prose :global(h2) {
+      color: var(--white);
+      font-size: 1.375rem;
+      font-weight: 700;
+      margin: 2.25rem 0 0.875rem;
+      letter-spacing: -0.02em;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .svc-prose :global(h3) {
+      color: var(--white);
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 1.75rem 0 0.625rem;
+    }
+    .svc-prose :global(p) { margin: 0 0 1.125rem; }
+    .svc-prose :global(ol) {
+      margin: 0 0 1.25rem;
+      padding-left: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .svc-prose :global(ol li) {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      padding-left: 0.25rem;
+    }
+    .svc-prose :global(ul) {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .svc-prose :global(ul li) {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--purple);
+      border-radius: 8px;
+      padding: 0.875rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      line-height: 1.6;
+    }
+    .svc-prose :global(ul li)::before {
+      content: '✓';
+      color: var(--purple);
+      font-weight: 700;
+      flex-shrink: 0;
+      font-size: 0.875rem;
+      margin-top: 2px;
+    }
+    .svc-prose :global(ul li strong) {
+      display: block;
+      color: var(--white);
+      font-weight: 600;
+      font-size: 0.9375rem;
+      margin-bottom: 0.2rem;
+    }
+    .svc-prose :global(strong) { color: var(--white); font-weight: 600; }
+    .svc-prose :global(a) {
+      color: var(--purple);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color 0.2s;
+    }
+    .svc-prose :global(a:hover) { color: var(--purple-light); }
+
+    /* Location grid */
+    .loc-section {
+      padding: 3.5rem 0 4.5rem;
+      border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, transparent 0%, rgba(139,92,246,0.04) 100%);
+    }
+
+    .loc-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .loc-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--white);
+      margin: 0 0 0.375rem;
+      letter-spacing: -0.02em;
+    }
+
+    .loc-header p {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      margin: 0;
+    }
+
+    .loc-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.625rem;
+      justify-content: center;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .loc-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 0.9rem;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      color: var(--text);
+      font-size: 0.875rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      line-height: 1;
+    }
+
+    .loc-pill:hover {
+      border-color: var(--purple);
+      color: var(--white);
+      background: rgba(139, 92, 246, 0.12);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+    }
+
+    .loc-pin {
+      color: var(--purple);
+      flex-shrink: 0;
+      transition: color 0.2s;
+    }
+
+    .loc-pill:hover .loc-pin {
+      color: var(--purple-light, #c4b5fd);
+    }
+
+    @media (max-width: 768px) {
+      .thumb-strip { grid-template-columns: 1fr; }
+      .thumb-item { height: 180px; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .pricing-card-head p { min-height: 0; }
+      .pricing-section { padding-top: 0; }
+    }
+  </style>
 
 </BaseLayout>

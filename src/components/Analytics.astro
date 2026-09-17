@@ -1,0 +1,36 @@
+---
+// Third-party analytics + chat loader (GTM, Meta Pixel, Microsoft Clarity, Tawk.to).
+// Loaded lazily on first interaction or after 4s to protect initial load performance.
+// Used by BaseLayout so the Meta Pixel fires identically across the site.
+interface Props { loadChat?: boolean; }
+const { loadChat = true } = Astro.props;
+---
+<script is:inline data-load-chat={String(loadChat)}>
+(function(){
+  var loadChat = document.currentScript.dataset.loadChat !== 'false';
+  var loaded=false;
+  function appendScript(script){
+    var parent=document.head||document.body||document.documentElement;
+    if(parent)parent.appendChild(script);
+  }
+  function loadAll(){
+    if(loaded)return; loaded=true;
+    // GTM
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;appendScript(j);})(window,document,'script','dataLayer','GTM-WZHL5QW3');
+    // Meta Pixel
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];if(s&&s.parentNode){s.parentNode.insertBefore(t,s);}else{appendScript(t);}}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init','2554756121636695');
+    fbq('track','PageView');
+    // Microsoft Clarity
+    (function(c,l,a,r,i,t){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src='https://www.clarity.ms/tag/'+i;appendScript(t);})(window,document,'clarity','script','wjsnhc5fib');
+    // Tawk.to
+    if(loadChat&&!window.__ncTawkLoaded&&!document.querySelector('script[data-nc-tawk]')){
+      window.__ncTawkLoaded=true;
+      var s1=document.createElement('script');
+      s1.async=true;s1.src='https://embed.tawk.to/681f5e1182f1331910514963/1iqt8ests';s1.charset='UTF-8';s1.setAttribute('data-nc-tawk','');appendScript(s1);
+    }
+  }
+  var t=setTimeout(loadAll,4000);
+  ['scroll','mousemove','touchstart','keydown'].forEach(function(e){window.addEventListener(e,function h(){clearTimeout(t);loadAll();['scroll','mousemove','touchstart','keydown'].forEach(function(ev){window.removeEventListener(ev,h);});},{once:true,passive:true});});
+})();
+</script>

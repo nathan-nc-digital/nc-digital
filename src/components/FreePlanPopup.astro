@@ -1,0 +1,207 @@
+<!-- Free Plan Popup — triggers on first click OR exit intent. Once dismissed, won't show again this session. -->
+<div id="fp-overlay" inert>
+  <div id="fp-modal" role="dialog" aria-modal="true" aria-labelledby="fp-title">
+    <button id="fp-close" aria-label="Close">&times;</button>
+
+    <div class="fp-badge">Free plan + 10% off</div>
+
+    <h2 id="fp-title">Get your free website plan</h2>
+    <p>
+      Not sure where to start? We'll put together a free, personalised website plan for your business — no commitment, no pushy sales calls.
+    </p>
+
+    <div class="fp-offer">
+      🎁 Use the planner and hire us — get <strong>10% off</strong> your chosen service and hosting plan.
+    </div>
+
+    <a href="/free-website-plan/" class="fp-cta">Claim your free plan →</a>
+
+    <button id="fp-dismiss" class="fp-skip">No thanks, I'll figure it out myself</button>
+  </div>
+</div>
+
+<style>
+  #fp-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  #fp-overlay.fp-visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  #fp-modal {
+    position: relative;
+    background: var(--bg-2);
+    border: 1px solid rgba(135, 80, 247, 0.35);
+    border-radius: 16px;
+    padding: 2.5rem 2.25rem 2rem;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 0 80px rgba(135, 80, 247, 0.2), 0 32px 64px rgba(0,0,0,0.5);
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.3s ease;
+    text-align: center;
+  }
+  #fp-overlay.fp-visible #fp-modal {
+    transform: translateY(0) scale(1);
+  }
+
+  #fp-close {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s;
+  }
+  #fp-close:hover { color: var(--white); }
+
+  .fp-badge {
+    display: inline-block;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--purple);
+    background: rgba(135, 80, 247, 0.1);
+    border: 1px solid rgba(135, 80, 247, 0.25);
+    border-radius: 99px;
+    padding: 0.3rem 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  #fp-modal h2 {
+    font-size: clamp(1.375rem, 3vw, 1.75rem);
+    font-weight: 800;
+    color: var(--white);
+    margin: 0 0 0.875rem;
+    line-height: 1.2;
+  }
+
+  #fp-modal p {
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    margin: 0 0 1.75rem;
+  }
+
+  .fp-offer {
+    background: rgba(135, 80, 247, 0.1);
+    border: 1px solid rgba(135, 80, 247, 0.3);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+  }
+  .fp-offer strong { color: var(--white); }
+
+  .fp-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--purple);
+    color: var(--white);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    padding: 0.8rem 1.75rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .fp-cta:hover {
+    background: var(--purple-light);
+    color: var(--white);
+    transform: translateY(-1px);
+  }
+
+  #fp-dismiss {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: 'Sora', sans-serif;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s;
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+  #fp-dismiss:hover { color: var(--white); }
+
+  @media (max-width: 480px) {
+    #fp-modal { padding: 2rem 1.5rem 1.5rem; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    if (window.location.pathname === '/free-website-plan/' || window.location.pathname === '/free-website-plan/') return;
+
+    const STORAGE_KEY = 'nc_fp_dismissed';
+    const dismissed = localStorage.getItem(STORAGE_KEY);
+    if (dismissed && Date.now() < Number(dismissed)) return;
+
+    const overlay = document.getElementById('fp-overlay');
+    if (!overlay) return;
+
+    let shown = false;
+
+    function show() {
+      if (shown) return;
+      shown = true;
+      overlay.removeAttribute('inert');
+      overlay.classList.add('fp-visible');
+      document.getElementById('fp-close').focus();
+    }
+
+    function dismiss() {
+      overlay.classList.remove('fp-visible');
+      overlay.setAttribute('inert', '');
+      localStorage.setItem(STORAGE_KEY, String(Date.now() + 24 * 60 * 60 * 1000));
+    }
+
+    // Trigger after 45 seconds on the page
+    setTimeout(show, 45000);
+
+    // Exit intent — only after 15 seconds on page
+    const exitIntentReady = Date.now() + 15000;
+    document.addEventListener('mouseleave', function (e) {
+      if (e.clientY <= 0 && Date.now() >= exitIntentReady) show();
+    });
+
+    // Close controls
+    document.getElementById('fp-close').addEventListener('click', dismiss);
+    document.getElementById('fp-dismiss').addEventListener('click', dismiss);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) dismiss();
+    });
+
+    // Keyboard escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && shown) dismiss();
+    });
+  })();
+</script>

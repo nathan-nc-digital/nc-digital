@@ -1,0 +1,250 @@
+<!-- CSS background — always visible instantly, zero TBT -->
+<div class="site-bg-css" aria-hidden="true">
+  <div class="bg-blob blob-1"></div>
+  <div class="bg-blob blob-2"></div>
+  <div class="bg-blob blob-3"></div>
+</div>
+
+<!-- WebGL canvas — fades in on first user interaction -->
+<canvas id="webgl-bg" aria-hidden="true"></canvas>
+
+<style>
+  .site-bg-css {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: var(--bg);
+    overflow: hidden;
+    transition: opacity 1.5s ease;
+  }
+
+  .bg-blob {
+    position: absolute;
+    border-radius: 50%;
+    will-change: transform;
+  }
+
+  .blob-1 {
+    width: 70vw;
+    height: 70vw;
+    top: -25%;
+    left: -15%;
+    background: radial-gradient(circle, rgba(135,80,247,0.22) 0%, rgba(42,20,84,0.12) 55%, transparent 75%);
+    filter: blur(90px);
+    animation: blob-1 20s ease-in-out infinite;
+  }
+
+  .blob-2 {
+    width: 55vw;
+    height: 55vw;
+    bottom: -20%;
+    right: -10%;
+    background: radial-gradient(circle, rgba(42,20,84,0.28) 0%, rgba(135,80,247,0.08) 55%, transparent 75%);
+    filter: blur(100px);
+    animation: blob-2 26s ease-in-out infinite;
+  }
+
+  .blob-3 {
+    width: 45vw;
+    height: 45vw;
+    top: 35%;
+    left: 38%;
+    background: radial-gradient(circle, rgba(155,141,255,0.10) 0%, transparent 70%);
+    filter: blur(80px);
+    animation: blob-3 32s ease-in-out infinite;
+  }
+
+  @keyframes blob-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%       { transform: translate(4%, 7%) scale(1.04); }
+    66%       { transform: translate(-3%, 3%) scale(0.97); }
+  }
+
+  @keyframes blob-2 {
+    0%, 100% { transform: translate(0, 0) scale(1.08); }
+    33%       { transform: translate(-5%, -4%) scale(1); }
+    66%       { transform: translate(3%, -7%) scale(1.12); }
+  }
+
+  @keyframes blob-3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50%       { transform: translate(-6%, 4%) scale(1.08); }
+  }
+
+  #webgl-bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    display: block;
+  }
+</style>
+
+<script>
+  let loaded = false;
+
+  async function initWebGL() {
+    if (loaded) return;
+    loaded = true;
+
+    const canvas = document.getElementById('webgl-bg') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    // Some in-app browsers and restricted devices expose WebGL APIs but cannot
+    // create a usable context. Keep the CSS fallback active on those devices.
+    const context = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    if (!context) return;
+
+    // A navigation or deployment can interrupt the lazy module request.
+    // Keep the CSS background active instead of reporting an unhandled error.
+    const THREE = await import('three').catch(() => null);
+    if (!THREE) return;
+
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas, context, antialias: false, alpha: false });
+    } catch {
+      return;
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+    const vertexShader = `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = vec4(position, 1.0);
+      }
+    `;
+
+    const fragmentShader = `
+      uniform float u_time;
+      uniform vec2  u_resolution;
+      uniform vec2  u_mouse;
+      varying vec2  vUv;
+
+      vec2 hash(vec2 p) {
+        p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+        return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+      }
+
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        vec2 u = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(dot(hash(i + vec2(0,0)), f - vec2(0,0)),
+              dot(hash(i + vec2(1,0)), f - vec2(1,0)), u.x),
+          mix(dot(hash(i + vec2(0,1)), f - vec2(0,1)),
+              dot(hash(i + vec2(1,1)), f - vec2(1,1)), u.x),
+          u.y
+        );
+      }
+
+      float fbm(vec2 p) {
+        float v = 0.0, a = 0.5;
+        for (int i = 0; i < 4; i++) {
+          v += a * noise(p);
+          p  = p * 2.0 + vec2(3.1, 1.7);
+          a *= 0.5;
+        }
+        return v;
+      }
+
+      void main() {
+        vec2 uv = vUv;
+        uv.x *= u_resolution.x / u_resolution.y;
+
+        float t = u_time * 0.12;
+
+        vec2 mouse = u_mouse * vec2(u_resolution.x / u_resolution.y, 1.0);
+        vec2 mouseOffset = (uv - mouse) * 0.18;
+
+        vec2 q = vec2(
+          fbm(uv + vec2(0.0, 0.0) + t * 0.8 - mouseOffset * 0.6),
+          fbm(uv + vec2(5.2, 1.3) + t * 0.6 - mouseOffset * 0.4)
+        );
+
+        vec2 r = vec2(
+          fbm(uv + 3.0 * q + vec2(1.7, 9.2) + t * 0.5 + mouseOffset * 0.3),
+          fbm(uv + 3.0 * q + vec2(8.3, 2.8) + t * 0.4 + mouseOffset * 0.2)
+        );
+
+        float f = fbm(uv + 2.5 * r + t * 0.3);
+        f = f * 0.5 + 0.5;
+
+        float dist = length(uv - mouse);
+        float glow = smoothstep(0.6, 0.0, dist) * 0.12;
+        f = clamp(f + glow, 0.0, 1.0);
+
+        vec3 bg     = vec3(0.047, 0.067, 0.082);
+        vec3 purple = vec3(0.529, 0.314, 0.969);
+        vec3 deep   = vec3(0.09,  0.04,  0.22);
+        vec3 light  = vec3(0.62,  0.45,  1.0);
+
+        vec3 col = bg;
+        col = mix(col,   deep,   smoothstep(0.2, 0.6, f));
+        col = mix(col,   purple, smoothstep(0.5, 0.8, f) * 0.7);
+        col = mix(col,   light,  smoothstep(0.75, 1.0, f) * 0.4);
+
+        vec2 vig = vUv * 2.0 - 1.0;
+        float v = 1.0 - dot(vig, vig) * 0.4;
+        col *= v;
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    const material = new THREE.ShaderMaterial({
+      vertexShader,
+      fragmentShader,
+      uniforms: {
+        u_time:       { value: 0 },
+        u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        u_mouse:      { value: new THREE.Vector2(0.5, 0.5) },
+      },
+    });
+
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+    scene.add(mesh);
+
+    const target  = new THREE.Vector2(0.5, 0.5);
+    const current = new THREE.Vector2(0.5, 0.5);
+
+    window.addEventListener('mousemove', (e) => {
+      target.set(e.clientX / window.innerWidth, 1.0 - e.clientY / window.innerHeight);
+    });
+
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      material.uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+    });
+
+    const timer = new THREE.Timer();
+    (function animate() {
+      requestAnimationFrame(animate);
+      timer.update();
+      current.lerp(target, 0.04);
+      material.uniforms.u_mouse.value.copy(current);
+      material.uniforms.u_time.value = timer.getElapsed();
+      renderer.render(scene, camera);
+    })();
+
+    // Fade in WebGL, fade out CSS background
+    canvas.style.opacity = '1';
+    const cssBg = document.querySelector('.site-bg-css') as HTMLElement;
+    if (cssBg) cssBg.style.opacity = '0';
+  }
+
+  ['mousemove', 'scroll', 'touchstart', 'keydown'].forEach((e) => {
+    window.addEventListener(e, initWebGL, { once: true, passive: true });
+  });
+</script>

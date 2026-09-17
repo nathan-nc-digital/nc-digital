@@ -1,17 +1,20 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import JsonLD from '../components/JsonLD.astro';
-import HeroOrbs from '../components/HeroOrbs.astro';
+import ReviewsStrip from '../components/ReviewsStrip.astro';
 import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
 
 export const prerender = true;
 
 export async function getStaticPaths() {
   const locations = await getCollection('locations');
-  return locations.map((loc) => ({
-    params: { location: loc.id.replace('/index.mdoc', '') },
-    props: { loc },
-  }));
+  return locations
+    .filter((loc) => loc.id.replace('/index.mdoc', '') !== 'seo-services-south-wales')
+    .map((loc) => ({
+      params: { location: loc.id.replace('/index.mdoc', '') },
+      props: { loc },
+    }));
 }
 
 const { loc } = Astro.props;
@@ -26,12 +29,55 @@ const serviceLabel = loc.data.serviceType === 'seo'
   ? 'Local SEO'
   : loc.data.serviceType === 'both'
   ? 'Web Design & SEO'
+  : loc.data.serviceType === 'logo-design'
+  ? 'Logo Design'
+  : loc.data.serviceType === 'ecommerce'
+  ? 'Ecommerce Web Design'
   : 'Web Design';
+
+// Pull portfolio projects for the "Recent work" section — ranked by relevance to this
+// page (matching location, then matching service) rather than a fixed first-3 slice,
+// so different location pages surface different, genuinely relevant proof instead of
+// the same three clients on every page.
+const townSlug = loc.data.town.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+// Stable per-page pseudo-random tiebreaker so pages with no direct location/service
+// match still rotate which projects they show, instead of always falling back to
+// the same alphabetical/order-field sequence.
+function hashStr(input: string) {
+  let h = 0;
+  for (let i = 0; i < input.length; i++) h = (Math.imul(31, h) + input.charCodeAt(i)) | 0;
+  return h;
+}
+const pageSeed = hashStr(Astro.params.location as string);
+const allPortfolioEntries = await getCollection('portfolio');
+const portfolioEntries = [...allPortfolioEntries].sort((a, b) => {
+  const score = (p: typeof a) => {
+    let s = 0;
+    if (p.data.location === townSlug) s += 2;
+    if (p.data.services?.includes(loc.data.serviceType)) s += 1;
+    return s;
+  };
+  const diff = score(b) - score(a);
+  if (diff !== 0) return diff;
+  return hashStr(`${pageSeed}-${a.id}`) - hashStr(`${pageSeed}-${b.id}`);
+});
+const portfolioImages = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/portfolio/*.{jpg,jpeg,png,webp}',
+  { eager: true }
+);
+function getPortfolioImage(slug: string) {
+  for (const [path, mod] of Object.entries(portfolioImages)) {
+    const filename = path.split('/').pop()!.replace(/\.[^.]+$/, '');
+    if (filename === slug) return mod.default;
+  }
+  return null;
+}
 ---
 
 <BaseLayout
   title={loc.data.metaTitle || `${serviceLabel} ${loc.data.town} | NC Digital`}
   description={loc.data.metaDescription || `Professional ${serviceLabel.toLowerCase()} for ${loc.data.town} businesses. NC Digital — based in South Wales.`}
+  noindex={loc.data.noindex}
 >
 
   <JsonLD schema={{
@@ -40,7 +86,7 @@ const serviceLabel = loc.data.serviceType === 'seo'
     "name": "NC Digital",
     "description": `${serviceLabel} for ${loc.data.town} businesses.`,
     "url": `https://nc-digital.co.uk/${Astro.params.location}`,
-    "email": "nathan@nc-digital.co.uk",
+    "email": "info@nc-digital.co.uk",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Merthyr Tydfil",
@@ -53,48 +99,317 @@ const serviceLabel = loc.data.serviceType === 'seo'
     }
   }} />
 
-  <section style="padding:4rem 0 3rem; position:relative; overflow:hidden;">
-    <HeroOrbs />
-    <div class="container site-pad" style="text-align:center; position:relative; z-index:1;">
+  <!-- Hero -->
+  <section style="padding:4rem 0 3rem;">
+    <div class="container site-pad" style="text-align:center;">
       <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">{serviceLabel} · {loc.data.town}</p>
-      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:640px; margin-left:auto; margin-right:auto;">{loc.data.headline}</h1>
+      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:820px; margin-left:auto; margin-right:auto;">{loc.data.headline}</h1>
       <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin:0 auto 2rem;">
         {loc.data.metaDescription}
       </p>
       <div data-animate="fade-up" style="display:flex; gap:1rem; flex-wrap:wrap; justify-content:center;">
-        <a href="/free-website-plan" class="btn-primary">Get your free plan →</a>
-        <a href="/portfolio" class="btn-outline">See our work</a>
+        <a href="/contact/" class="btn-primary">Get a free quote →</a>
+        <a href="/portfolio/" class="btn-outline">See our work</a>
       </div>
     </div>
   </section>
 
-  <section style="padding:2rem 0 5rem;">
+  <!-- Service cards (web-agency pillar pages) -->
+  {loc.data.services && loc.data.services.length > 0 && (
+    <section class="service-cards-section">
+      <div class="container site-pad">
+        <div class="service-cards-header">
+          <h2>Services for {loc.data.town} businesses</h2>
+          <p>Everything you need to build and grow your online presence — handled directly, no agency layers.</p>
+        </div>
+        <div class="service-cards-grid">
+          {loc.data.services.map((service: { name: string; description: string; href: string }) => (
+            <a href={service.href} class="service-card">
+              <h3>{service.name}</h3>
+              <p>{service.description}</p>
+              <span class="service-card-cta">Learn more →</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Main content + sidebar -->
+  <section style="padding:2rem 0 4rem;">
     <div class="container site-pad layout-sidebar">
 
-      <div data-animate="fade-up" style="color:var(--text); line-height:1.85; font-size:1rem;">
+      <div data-animate="fade-up" class="loc-prose">
         <Content />
       </div>
 
       <aside>
-        <div data-animate="fade-in" class="card">
+        <div data-animate="fade-in" class="card" style="position:sticky; top:calc(72px + 2rem);">
           <h3 style="font-size:1rem; font-weight:700; color:var(--white); margin-bottom:0.75rem;">
             Get a free plan
           </h3>
           <p style="color:var(--text-muted); font-size:0.9375rem; line-height:1.6; margin-bottom:1.25rem;">
             See exactly what we'd build for your {loc.data.town} business — free, no obligation.
           </p>
-          <a href="/free-website-plan" class="btn-primary" style="width:100%; justify-content:center; display:flex;">
+          <a href="/free-website-plan/" class="btn-primary" style="width:100%; justify-content:center; display:flex;">
             Get started →
           </a>
-          <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border);">
-            <a href="mailto:nathan@nc-digital.co.uk" style="color:var(--text-muted); font-size:0.875rem; display:block; margin-bottom:0.375rem;">
-              nathan@nc-digital.co.uk
-            </a>
-          </div>
         </div>
       </aside>
 
     </div>
   </section>
+
+  <!-- Recent projects -->
+  {portfolioEntries.length > 0 && (
+    <section style="padding:4rem 0; background:var(--bg-2); border-top:1px solid var(--border);">
+      <div class="container site-pad">
+        <div style="margin-bottom:2.5rem;">
+          <p class="eyebrow" style="margin-bottom:0.75rem;">Our work</p>
+          <h2 style="margin:0 0 0.5rem;">Recent projects</h2>
+          <p style="color:var(--text-muted); font-size:1rem;">Real websites built for South Wales businesses.</p>
+        </div>
+        <div data-animate="stagger" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.25rem; margin-bottom:2rem;">
+          {portfolioEntries.slice(0, 3).map((project) => {
+            const slug = project.id.replace('/index.mdoc', '');
+            const img = getPortfolioImage(slug);
+            return (
+              <a href={`/portfolio/${slug}/`} class="card" style="display:block; text-decoration:none; padding:0; overflow:hidden;">
+                {img ? (
+                  <Image
+                    src={img}
+                    alt={project.data.title}
+                    width={600}
+                    height={340}
+                    style="width:100%; height:180px; object-fit:cover; display:block;"
+                  />
+                ) : (
+                  <div style="width:100%; height:180px; background:var(--bg-3); display:flex; align-items:center; justify-content:center;">
+                    <span style="color:var(--text-muted); font-size:0.875rem;">{project.data.title}</span>
+                  </div>
+                )}
+                <div style="padding:1.25rem;">
+                  <h3 style="font-size:1rem; font-weight:600; color:var(--white); margin-bottom:0.5rem;">{project.data.client}</h3>
+                  <p style="font-size:0.875rem; color:var(--text-muted); margin:0;">{project.data.summary}</p>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+        <a href="/portfolio/" class="btn-outline">View all projects →</a>
+      </div>
+    </section>
+  )}
+
+  {loc.data.locationLinks && loc.data.locationLinks.length > 0 && (
+    <section class="loc-section">
+      <div class="container site-pad">
+        <div class="loc-header">
+          {loc.data.locationSectionTitle && (
+            <h2>{loc.data.locationSectionTitle}</h2>
+          )}
+          <p>Find out more about our services in your area:</p>
+        </div>
+        <div class="loc-grid">
+          {loc.data.locationLinks.map((l: { label: string; href: string }) => (
+            <a href={l.href} class="loc-pill">
+              <svg class="loc-pin" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="13" height="13">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
+              </svg>
+              {l.label}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <ReviewsStrip />
+
+  <!-- CTA -->
+  <section style="padding:5rem 0; border-top:1px solid var(--border);">
+    <div class="container site-pad" style="text-align:center;">
+      <p class="eyebrow" style="margin-bottom:1rem;">Ready to get started?</p>
+      <h2 data-animate="fade-up" style="margin-bottom:1rem;">
+        {loc.data.serviceType === 'logo-design'
+          ? `Let's design your ${loc.data.town} brand`
+          : loc.data.serviceType === 'ecommerce'
+          ? `Let's build your ${loc.data.town} online store`
+          : `Let's build your ${loc.data.town} website`}
+      </h2>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; margin-bottom:2rem; max-width:500px; margin-left:auto; margin-right:auto;">
+        {loc.data.serviceType === 'logo-design'
+          ? "Get in touch for a free quote — no commitment, no jargon. Tell us about your business and we'll take it from there."
+          : loc.data.serviceType === 'ecommerce'
+          ? "Get a free quote — we'll recommend the right platform for your products and budget, with no jargon and no commitment."
+          : "Get a free website plan — no commitment, no jargon. We'll show you exactly what we'd build and what it would cost."}
+      </p>
+      <a data-animate="fade-up" href={loc.data.serviceType === 'logo-design' || loc.data.serviceType === 'ecommerce' ? '/contact/' : '/free-website-plan/'} class="btn-primary" style="font-size:1rem; padding:1rem 2rem;">
+        {loc.data.serviceType === 'logo-design' || loc.data.serviceType === 'ecommerce' ? 'Get a free quote →' : 'Get your free plan →'}
+      </a>
+    </div>
+  </section>
+
+  <style>
+    .loc-prose { color: var(--text); line-height: 1.85; font-size: 1rem; }
+    .loc-prose :global(h2) {
+      color: var(--white); font-size: 1.375rem; font-weight: 700;
+      margin: 2rem 0 0.75rem; letter-spacing: -0.02em;
+    }
+    .loc-prose :global(h3) {
+      color: var(--white); font-size: 1.125rem; font-weight: 600;
+      margin: 1.5rem 0 0.625rem;
+    }
+    .loc-prose :global(p) { margin: 0 0 1.125rem; }
+    .loc-prose :global(ul), .loc-prose :global(ol) {
+      margin: 0 0 1.125rem 1.25rem; padding: 0;
+    }
+    .loc-prose :global(li) { margin-bottom: 0.4rem; }
+    .loc-prose :global(ul li)::marker { color: var(--purple); }
+    .loc-prose :global(strong) { color: var(--white); font-weight: 600; }
+    .loc-prose :global(a) { color: var(--purple); text-decoration: underline; text-underline-offset: 3px; }
+    .loc-prose :global(blockquote) {
+      border-left: 3px solid var(--purple); margin: 1.5rem 0;
+      padding: 0.75rem 1.25rem; background: var(--bg-2);
+      border-radius: 0 8px 8px 0; color: var(--text-muted); font-style: italic;
+    }
+    .loc-prose :global(blockquote p) { margin: 0; }
+
+    /* Location pill grid */
+    .loc-section {
+      padding: 3.5rem 0 4.5rem;
+      border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, transparent 0%, rgba(139,92,246,0.04) 100%);
+    }
+    .loc-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .loc-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--white);
+      margin: 0 0 0.375rem;
+      letter-spacing: -0.02em;
+    }
+    .loc-header p {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      margin: 0;
+    }
+    .loc-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.625rem;
+      justify-content: center;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .loc-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 0.9rem;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      color: var(--text);
+      font-size: 0.875rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      line-height: 1;
+    }
+    .loc-pill:hover {
+      border-color: var(--purple);
+      color: var(--white);
+      background: rgba(139, 92, 246, 0.12);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.15);
+    }
+    .loc-pin {
+      color: var(--purple);
+      flex-shrink: 0;
+      transition: color 0.2s;
+    }
+    .loc-pill:hover .loc-pin {
+      color: var(--purple-light, #c4b5fd);
+    }
+
+    /* Service cards (pillar pages) */
+    .service-cards-section {
+      padding: 1rem 0 4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .service-cards-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    .service-cards-header h2 {
+      font-size: 1.625rem;
+      font-weight: 700;
+      color: var(--white);
+      margin: 0 0 0.5rem;
+      letter-spacing: -0.02em;
+    }
+    .service-cards-header p {
+      color: var(--text-muted);
+      font-size: 0.9375rem;
+      margin: 0;
+    }
+    .service-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+    .service-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--purple);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+      transition: all 0.2s ease;
+    }
+    .service-card:hover {
+      border-color: var(--purple);
+      background: var(--bg-3);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+    }
+    .service-card h3 {
+      color: var(--white);
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .service-card p {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin: 0;
+      flex: 1;
+    }
+    .service-card-cta {
+      color: var(--purple);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-top: 0.25rem;
+      transition: color 0.2s;
+    }
+    .service-card:hover .service-card-cta {
+      color: var(--purple-light, #c4b5fd);
+    }
+    @media (max-width: 1024px) {
+      .service-cards-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .service-cards-grid { grid-template-columns: 1fr; }
+      .service-cards-section { padding-bottom: 3rem; }
+    }
+  </style>
 
 </BaseLayout>

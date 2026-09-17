@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Page Not Found | NC Digital"
+  description="Page not found on NC Digital. Use the homepage, services, portfolio, blog or contact links to find the web design and SEO information you need."
+>
+
+  <section style="padding:8rem 0 6rem; text-align:center; position:relative; overflow:hidden;">
+    <div style="position:absolute; top:-100px; left:50%; transform:translateX(-50%); width:600px; height:500px; background:radial-gradient(ellipse at center, rgba(135,80,247,0.12) 0%, transparent 70%); pointer-events:none;"></div>
+
+    <div class="container site-pad" style="max-width:600px; position:relative;">
+      <p class="eyebrow" style="margin-bottom:1rem;">404</p>
+      <h1 style="margin-bottom:1.25rem; font-size:clamp(2rem, 4vw, 3rem);">Page not found</h1>
+      <p style="color:var(--text-muted); font-size:1.125rem; line-height:1.7; margin-bottom:2.5rem;">
+        Sorry, we couldn't find the page you were looking for. It may have moved or been removed.
+      </p>
+
+      <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-bottom:3rem;">
+        <a href="/" class="btn-primary">Go to homepage →</a>
+        <a href="/contact/" class="btn-outline">Contact us</a>
+      </div>
+
+      <div class="quick-links">
+        <p style="color:var(--text-muted); font-size:0.875rem; margin-bottom:1rem;">Or try one of these:</p>
+        <div style="display:flex; flex-wrap:wrap; gap:0.625rem; justify-content:center;">
+          {[
+            { href: '/services/', label: 'Services' },
+            { href: '/portfolio/', label: 'Portfolio' },
+            { href: '/blog/', label: 'Blog' },
+            { href: '/about/', label: 'About' },
+            { href: '/services/web-design/', label: 'Web Design' },
+            { href: '/services/web-development/', label: 'Web Development' },
+            { href: '/services/local-seo-google-ranking/', label: 'Local SEO' },
+            { href: '/free-website-plan/', label: 'Free Website Plan' },
+          ].map(({ href, label }) => (
+            <a href={href} style="padding:0.4rem 0.875rem; border:1px solid var(--border); border-radius:6px; color:var(--text-muted); font-size:0.875rem; transition:color 0.2s, border-color 0.2s;" onmouseover="this.style.color='var(--white)';this.style.borderColor='var(--purple)'" onmouseout="this.style.color='var(--text-muted)';this.style.borderColor='var(--border)'">{label}</a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+</BaseLayout>

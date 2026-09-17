@@ -1,0 +1,134 @@
+---
+const reviews = [
+  { name: 'Jake Lewis',       text: "I couldn't be happier with the website that was designed for my business. From the very beginning, the team was professional, responsive, and easy to work with. They took the time to understand exactly what I wanted and turned my ideas into a modern, professional, and user-friendly website that exceeded my expectations. Communication was excellent throughout the entire process, and any questions or changes I had were handled quickly and efficiently. The attention to detail and quality of their work really stands out. I would highly recommend them to anyone looking for a reliable, talented web design company. Thank you for delivering a website I'm genuinely proud of!" },
+  { name: 'Laura Ann',        text: 'Nathan redesigned our website exactly the way we envisioned it. Incredibly helpful and knowledgeable throughout. Our team from IR Energy would highly recommend him!',          href: '/portfolio/ir-energy/' },
+  { name: 'Kerry Morgan',     text: 'Highly recommend Nathan — from start to finish he was very professional, easy to work with and did an excellent job on our website.',                                          href: '/portfolio/ak-promotions/' },
+  { name: 'Michael Mordecai', text: 'Nothing was too much to ask of him, his efficiency and attention to detail was amazing throughout. Would highly recommend anyone wanting a website to get in touch.',           href: '/portfolio/pro-tech-plumbing/' },
+  { name: 'Stuart Baker',     text: 'AMAZING service, so quick and affordable for small start-up companies. Thank you so much Nathan, much more professional look I have now 👍',                                  href: '/portfolio/3d-framing/' },
+  { name: 'Chris Davies',     text: 'Nathan was quick and efficient and explained how to carry on going forward with my new site. Excellent value for money and my new site looks so much more professional.',       href: '/portfolio/davies-property-development/' },
+  { name: 'Sean Hicks',       text: '10/10 for the service provided. Website is outstanding — detail is key and he delivers that. Anyone wanting a website, this is your guy 💯',                                 href: '/portfolio/ds-carpentry/' },
+];
+
+// Show 3 rotating reviews based on a simple hash so different pages show different ones
+// Falls back gracefully — just slice the first 3
+const shown = reviews.slice(0, 3);
+---
+
+<section class="reviews-strip">
+  <div class="container site-pad">
+    <div class="rs-header">
+      <div>
+        <p class="eyebrow" style="margin-bottom:0.5rem;">Google Reviews</p>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span class="rs-stars">★★★★★</span>
+          <span style="color:var(--text-muted); font-size:0.875rem;">5.0 on Google</span>
+        </div>
+      </div>
+      <a href="https://www.google.com/search?si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOTBzWIT6Ou4xKgk8HxTKUffXdX_ipDhpjv4Y166sqHtCNMgTl1pIhlGcOh7efwTupj9GFzILc54TrwurTz-lwsb2s2Tv&q=NC+Digital+Reviews&sa=X"
+         target="_blank" rel="noopener" class="rs-all-link">See all reviews →</a>
+    </div>
+
+    <div class="rs-grid">
+      {shown.map(({ name, text, href }) => (
+        <div class="rs-card">
+          <div class="rs-card-stars">★★★★★</div>
+          <p class="rs-card-text">"{text}"</p>
+          <div class="rs-card-footer">
+            <span class="rs-card-name">{name}</span>
+            {href && <a href={href} class="rs-card-link">View project →</a>}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .reviews-strip {
+    padding: 4rem 0;
+  }
+
+  .rs-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .rs-stars {
+    color: #f5c518;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+  }
+
+  .rs-all-link {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .rs-all-link:hover { color: var(--white); }
+
+  .rs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  .rs-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+  }
+
+  .rs-card-stars {
+    color: #f5c518;
+    font-size: 0.9375rem;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  .rs-card-text {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin: 0;
+    flex: 1;
+  }
+
+  .rs-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    gap: 0.5rem;
+  }
+
+  .rs-card-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .rs-card-link {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--purple-light);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+  .rs-card-link:hover { color: var(--white); }
+
+  @media (max-width: 760px) {
+    .rs-grid { grid-template-columns: 1fr; }
+  }
+</style>

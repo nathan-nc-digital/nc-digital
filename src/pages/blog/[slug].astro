@@ -1,7 +1,10 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import JsonLD from '../../components/JsonLD.astro';
+import EnquiryForm from '../../components/EnquiryForm.astro';
+import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
+import { getBlogCategoryLabel } from '../../data/blogCategories';
 
 export const prerender = true;
 
@@ -16,7 +19,7 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 
 if (!post) {
-  return Astro.redirect('/blog');
+  return Astro.redirect('/blog/');
 }
 
 const { Content } = await render(post);
@@ -26,16 +29,32 @@ const formattedDate = post.data.pubDate
   : '';
 
 const allPosts = await getCollection('blog');
-const related = allPosts
+const sameCategory = allPosts
   .filter(p => p.data.category === post.data.category && p.id !== post.id && p.data.pubDate)
-  .sort((a, b) => new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime())
-  .slice(0, 2);
+  .sort((a, b) => new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime());
+const otherPosts = allPosts
+  .filter(p => p.data.category !== post.data.category && p.id !== post.id && p.data.pubDate)
+  .sort((a, b) => new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime());
+const related = [...sameCategory, ...otherPosts].slice(0, 2);
+
+const heroImage = post.data.heroImage;
 ---
 
 <BaseLayout
   title={post.data.metaTitle || `${post.data.title} | NC Digital`}
   description={post.data.metaDescription || post.data.description || ''}
+  image={heroImage?.src}
 >
+
+  <JsonLD schema={{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://nc-digital.co.uk/" },
+      { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://nc-digital.co.uk/blog/" },
+      { "@type": "ListItem", "position": 3, "name": post.data.title, "item": Astro.url.href }
+    ]
+  }} />
 
   <JsonLD schema={{
     "@context": "https://schema.org",
@@ -43,10 +62,11 @@ const related = allPosts
     "headline": post.data.title,
     "description": post.data.description,
     "datePublished": post.data.pubDate ?? undefined,
+    "image": heroImage ? new URL(heroImage.src, Astro.site).href : undefined,
     "author": {
       "@type": "Person",
       "name": "Nathan Constance",
-      "url": "https://nc-digital.co.uk/about"
+      "url": "https://nc-digital.co.uk/about/"
     },
     "publisher": {
       "@type": "Organization",
@@ -63,13 +83,28 @@ const related = allPosts
 
     <section class="post-header">
       <div class="container site-pad">
-        <a href="/blog" class="back-link">← All posts</a>
+        <a href="/blog/" class="back-link">← All posts</a>
         <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">
-          {post.data.category?.replace(/-/g, ' ')}
+          {getBlogCategoryLabel(post.data.category)}
         </p>
         <h1 data-animate="fade-up" style="margin-bottom:1rem; line-height:1.2; max-width:780px;">{post.data.title}</h1>
-        {formattedDate && (
-          <p data-animate="fade-up" style="color:var(--text-muted); font-size:0.9375rem;">{formattedDate}</p>
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:0.9375rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+          {formattedDate && <span>{formattedDate}</span>}
+          {formattedDate && <span aria-hidden="true" style="opacity:0.4;">·</span>}
+          <span>By <a href="/about/" style="color:var(--purple); text-decoration:underline; text-underline-offset:3px;">Nathan Constance</a></span>
+        </p>
+        {heroImage && (
+          <figure class="post-hero" data-animate="fade-up">
+            <Image
+              src={heroImage}
+              alt={post.data.heroImageAlt || post.data.title}
+              width={840}
+              widths={[420, 840]}
+              sizes="(max-width: 560px) 100vw, 420px"
+              loading="eager"
+              fetchpriority="high"
+            />
+          </figure>
         )}
       </div>
     </section>
@@ -91,32 +126,7 @@ const related = allPosts
               <p style="color:var(--text-muted); font-size:0.8125rem; line-height:1.5; margin-bottom:0.875rem;">
                 Need a website or better Google rankings? Drop your details below.
               </p>
-              <form
-                class="sidebar-form"
-                action="https://api.web3forms.com/submit"
-                method="POST"
-              >
-                <input type="hidden" name="access_key" value="623d4393-90f3-4de8-b0c0-646e1d8ff1c3" />
-                <input type="hidden" name="subject" value="Blog sidebar enquiry" />
-                <input type="hidden" name="redirect" value="https://nc-digital.co.uk/contact?success=true" />
-                <input type="hidden" name="from_page" value={Astro.url.pathname} />
-
-                <div>
-                  <label class="field-label">Name</label>
-                  <input type="text" name="name" placeholder="Your name" required />
-                </div>
-                <div>
-                  <label class="field-label">Email</label>
-                  <input type="email" name="email" placeholder="you@example.com" required />
-                </div>
-                <div>
-                  <label class="field-label">Message</label>
-                  <textarea name="message" rows="2" placeholder="Tell us about your project..."></textarea>
-                </div>
-                <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">
-                  Send message
-                </button>
-              </form>
+              <EnquiryForm id="blog-enquiry-form" subject="Blog sidebar enquiry" compact={true} />
             </div>
 
             {related.length > 0 && (
@@ -125,8 +135,8 @@ const related = allPosts
                 <ul class="related-list">
                   {related.map((p) => (
                     <li>
-                      <a href={`/blog/${p.id.replace('/index.mdoc', '')}`}>
-                        <span class="related-cat">{p.data.category?.replace(/-/g, ' ')}</span>
+                      <a href={`/blog/${p.id.replace('/index.mdoc', '')}/`}>
+                        <span class="related-cat">{getBlogCategoryLabel(p.data.category)}</span>
                         {p.data.title}
                       </a>
                     </li>
@@ -135,6 +145,7 @@ const related = allPosts
               </div>
             )}
 
+
           </aside>
         </div>
       </div>
@@ -142,11 +153,11 @@ const related = allPosts
 
   </article>
 
-  <section style="padding:4rem 0; background:var(--bg-2); border-top:1px solid var(--border);">
+  <section style="padding:4rem 0; border-top:1px solid var(--border);">
     <div class="container site-pad" style="text-align:center;">
       <h2 data-animate="fade-up" style="margin-bottom:1rem;">Ready to grow your business online?</h2>
       <p data-animate="fade-up" style="color:var(--text-muted); margin-bottom:2rem;">Get a free website plan with no commitment.</p>
-      <a data-animate="fade-up" href="/free-website-plan" class="btn-primary">Get your free plan →</a>
+      <a data-animate="fade-up" href="/free-website-plan/" class="btn-primary">Get your free plan →</a>
     </div>
   </section>
 
@@ -190,6 +201,23 @@ const related = allPosts
       transition: color 0.2s;
     }
     .back-link:hover { color: var(--text); }
+
+    /* ── Optional featured image ───────────────────────────── */
+    .post-hero {
+      margin: 2rem 0 0;
+      max-width: 420px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--bg-2);
+      line-height: 0;
+    }
+
+    .post-hero img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
 
     /* ── Two-column layout ─────────────────────────────────── */
     .post-body {
@@ -333,6 +361,13 @@ const related = allPosts
 
     .prose :global(p) { margin: 0 0 1.25rem; }
 
+    .prose :global(img) {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+    }
+
     .prose :global(a) {
       color: var(--purple);
       text-decoration: underline;
@@ -394,12 +429,12 @@ const related = allPosts
         /* Sidebar moves below content on mobile */
       }
 
-      /* On mobile, progress bar sits above nav since sticky can't work */
       #scroll-progress {
-        top: 0;
+        top: 72px;
         height: 3px;
       }
     }
   </style>
+
 
 </BaseLayout>

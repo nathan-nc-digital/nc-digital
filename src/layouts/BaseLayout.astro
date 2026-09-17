@@ -2,6 +2,9 @@
 import BaseHead from '../components/BaseHead.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import WebGLBackground from '../components/WebGLBackground.astro';
+import FreePlanPopup from '../components/FreePlanPopup.astro';
+import Analytics from '../components/Analytics.astro';
 import '../styles/global.css';
 
 export interface Props {
@@ -9,23 +12,35 @@ export interface Props {
   description: string;
   image?: string;
   canonical?: string;
+  hidePopup?: boolean;
+  noindex?: boolean;
 }
 
-const { title, description, image, canonical } = Astro.props;
+// Free-plan popup disabled site-wide for now (may be re-enabled later) — flip this default back to false to restore it.
+const { title, description, image, canonical, hidePopup = true, noindex = false } = Astro.props;
 ---
 <!doctype html>
 <html lang="en-GB">
   <head>
-    <BaseHead {title} {description} {image} {canonical} />
+    <BaseHead {title} {description} {image} {canonical} {noindex} />
+    <slot name="head" />
   </head>
   <body>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2554756121636695&ev=PageView&noscript=1" alt="" /></noscript>
+    <WebGLBackground />
     <Nav />
     <main>
       <slot />
     </main>
     <Footer />
+    {!hidePopup && <FreePlanPopup />}
+    <Analytics />
     <script>
       import '../scripts/animations';
     </script>
   </body>
 </html>
+
+<style is:global>
+  main, footer { position: relative; z-index: 1; }
+</style>

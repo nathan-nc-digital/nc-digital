@@ -1,10 +1,10 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import HeroOrbs from '../../components/HeroOrbs.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 
-const projects = await getCollection('portfolio');
+const allProjects = await getCollection('portfolio');
+const projects = allProjects.sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
 
 const subfolderImages = import.meta.glob<{ default: ImageMetadata }>(
   '../../assets/portfolio/**/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG}',
@@ -26,6 +26,14 @@ const folderMap: Record<string, string> = {
   'k-williams-roofing':          'K Williams Roofing',
   'lr-building-roofing':         'L&R Building and Roofing',
   'mj-roofing':                  'M&J Roofing',
+  'rap-roofing':                 'RAP Roofing and Building',
+  'pro-tech-plumbing':           'Pro Tech Plumbing and Bathrooms',
+  'whats-on-merthyr-tydfil':    "What's On Merthyr Tydfil",
+  'web-design-south-wales':      'Web Design South Wales',
+  'sell-my-caravan-right':       'Sell My Caravan Right',
+  'electrician-barry':          'Electrician Barry',
+  'utopia-design':              'Utopia Design',
+  'c-morgan-pallets':           'C Morgan Pallets',
 };
 
 function getProjectImage(slug: string) {
@@ -50,46 +58,91 @@ function getProjectImage(slug: string) {
   return null;
 }
 
+const rootImages = import.meta.glob<{ default: ImageMetadata }>(
+  '../../assets/portfolio/*.{jpg,jpeg,png,webp}',
+  { eager: true }
+);
+function getThumb(slug: string) {
+  const folder = folderMap[slug];
+  if (folder) {
+    const match = Object.entries(subfolderImages).find(([path]) => {
+      if (!path.includes(`/${folder}/`)) return false;
+      return !path.split('/').pop()!.toLowerCase().startsWith('whatsapp');
+    });
+    if (match) return match[1].default;
+  }
+  for (const [path, mod] of Object.entries(rootImages)) {
+    if (path.split('/').pop()!.replace(/\.[^.]+$/, '') === slug) return mod.default;
+  }
+  return null;
+}
+
+const seoResults = [
+  { slug: 'ir-energy',     client: 'IR Energy',     href: '/portfolio/ir-energy/',     service: 'Local SEO Campaign',   period: 'Last 3 months vs previous 3 months',        stats: [{ value: '+76%',   label: 'Clicks from Google' }, { value: '+164%', label: 'Search impressions' }, { value: '50',    label: 'Enquiries generated' }] },
+  { slug: 'mj-roofing',    client: 'M&J Roofing',   href: '/portfolio/mj-roofing/',    service: 'Local SEO Campaign',   period: 'Last 3 months vs previous 3 months',       stats: [{ value: '+101%',  label: 'Clicks from Google' }, { value: '+745%', label: 'Search impressions' }, { value: '24',    label: 'Qualified leads generated' }] },
+  { slug: 'ds-carpentry',  client: 'DS Carpentry',  href: '/portfolio/ds-carpentry/',  service: 'Local SEO Campaign',   period: 'Last 3 months vs previous 3 months',       stats: [{ value: '+300%',  label: 'Clicks from Google' }, { value: '+384%', label: 'Search impressions' }, { value: '11',    label: 'Enquiry forms submitted' }] },
+  { slug: 'ak-promotions', client: 'AK Promotions', href: '/portfolio/ak-promotions/', service: 'Web Design & Build',   period: '15 Aug 2025 – 30 Apr 2026',        stats: [{ value: '2,800+', label: 'Visits since launch' },  { value: '75',    label: 'Enquiry forms submitted' },  { value: '808',   label: 'Organic search sessions' }] },
+];
+
 const serviceLabels: Record<string, string> = {
   'web-design':      'Web Design',
   'web-development': 'Web Development',
   'seo':             'Local SEO',
-  'hosting':         'Hosting',
+  'local-seo':       'Local SEO',
+  'hosting':                  'Hosting & Security',
+  'email':                    'Business Email',
+  'managed-starter-websites': 'Managed Starter Websites',
 };
 
 const serviceLinks: Record<string, string> = {
-  'web-design':      '/services/web-development',
-  'web-development': '/services/web-development',
-  'seo':             '/services/local-seo-google-ranking',
-  'hosting':         '/services/website-hosting-security',
+  'web-design':               '/services/web-design/',
+  'web-development':          '/services/web-development/',
+  'seo':                      '/services/local-seo-google-ranking/',
+  'local-seo':                '/services/local-seo-google-ranking/',
+  'hosting':                  '/services/website-hosting-security/',
+  'managed-starter-websites': '/services/managed-starter-websites/',
 };
 ---
 
 <BaseLayout
-  title="Portfolio | NC Digital"
-  description="Case studies from NC Digital — web design and SEO projects for South Wales small businesses."
+  title="Web Design Portfolio South Wales | NC Digital"
+  description="See our web design and SEO work for South Wales small businesses — real projects, real results. Based in Merthyr Tydfil."
 >
 
-  <section style="padding:5rem 0 3rem; position:relative; overflow:hidden;">
-    <HeroOrbs />
-    <div class="container site-pad" style="text-align:center; position:relative; z-index:1;">
+  <section style="padding:5rem 0 3rem;">
+    <div class="container site-pad" style="text-align:center;">
       <p data-animate="fade-up" class="eyebrow" style="margin-bottom:0.75rem;">Our work</p>
-      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:620px; margin-left:auto; margin-right:auto;">Real results for South Wales businesses</h1>
-      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin:0 auto;">
+      <h1 data-animate="fade-up" style="margin-bottom:1rem; max-width:820px; margin-left:auto; margin-right:auto;">Real results for South Wales businesses</h1>
+      <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.125rem; max-width:560px; line-height:1.7; margin:0 auto 2rem;">
         Every project we take on is built to generate leads, rank on Google, and grow with the business.
       </p>
+      <a data-animate="fade-up" href="#real-results" class="btn-outline" style="font-size:0.9375rem;">See real results →</a>
     </div>
   </section>
 
   <section style="padding:3rem 0 5rem;" id="portfolio-v3">
     <div class="container site-pad">
-      <div data-animate="stagger" class="portfolio-grid">
+
+      <!-- Filter bar -->
+      <div class="filter-bar" id="portfolio-filters">
+        <button class="filter-btn filter-btn--active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="trades">Trades</button>
+        <button class="filter-btn" data-filter="property">Property</button>
+        <button class="filter-btn" data-filter="energy">Energy Renewal</button>
+        <button class="filter-btn" data-filter="events">Events</button>
+        <button class="filter-btn" data-filter="ecommerce">Ecommerce</button>
+        <button class="filter-btn" data-filter="lead-generation">Lead Generation</button>
+        <button class="filter-btn" data-filter="agency">Agency</button>
+      </div>
+
+      <div data-animate="stagger" class="portfolio-grid" id="portfolio-grid">
         {projects.map((project) => {
           const slug = project.id.replace('/index.mdoc', '');
           const img = getProjectImage(slug);
+          const industries = (project.data.industry ?? ['trades']).join(' ');
           return (
-            <div class="portfolio-card">
-              <a href={`/portfolio/${slug}`} class="card-image">
+            <div class="portfolio-card" data-industry={industries}>
+              <a href={`/portfolio/${slug}/`} class="card-image">
                 {img ? (
                   <Image
                     src={img}
@@ -109,21 +162,203 @@ const serviceLinks: Record<string, string> = {
                 <p class="card-summary">{project.data.summary}</p>
                 <div class="card-tags">
                   {project.data.services.map((s: string) => (
-                    <a href={serviceLinks[s] || '/services'} class="card-tag">
+                    <a href={serviceLinks[s] || '/services/'} class="card-tag">
                       {serviceLabels[s] || s}
                     </a>
                   ))}
                 </div>
-                <a href={`/portfolio/${slug}`} class="card-cta">View case study →</a>
+                <a href={`/portfolio/${slug}/`} class="card-cta">View case study →</a>
               </div>
             </div>
           );
         })}
       </div>
+
+      <p class="no-results" id="no-results" style="display:none;">No projects found in this category.</p>
     </div>
   </section>
 
+  <!-- REAL RESULTS -->
+  <section id="real-results" style="padding:5rem 0;">
+    <div class="container site-pad">
+      <div style="text-align:center; margin-bottom:3rem;">
+        <p class="eyebrow" style="margin-bottom:0.75rem;">Real results</p>
+        <h2 data-animate="fade-up">Real results from real clients</h2>
+        <p data-animate="fade-up" style="color:var(--text-muted); font-size:1.0625rem; margin:1rem auto 0; max-width:520px; line-height:1.7;">Real data from live client campaigns. No estimates, no projections.</p>
+      </div>
+
+      <div class="seo-carousel" id="seoCarousel">
+        <div class="seo-viewport">
+          <div class="seo-slides" id="seoSlides">
+            {seoResults.map(({ slug, client, href, service, period, stats }) => {
+              const img = getThumb(slug);
+              return (
+                <div class="seo-slide">
+                  <div class="seo-card">
+                    <div class="seo-img-wrap">
+                      {img && <Image src={img} alt={client} width={700} height={480} class="seo-img" loading="lazy" />}
+                    </div>
+                    <div class="seo-content">
+                      <p class="eyebrow" style="margin-bottom:0.625rem;">{service}</p>
+                      <h3 class="seo-client">{client}</h3>
+                      <p class="seo-period">{period}</p>
+                      <div class="seo-stats-grid">
+                        {stats.map(({ value, label }) => (
+                          <div class="seo-stat">
+                            <span class="seo-stat-val">{value}</span>
+                            <span class="seo-stat-label">{label}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p style="font-size:0.75rem; color:var(--text-muted); opacity:0.6; margin-top:1.5rem; margin-bottom:0;">Stats taken 30/04/2026</p>
+                      <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-top:0.75rem;">
+                        <a href={href} class="btn-outline" style="font-size:0.875rem;">View project →</a>
+                        <a href="/contact/" class="btn-primary" style="font-size:0.875rem;">Hire us →</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div class="seo-controls">
+          <div class="seo-dots" id="seoDots"></div>
+          <div style="display:flex; gap:0.625rem;">
+            <button class="reviews-arrow" id="seoPrev" aria-label="Previous">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button class="reviews-arrow" id="seoNext" aria-label="Next">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      const slides   = document.getElementById('seoSlides') as HTMLElement;
+      const dotsWrap = document.getElementById('seoDots')!;
+      const prevBtn  = document.getElementById('seoPrev')!;
+      const nextBtn  = document.getElementById('seoNext')!;
+      if (!slides) return;
+      const items = slides.querySelectorAll('.seo-slide');
+      const total = items.length;
+      let current = 0;
+
+      function buildDots() {
+        dotsWrap.innerHTML = '';
+        for (let i = 0; i < total; i++) {
+          const d = document.createElement('button');
+          d.className = 'reviews-dot' + (i === current ? ' active' : '');
+          d.setAttribute('aria-label', `Go to slide ${i + 1}`);
+          d.addEventListener('click', () => goTo(i));
+          dotsWrap.appendChild(d);
+        }
+      }
+
+      function goTo(n: number) {
+        current = ((n % total) + total) % total;
+        slides.style.transform = `translateX(-${current * (items[0] as HTMLElement).offsetWidth}px)`;
+        dotsWrap.querySelectorAll('.reviews-dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      }
+
+      prevBtn.addEventListener('click', () => goTo(current - 1));
+      nextBtn.addEventListener('click', () => goTo(current + 1));
+
+      let touchX = 0;
+      slides.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+      slides.addEventListener('touchend', (e) => {
+        const dx = touchX - e.changedTouches[0].clientX;
+        if (Math.abs(dx) > 40) goTo(dx > 0 ? current + 1 : current - 1);
+      }, { passive: true });
+
+      let dragStartX = 0, dragging = false;
+      slides.addEventListener('mousedown', (e) => { dragStartX = e.clientX; dragging = true; slides.style.cursor = 'grabbing'; });
+      document.addEventListener('mouseup', (e) => {
+        if (!dragging) return;
+        dragging = false; slides.style.cursor = 'grab';
+        const dx = dragStartX - e.clientX;
+        if (Math.abs(dx) > 40) goTo(dx > 0 ? current + 1 : current - 1);
+      });
+      slides.style.cursor = 'grab';
+
+      window.addEventListener('resize', () => goTo(current));
+      buildDots();
+      goTo(0);
+
+      const carousel = document.getElementById('seoCarousel')!;
+      let autoTimer = window.setInterval(() => goTo(current + 1 < total ? current + 1 : 0), 4000);
+      carousel.addEventListener('mouseenter', () => window.clearInterval(autoTimer));
+      carousel.addEventListener('mouseleave', () => { autoTimer = window.setInterval(() => goTo(current + 1 < total ? current + 1 : 0), 4000); });
+    })();
+  </script>
+
+  <script is:inline>
+    (function () {
+      const btns = document.querySelectorAll('.filter-btn');
+      const cards = document.querySelectorAll('.portfolio-card');
+      const noResults = document.getElementById('no-results');
+
+      btns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const filter = btn.getAttribute('data-filter');
+
+          btns.forEach(function (b) { b.classList.remove('filter-btn--active'); });
+          btn.classList.add('filter-btn--active');
+
+          let visible = 0;
+          cards.forEach(function (card) {
+            const industries = (card.getAttribute('data-industry') || '').split(' ');
+            const match = filter === 'all' || industries.includes(filter);
+            card.style.display = match ? '' : 'none';
+            if (match) visible++;
+          });
+
+          noResults.style.display = visible === 0 ? 'block' : 'none';
+        });
+      });
+    })();
+  </script>
+
   <style>
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .filter-btn {
+      background: var(--bg-3);
+      border: 1px solid var(--border-2);
+      color: var(--text-muted);
+      font-family: 'Sora', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.45rem 1.1rem;
+      border-radius: 99px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .filter-btn:hover {
+      border-color: var(--purple);
+      color: var(--white);
+    }
+    .filter-btn--active {
+      background: var(--purple);
+      border-color: var(--purple);
+      color: var(--white);
+    }
+
+    .no-results {
+      color: var(--text-muted);
+      text-align: center;
+      padding: 3rem 0;
+    }
+
     .portfolio-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -147,7 +382,7 @@ const serviceLinks: Record<string, string> = {
     .card-image {
       display: block;
       width: 100%;
-      height: 260px;
+      height: 300px;
       overflow: hidden;
       flex-shrink: 0;
       background: var(--bg-3);
@@ -158,7 +393,7 @@ const serviceLinks: Record<string, string> = {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: top center;
+      object-position: center;
       display: block;
       transition: transform 0.3s ease;
     }
@@ -198,6 +433,10 @@ const serviceLinks: Record<string, string> = {
       line-height: 1.6;
       margin-bottom: 1rem;
       flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .card-tags {
@@ -222,13 +461,6 @@ const serviceLinks: Record<string, string> = {
       border-color: var(--purple);
     }
 
-    .card-body {
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-
     .card-cta {
       color: var(--purple);
       font-size: 0.875rem;
@@ -242,6 +474,40 @@ const serviceLinks: Record<string, string> = {
     }
     @media (max-width: 560px) {
       .portfolio-grid { grid-template-columns: 1fr; }
+    }
+
+    /* SEO results carousel */
+    .seo-viewport { overflow: hidden; border-radius: 16px; }
+    .seo-slides { display: flex; transition: transform 0.45s cubic-bezier(0.4,0,0.2,1); will-change: transform; cursor: grab; }
+    .seo-slides:active { cursor: grabbing; }
+    .seo-slide { flex: 0 0 100%; }
+    .seo-card { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; background: var(--bg-2); min-height: 420px; }
+    .seo-img-wrap { overflow: hidden; position: relative; background: var(--bg-3); }
+    .seo-img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; transition: transform 0.5s ease; }
+    .seo-card:hover .seo-img { transform: scale(1.03); }
+    .seo-content { padding: 3rem; display: flex; flex-direction: column; justify-content: center; }
+    .seo-client { font-size: 1.75rem; font-weight: 800; color: var(--white); margin: 0 0 0.375rem; letter-spacing: -0.02em; }
+    .seo-period { font-size: 0.875rem; color: var(--text-muted); margin: 0 0 2rem; }
+    .seo-stats-grid { display: flex; flex-direction: column; gap: 1.25rem; }
+    .seo-stat { display: flex; flex-direction: column; gap: 0.2rem; }
+    .seo-stat-val { font-size: 2rem; font-weight: 800; color: var(--purple); line-height: 1; letter-spacing: -0.02em; }
+    .seo-stat-label { font-size: 0.8125rem; color: var(--text-muted); }
+    .seo-controls { display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; }
+    .seo-dots { display: flex; gap: 0.5rem; }
+    .reviews-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); border: none; padding: 0; cursor: pointer; transition: background 0.2s, transform 0.2s; }
+    .reviews-dot.active { background: var(--purple); transform: scale(1.25); }
+    .reviews-arrow { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg-2); color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.2s, color 0.2s, background 0.2s; }
+    .reviews-arrow:hover { border-color: var(--purple); color: var(--white); background: rgba(135,80,247,0.1); }
+    @media (max-width: 760px) {
+      .seo-card { grid-template-columns: 1fr; }
+      .seo-img-wrap { height: 360px; }
+      .seo-content { padding: 1.75rem 1.25rem; }
+      .seo-client { font-size: 1.375rem; }
+      .seo-period { margin-bottom: 1.25rem; }
+      .seo-stats-grid { flex-direction: row; flex-wrap: wrap; gap: 1rem; }
+      .seo-stat { flex: 1; min-width: 80px; }
+      .seo-stat-val { font-size: 1.5rem; }
+      .seo-stat-label { font-size: 0.75rem; }
     }
   </style>
 
