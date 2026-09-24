@@ -9,7 +9,13 @@ const fail = (message, status = 400) => Object.assign(new Error(message), { stat
 const decoder = new TextDecoder();
 export const researchLocations = locations.filter(x => ['City', 'Post town', 'County', 'Region', 'District'].includes(x.type));
 
-export async function dataForSeo(env, endpoint, input) {
+// Every paid lookup is written to the spend ledger (by tool) so the admin dashboard can total the month.
+// Logging never blocks or fails the lookup itself.
+async function logSpend(env, tool, endpoint, cost) {
+  try { if (cost > 0 && env.JOBS_DB) await env.JOBS_DB.prepare('INSERT INTO dataforseo_usage(at,tool,endpoint,cost) VALUES(?,?,?,?)').bind(new Date().toISOString(), tool, endpoint, cost).run(); } catch {}
+}
+
+export async function dataForSeo(env, endpoint, input, tool = 'other') {
   if (!env.DATAFORSEO_LOGIN || !env.DATAFORSEO_PASSWORD) throw fail('DataForSEO is not connected. Ask Nathan to configure the API credentials.', 503);
   const bytes = new TextEncoder().encode(`${env.DATAFORSEO_LOGIN}:${env.DATAFORSEO_PASSWORD}`);
   const auth = btoa(Array.from(bytes, b => String.fromCharCode(b)).join(''));
@@ -25,7 +31,9 @@ export async function dataForSeo(env, endpoint, input) {
     const message = [401, 40100].includes(code) ? 'DataForSEO credentials were rejected.' : [402, 40200].includes(code) ? 'DataForSEO needs account credit before research can run.' : `DataForSEO could not complete this lookup (code ${code}).`;
     throw fail(message, 502);
   }
-  return { result: task.result?.[0] || null, cost: typeof body.cost === 'number' ? body.cost : typeof task.cost === 'number' ? task.cost : 0, costReported: typeof body.cost === 'number' || typeof task.cost === 'number' };
+  const cost = typeof body.cost === 'number' ? body.cost : typeof task.cost === 'number' ? task.cost : 0;
+  await logSpend(env, tool, endpoint, cost);
+  return { result: task.result?.[0] || null, cost, costReported: typeof body.cost === 'number' || typeof task.cost === 'number' };
 }
 
 export async function runResearch(env, input) {
@@ -35,7 +43,7 @@ export async function runResearch(env, input) {
   const warnings = [];
   const lookup = async (label, endpoint, params) => {
     calls++;
-    try { const r = await dataForSeo(env, endpoint, params); cost += r.cost; return r.result; }
+    try { const r = await dataForSeo(env, endpoint, params, 'keyword-research'); cost += r.cost; return r.result; }
     catch (error) { warnings.push(`${label}: ${error.message}`); return null; }
   };
   const [suggestions, related, serp] = await Promise.all([

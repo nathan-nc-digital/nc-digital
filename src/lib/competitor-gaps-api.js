@@ -26,7 +26,7 @@ async function advance(env,id){return lock(env.JOBS_DB,async()=>{
  // Reserve before dispatch. A crash or timeout leaves the reservation durable.
  await db.prepare("INSERT INTO gap_spend(report_id,step,request_key,reserve,status,created_at) VALUES(?,?,?,?,'uncertain',?)").bind(id,state.index,key,RESERVE,now()).run();
  let result;
- try{result=await dataForSeo(env,'dataforseo_labs/google/domain_intersection/live',gapRequest(state.input,step));if(!result.costReported||!Number.isFinite(result.cost)||result.cost<0)throw fail('The provider did not confirm a valid charge.',502);}
+ try{result=await dataForSeo(env,'dataforseo_labs/google/domain_intersection/live',gapRequest(state.input,step),'competitor-gaps');if(!result.costReported||!Number.isFinite(result.cost)||result.cost<0)throw fail('The provider did not confirm a valid charge.',502);}
  catch(e){state.warnings.push(`${step.competitor} / ${step.kind}: ${e.status?e.message:'The lookup did not complete.'} The $${RESERVE.toFixed(2)} allowance remains reserved; no automatic retry.`);await saveStep(db,id,state,{...empty,error:'Lookup unavailable; charge uncertain.'});return view(db,await row(db,id));}
  const data=mapGapResult(state.input,step,result.result,extra);if(result.cost>RESERVE){state.warnings.push('The provider charge exceeded the conservative allowance. Further paid requests were stopped.');state.input.budget=0;}
  await saveStep(db,id,state,data,[db.prepare("UPDATE gap_spend SET cost=?,status='complete' WHERE report_id=? AND step=?").bind(result.cost,id,state.index),db.prepare('INSERT INTO gap_cache(key,data,updated_at) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at').bind(key,JSON.stringify(data),now())]);

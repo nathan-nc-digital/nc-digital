@@ -49,7 +49,7 @@ async function paid(env,id,state,step,reserve,endpoint,input) {
     db.prepare('UPDATE emd_scans SET state=?,updated_at=? WHERE id=?').bind(JSON.stringify(state),now(),id),
   ]);
   try {
-    const r=await dataForSeo(env,endpoint,input);
+    const r=await dataForSeo(env,endpoint,input,'emd-finder');
     if(!r.costReported||!Number.isFinite(r.cost)||r.cost<0) throw problem('The provider did not return a valid cost.',502);
     await db.prepare("UPDATE emd_spend SET cost=?,status='complete' WHERE scan_id=? AND step=?").bind(r.cost,id,step).run();
     if(r.cost>reserve){state.phase='done';state.warnings.push('Provider cost exceeded the conservative estimate; stopped further spending.');}

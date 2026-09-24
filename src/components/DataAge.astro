@@ -1,0 +1,21 @@
+---
+// Banner for admin pages built from a saved snapshot: shows when the data was fetched and how old it
+// is now (worked out in the browser), turning amber after a week and red after a month.
+interface Props { at?: string | null; source: string; refresh?: string }
+const { at, source, refresh } = Astro.props;
+---
+<div class="data-age" data-age-at={at ?? ''} data-tone="old" role="note">
+  <strong>{source} data from <span data-age-text>{at ? at.slice(0, 10) : 'an unknown date'}</span></strong>
+  {refresh && <span class="data-age-how">To update: <code>{refresh}</code></span>}
+</div>
+<style>
+  .data-age { display:flex; flex-wrap:wrap; gap:.4rem 1rem; align-items:center; margin:1rem 0; padding:.7rem 1rem; border-radius:8px; border:1px solid #2d7a52; background:rgba(45,215,124,.08); color:#bff5d6; font-size:.82rem; line-height:1.5; }
+  .data-age[data-tone="stale"] { border-color:#8a6d1f; background:rgba(246,200,95,.1); color:#f8e2a6; }
+  .data-age[data-tone="old"] { border-color:#8a2a3c; background:rgba(255,92,122,.1); color:#ffc2cd; }
+  .data-age-how { color:inherit; opacity:.8; }
+  .data-age code { font-size:.75rem; overflow-wrap:anywhere; }
+</style>
+<script>
+  import { fillAgeLabels } from '../scripts/data-age.js';
+  fillAgeLabels();
+</script>

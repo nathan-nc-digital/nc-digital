@@ -1,4 +1,6 @@
 ---
+import AdminNav from '../../components/AdminNav.astro';
+import DataAge from '../../components/DataAge.astro';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -102,20 +104,14 @@ const spamCount      = refdomains.filter(r => r.is_spam).length;
   </style>
 </head>
 <body>
+<AdminNav />
 
 <div class="topbar">
   <h1>Backlinks</h1>
   <div class="topbar-right">
-    {fetchedAt && <span class="build-note">Data from {fetchedAt}</span>}
-    <a href="/admin/links/">Internal Links →</a>
-    <a href="/admin/keywords/">Keywords →</a>
-    <a href="/admin/keyword-research/">Keyword Research →</a>
-    <a href="/admin/indexing/">Indexing →</a>
-    <a href="/admin/gsc/">GSC →</a>
-    <a href="/admin/emd-finder/">EMD Finder →</a>
-    <a href="/">← Back to site</a>
   </div>
 </div>
+<div style="padding:0 1.5rem"><DataAge at={cache?.fetchedAt} source="Ahrefs backlink" refresh="node scripts/ahrefs-fetch.mjs && npm run build && npx wrangler deploy" /></div>
 
 {cacheError ? (
   <div class="error-box">⚠ {cacheError}</div>

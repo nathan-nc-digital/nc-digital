@@ -1,36 +1,5 @@
 ---
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
-interface IndexedPage {
-  url: string;
-  status: 'indexed' | 'not-indexed' | 'unknown';
-  verdict?: string;
-  coverageState?: string;
-  lastCrawlTime?: string | null;
-  googleCanonical?: string | null;
-  userCanonical?: string | null;
-  pageFetchState?: string | null;
-}
-
-interface IndexCache {
-  fetchedAt?: string;
-  pages?: IndexedPage[];
-}
-
-const cachePath = join(process.cwd(), 'scripts/gsc-indexing-cache.json');
-const cache: IndexCache = existsSync(cachePath)
-  ? JSON.parse(readFileSync(cachePath, 'utf8'))
-  : { pages: [] };
-const pages = cache.pages ?? [];
-const indexed = pages.filter((page) => page.status === 'indexed').length;
-const notIndexed = pages.filter((page) => page.status === 'not-indexed').length;
-const unknown = pages.filter((page) => page.status === 'unknown').length;
-
-function fmtDate(value?: string | null) {
-  if (!value) return '-';
-  return new Date(value).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
-}
+import AdminNav from '../../components/AdminNav.astro';
 ---
 
 <html lang="en">
@@ -39,7 +8,7 @@ function fmtDate(value?: string | null) {
     <meta name="robots" content="noindex,nofollow" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Google Indexing | NC Digital Admin</title>
-    <style>
+    <style is:global>
       :root { color-scheme:dark; --bg:#090911; --panel:#11111c; --border:#25253a; --text:#f7f7fb; --muted:#a6a6bb; --purple:#8750f7; --green:#2dd77c; --red:#ff5c7a; --amber:#f6c85f; }
       * { box-sizing:border-box; }
       body { margin:0; background:var(--bg); color:var(--text); font-family:Sora,Inter,system-ui,sans-serif; }
@@ -125,32 +94,59 @@ function fmtDate(value?: string | null) {
         td:first-child .url { color:var(--text); font-weight:800; }
         .pill { padding:.2rem .45rem; font-size:.62rem; }
       }
+      .hero { display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; margin-bottom:1rem; }
+      .controls { display:grid; gap:.5rem; min-width:min(380px,100%); }
+      .controls select, .controls button, .progress button { background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:.7rem .9rem; font:inherit; font-size:.85rem; width:100%; cursor:pointer; }
+      .controls .primary { background:var(--purple); border-color:var(--purple); font-weight:800; }
+      .controls button:disabled { opacity:.55; cursor:wait; }
+      .buttons { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+      .age { font-size:.78rem; color:var(--muted); }
+      .age.stale { color:var(--amber); }
+      .age.old { color:var(--red); }
+      .stats { grid-template-columns:repeat(5,minmax(0,1fr)); }
+      .notice { margin:1rem 0; padding:.8rem 1rem; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--muted); font-size:.88rem; }
+      .notice.error { border-color:rgba(255,92,122,.5); color:#ffc2cd; }
+      .progress { display:flex; align-items:center; gap:1rem; margin:1rem 0; padding:1rem; border:1px solid var(--purple); border-radius:8px; background:var(--panel); }
+      .progress > div { flex:1; }
+      .progress p { margin:0 0 .5rem; font-size:.88rem; }
+      .progress button { width:auto; }
+      .bar { height:6px; border-radius:99px; background:var(--border); overflow:hidden; }
+      .bar span { display:block; height:100%; width:0; background:var(--purple); transition:width .3s; }
+      .pending { color:var(--muted); }
+      .advice { display:block; margin-top:.35rem; color:var(--muted); font-size:.78rem; line-height:1.5; }
+      .small { display:block; margin-top:.25rem; font-size:.72rem; }
+      .empty { padding:2rem; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--muted); }
+      @media(max-width:900px){ tbody { grid-template-columns:minmax(0,1fr); } td { overflow-wrap:anywhere; } .hero { display:block; } .controls { margin-top:1rem; } .stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .progress { display:block; } .progress button { margin-top:.5rem; } }
     </style>
   </head>
   <body>
+<AdminNav />
     <header class="topbar">
-      <div class="brand">NC Digital Admin</div>
-      <nav class="nav">
-        <a href="/admin/links/">Internal Links</a>
-        <a href="/admin/backlinks/">Backlinks</a>
-        <a href="/admin/keywords/">Keywords</a>
-        <a href="/admin/keyword-research/">Keyword Research</a>
-        <a href="/admin/indexing/" class="active">Indexing</a>
-        <a href="/admin/gsc/">GSC</a>
-        <a href="/admin/emd-finder/">EMD Finder</a>
-      </nav>
+      <div class="brand">Indexing</div>
     </header>
     <main>
-      <h1>Google Indexing</h1>
-      <p class="sub">Google Search Console URL Inspection results for every URL in the sitemap.</p>
-      <div class="cmd">npm run build && npm run gsc:indexing && npm run build && npx wrangler deploy</div>
-
-      <section class="stats">
-        <div class="stat"><div class="label">Last Refresh</div><div class="value" style="font-size:1rem">{fmtDate(cache.fetchedAt)}</div></div>
-        <button class="stat" data-status-filter="indexed"><div class="label">Indexed</div><div class="value">{indexed}</div></button>
-        <button class="stat" data-status-filter="not-indexed"><div class="label">Not Indexed</div><div class="value">{notIndexed}</div></button>
-        <button class="stat" data-status-filter="unknown"><div class="label">Unknown / Error</div><div class="value">{unknown}</div></button>
+      <section class="hero">
+        <div>
+          <h1>Google Indexing</h1>
+          <p class="sub">Live Google URL Inspection results for every page in the sitemap, with a plain-English reason and fix for anything not indexed.</p>
+        </div>
+        <div class="controls">
+          <select id="site" aria-label="Search Console property"><option>Loading properties…</option></select>
+          <div class="buttons">
+            <button id="check-problems" class="primary" type="button" title="Checks pages that are new, not indexed or had an error">Check new &amp; problem pages</button>
+            <button id="check-all" type="button" title="Rechecks every page in the sitemap. Google allows 2,000 checks per day.">Check all pages</button>
+          </div>
+          <div id="age" class="age"></div>
+        </div>
       </section>
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <section id="progress" class="progress" hidden>
+        <div><p id="progress-copy"></p><div class="bar"><span id="progress-bar"></span></div></div>
+        <button id="resume" type="button" hidden>Resume</button>
+        <button id="stop" type="button">Stop</button>
+      </section>
+
+      <section class="stats" id="stats"></section>
 
       <div class="filters">
         <input id="search" type="search" placeholder="Search page URL or coverage reason" />
@@ -158,42 +154,18 @@ function fmtDate(value?: string | null) {
           <option value="">All index statuses</option>
           <option value="indexed">Indexed</option>
           <option value="not-indexed">Not indexed</option>
+          <option value="stuck">Not indexed after 7+ days</option>
+          <option value="pending">Not checked yet</option>
           <option value="unknown">Unknown / error</option>
         </select>
       </div>
 
       <table id="pages">
-        <thead><tr><th>Page</th><th>Status</th><th>Google Coverage Reason</th><th>Last Crawl</th><th>Google Canonical</th><th>Fetch</th></tr></thead>
-        <tbody>
-          {pages.map((page) => (
-            <tr data-status={page.status} data-search={`${page.url} ${page.coverageState ?? ''}`.toLowerCase()}>
-              <td data-label="Page"><a class="url" href={page.url} target="_blank" rel="noopener">{page.url.replace('https://nc-digital.co.uk', '') || '/'}</a></td>
-              <td data-label="Status"><span class={`pill ${page.status}`}>{page.status === 'not-indexed' ? 'Not indexed' : page.status}</span></td>
-              <td data-label="Coverage">{page.coverageState ?? '-'}</td>
-              <td data-label="Last crawl" class="muted">{fmtDate(page.lastCrawlTime)}</td>
-              <td data-label="Canonical">{page.googleCanonical ? <a class="url" href={page.googleCanonical} target="_blank" rel="noopener">{page.googleCanonical.replace('https://nc-digital.co.uk', '') || '/'}</a> : '-'}</td>
-              <td data-label="Fetch">{page.pageFetchState ?? '-'}</td>
-            </tr>
-          ))}
-        </tbody>
+        <thead><tr><th>Page</th><th>Status</th><th>Google's reason &amp; what to do</th><th>Last crawl</th><th>Google canonical</th><th>Checked</th></tr></thead>
+        <tbody id="rows"></tbody>
       </table>
+      <p id="empty" class="empty" hidden>No pages checked for this property yet. Press <strong>Check new &amp; problem pages</strong> to read the sitemap and start.</p>
     </main>
-    <script>
-      const search = document.getElementById('search');
-      const status = document.getElementById('status');
-      const rows = Array.from(document.querySelectorAll('#pages tbody tr'));
-      function applyFilters() {
-        const query = search.value.trim().toLowerCase();
-        const selected = status.value;
-        for (const row of rows) row.style.display = (!query || row.dataset.search.includes(query)) && (!selected || row.dataset.status === selected) ? '' : 'none';
-      }
-      search?.addEventListener('input', applyFilters);
-      status?.addEventListener('change', applyFilters);
-      for (const stat of document.querySelectorAll('[data-status-filter]')) stat.addEventListener('click', () => {
-        status.value = stat.dataset.statusFilter;
-        applyFilters();
-        document.getElementById('pages')?.scrollIntoView({ behavior:'smooth', block:'start' });
-      });
-    </script>
+    <script>import '../../scripts/indexing.js';</script>
   </body>
 </html>

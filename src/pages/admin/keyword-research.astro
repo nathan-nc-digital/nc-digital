@@ -1,4 +1,6 @@
 ---
+import AdminNav from '../../components/AdminNav.astro';
+import DfsSpend from '../../components/DfsSpend.astro';
 import '@fontsource/sora/400.css';
 import '@fontsource/sora/600.css';
 ---
@@ -6,7 +8,9 @@ import '@fontsource/sora/600.css';
 <html lang="en">
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex, nofollow" /><title>Keyword Research | NC Digital Admin</title></head>
 <body>
-  <header class="topbar"><a class="brand" href="/admin/links/">NC <span>Digital</span><small>/ Keyword Research</small></a><nav aria-label="Admin"><a href="/admin/social/">Social posts</a><a href="/admin/links/">All admin tools ↗</a></nav></header>
+<AdminNav />
+<DfsSpend />
+  <header class="topbar"><a class="brand" href="/admin/links/">Keyword Research</a></header>
   <main>
     <div class="intro"><div><p class="eyebrow">CLIENT RESEARCH · GOOGLE UK</p><h1>Find the searches.<br /><span>Plan the site.</span></h1><p>Turn a service and a town into a practical website plan,<br /> with search data to explain your choices.</p></div><div class="source-status"><span class="status-dot"></span><span id="connection">Checking DataForSEO…</span></div></div>
     <section class="panel search-panel" aria-label="Start keyword research">

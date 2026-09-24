@@ -1,0 +1,27 @@
+---
+import AdminNav from '../../components/AdminNav.astro';
+import '@fontsource/sora/400.css';
+import '@fontsource/sora/600.css';
+import '../../styles/admin-dashboard.css';
+---
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex,nofollow"/><title>Dashboard | NC Digital Admin</title></head><body>
+<AdminNav />
+<main>
+  <div class="intro">
+    <div><p class="eyebrow" id="today"></p><h1 id="greeting">Hello, Nathan.</h1><p>What needs your attention across enquiries, clients, Google and spend.</p></div>
+    <div class="refresh"><span id="updated"></span><button id="reload" type="button">Refresh</button></div>
+  </div>
+  <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+  <section class="cards" id="cards" aria-label="At a glance"><div class="card loading"></div><div class="card loading"></div><div class="card loading"></div><div class="card loading"></div><div class="card loading"></div><div class="card loading"></div></section>
+  <div class="grid">
+    <section class="panel"><div class="panel-head"><h2>Enquiries</h2><a href="/admin/crm/inbox/">Open inbox →</a></div><div id="enquiries"></div></section>
+    <section class="panel"><div class="panel-head"><h2>Tasks due</h2><a href="/admin/crm/">CRM →</a></div><div id="tasks"></div></section>
+    <section class="panel" id="clients-panel"><div class="panel-head"><h2>Monthly SEO reports</h2><a href="/admin/analytics-reports/">SEO reports →</a></div><div id="clients"></div></section>
+    <section class="panel full" id="shares-panel"><div class="panel-head"><h2>Shared reviews &amp; reports</h2><a href="/admin/website-audit/">Website audits →</a></div><div id="shares"></div></section>
+    <section class="panel"><div class="panel-head"><h2>nc-digital.co.uk in Google</h2><a href="/admin/gsc/">Search Console →</a></div><div id="search"></div></section>
+    <section class="panel"><div class="panel-head"><h2>Indexing</h2><a href="/admin/indexing/">Indexing →</a></div><div id="indexing"></div></section>
+    <section class="panel" id="spend-panel"><div class="panel-head"><h2>DataForSEO spend</h2><a href="https://app.dataforseo.com/" target="_blank" rel="noopener">Account ↗</a></div><div id="spend"></div></section>
+  </div>
+</main>
+<script>import '../../scripts/admin-dashboard.js';</script>
+</body></html>

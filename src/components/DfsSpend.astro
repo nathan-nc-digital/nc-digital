@@ -1,0 +1,25 @@
+---
+// Slim bar for tools that spend DataForSEO credit: this month's spend against the budget set on the
+// admin dashboard, and the account balance. Turns amber near the budget and red once it is passed.
+---
+<div class="dfs-spend" data-dfs-spend hidden>
+  <span data-dfs-text></span>
+  <a href="/admin/#spend-panel">Spend details →</a>
+</div>
+<style>
+  .dfs-spend { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.3rem 1rem; max-width:1450px; margin:12px auto 0; padding:9px 14px; border-radius:10px; border:1px solid #2d7a52; background:rgba(45,215,124,.07); color:#bff5d6; font:12px/1.6 Sora, system-ui, sans-serif; width:calc(100% - 32px); box-sizing:border-box; }
+  .dfs-spend[data-level="near"] { border-color:#8a6d1f; background:rgba(246,200,95,.09); color:#f8e2a6; }
+  .dfs-spend[data-level="over"] { border-color:#8a2a3c; background:rgba(255,92,122,.1); color:#ffc2cd; }
+  .dfs-spend a { color:inherit; text-decoration:underline; }
+</style>
+<script>
+  const bar = document.querySelector('[data-dfs-spend]');
+  const money = (v) => '$' + Number(v).toFixed(2);
+  fetch('/admin/dashboard/api/spend').then(r => (r.ok ? r.json() : null)).then(s => {
+    if (!s || !bar) return;
+    const lead = s.level === 'over' ? 'Over budget: ' : s.level === 'near' ? 'Nearly at budget: ' : '';
+    bar.querySelector('[data-dfs-text]').textContent = `${lead}DataForSEO this month ${money(s.month)} of ${money(s.budget)} budget${s.balance != null ? ` · ${money(s.balance)} left on the account` : ''}`;
+    bar.dataset.level = s.level;
+    bar.hidden = false;
+  }).catch(() => {});
+</script>

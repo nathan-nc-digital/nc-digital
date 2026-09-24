@@ -1,136 +1,5 @@
 ---
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
-interface GscRow {
-  keys?: string[];
-  query?: string;
-  page?: string;
-  clicks: number;
-  impressions: number;
-  ctr: number;
-  position: number;
-}
-
-interface GscMover {
-  query: string;
-  pos: number;
-  prev: number;
-  delta: number;
-  clicks: number;
-}
-
-interface GscReport {
-  generatedAt?: string;
-  period?: {
-    startDate?: string;
-    endDate?: string;
-    previousStartDate?: string;
-    previousEndDate?: string;
-  };
-  overview?: {
-    current?: GscRow;
-    previous?: GscRow;
-    change?: {
-      clicks?: string;
-      impressions?: string;
-      ctr?: string;
-    };
-  };
-  topQueries?: GscRow[];
-  topPages?: GscRow[];
-  opportunities?: GscRow[];
-  queryPages?: GscRow[];
-  gained?: GscMover[];
-  lost?: GscMover[];
-}
-
-const REPORT_PATH = join(process.cwd(), 'scripts/gsc-report.json');
-const report: GscReport = existsSync(REPORT_PATH)
-  ? JSON.parse(readFileSync(REPORT_PATH, 'utf8'))
-  : {};
-
-const current = report.overview?.current ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 };
-const previous = report.overview?.previous ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 };
-const topQueries = report.topQueries ?? [];
-const topPages = report.topPages ?? [];
-const opportunities = report.opportunities ?? [];
-const queryPages = report.queryPages ?? [];
-const gained = report.gained ?? [];
-const lost = report.lost ?? [];
-const hasData = Boolean(report.generatedAt);
-
-const priorityActions = [
-  ...lost.slice(0, 6).map((row) => ({
-    type: 'Ranking drop',
-    title: row.query,
-    detail: `Position moved from ${fmtPos(row.prev)} to ${fmtPos(row.pos)}.`,
-    action: 'Check the ranking page, compare the current SERP, and add internal links from relevant pages.',
-    score: 100 - row.delta,
-    tone: 'page-two-plus',
-  })),
-  ...opportunities.slice(0, 12).map((row) => ({
-    type: issueType(row) === 'low-ctr' ? 'Low CTR' : 'Quick win',
-    title: row.query,
-    detail: `${fmtNumber(row.impressions)} impressions, ${fmtPct(row.ctr)} CTR, position ${fmtPos(row.position)}.`,
-    action: recommendedAction(row),
-    score: (row.impressions ?? 0) + (30 - (row.position ?? 30)) * 10,
-    tone: issueType(row),
-  })),
-]
-  .sort((a, b) => b.score - a.score)
-  .slice(0, 10);
-
-function fmtDate(value?: string | null) {
-  if (!value) return 'Not refreshed yet';
-  return new Date(value).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
-}
-
-function fmtNumber(value?: number | null) {
-  return value === null || value === undefined ? '-' : Math.round(value).toLocaleString();
-}
-
-function fmtPct(value?: number | null) {
-  if (value === null || value === undefined) return '-';
-  return `${(value * 100).toFixed(value * 100 < 1 ? 2 : 1)}%`;
-}
-
-function fmtPos(value?: number | null) {
-  if (value === null || value === undefined) return '-';
-  return value.toFixed(1);
-}
-
-function pagePath(value?: string) {
-  if (!value) return '-';
-  return value.replace('https://nc-digital.co.uk', '') || '/';
-}
-
-function queryIntent(query = '') {
-  const q = query.toLowerCase();
-  if (/\b(price|cost|cheap|affordable|quote|packages?)\b/.test(q)) return 'commercial';
-  if (/\b(near me|cardiff|newport|swansea|wales|merthyr|aberdare|bridgend|llanelli|pontypridd|caerphilly)\b/.test(q)) return 'local';
-  if (/\b(how|what|why|guide|best|compare|vs)\b/.test(q)) return 'informational';
-  return 'mixed';
-}
-
-function recommendedAction(row: GscRow) {
-  const ctr = row.ctr ?? 0;
-  const pos = row.position ?? 0;
-  const impressions = row.impressions ?? 0;
-  if (impressions >= 50 && ctr < 0.01 && pos <= 20) return 'Rewrite title/meta to make the result more clickable.';
-  if (pos >= 4 && pos <= 10) return 'Add stronger internal links and improve the matching section on the target page.';
-  if (pos > 10 && pos <= 30) return 'Expand the page around this query and add supporting FAQ copy.';
-  if (impressions >= 100 && ctr < 0.02) return 'Check search intent and make the snippet more specific.';
-  if ((row.clicks ?? 0) > 0) return 'Keep monitoring and protect the ranking with internal links.';
-  return 'Review whether this query needs a better target page.';
-}
-
-function issueType(row: GscRow) {
-  if ((row.position ?? 0) >= 4 && (row.position ?? 0) <= 20 && (row.ctr ?? 0) < 0.05) return 'quick-win';
-  if ((row.impressions ?? 0) >= 100 && (row.ctr ?? 0) < 0.01) return 'low-ctr';
-  if ((row.position ?? 0) > 20) return 'page-two-plus';
-  return 'monitor';
-}
+import AdminNav from '../../components/AdminNav.astro';
 ---
 
 <html lang="en">
@@ -139,7 +8,7 @@ function issueType(row: GscRow) {
     <meta name="robots" content="noindex,nofollow" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GSC Insights | NC Digital Admin</title>
-    <style>
+    <style is:global>
       :root {
         color-scheme: dark;
         --bg: #090911;
@@ -383,20 +252,48 @@ function issueType(row: GscRow) {
         td:first-child::before { display: none; }
         .url { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
       }
+      .controls { display:grid; gap:.5rem; justify-items:end; min-width:min(360px,100%); }
+      .controls select, .refresh { background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:.7rem .9rem; font:inherit; font-size:.85rem; width:100%; }
+      .refresh { cursor:pointer; font-weight:800; background:var(--purple); border-color:var(--purple); }
+      .refresh:disabled { opacity:.6; cursor:wait; }
+      .age { font-size:.78rem; color:var(--muted); }
+      .age.stale { color:var(--amber); }
+      .age.old { color:var(--red); }
+      .notice { margin:1rem 0; padding:.8rem 1rem; border:1px solid var(--border); border-radius:8px; background:var(--panel); color:var(--muted); font-size:.88rem; }
+      .notice.error { border-color:rgba(255,92,122,.5); color:#ffc2cd; }
+      .since-chips { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.75rem; padding:1rem; }
+      .since-chip { display:grid; gap:.2rem; padding:.8rem; border:1px solid var(--border); border-radius:8px; background:#0d0d16; }
+      .since-chip span { color:var(--muted); font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+      .since-chip strong { font-size:1rem; }
+      .since-chip em { font-style:normal; font-size:.78rem; color:var(--muted); }
+      .since-chip.good em { color:var(--green); }
+      .since-chip.bad em { color:var(--red); }
+      .since-cols { display:grid; grid-template-columns:1fr 1fr; gap:1rem; padding:0 1rem 1rem; }
+      .since-col { border:1px solid var(--border); border-radius:8px; padding:1rem; background:#0d0d16; min-width:0; }
+      .since-col.good { border-color:rgba(45,215,124,.3); }
+      .since-col.bad { border-color:rgba(255,92,122,.3); }
+      .since-col h3 { margin:0 0 .5rem; font-size:1rem; }
+      .since-col.good h3 { color:var(--green); }
+      .since-col.bad h3 { color:var(--red); }
+      .since-col h4 { margin:1rem 0 .4rem; font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+      .since-list { list-style:none; margin:0; padding:0; display:block !important; }
+      .since-list li { display:flex !important; justify-content:space-between; align-items:center; gap:.75rem; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.84rem; }
+      .since-list li:last-child { border-bottom:0; }
+      .since-list li > span:first-child { min-width:0; overflow-wrap:anywhere; }
+      .since-list small { display:block; color:var(--muted); font-size:.72rem; margin-top:.15rem; }
+      .since-tag { flex:none; font-size:.72rem; font-weight:800; padding:.2rem .5rem; border-radius:999px; border:1px solid var(--border); white-space:nowrap; }
+      .since-tag.good { color:var(--green); border-color:rgba(45,215,124,.35); }
+      .since-tag.bad { color:var(--red); border-color:rgba(255,92,122,.35); }
+      .since-none { margin:.25rem 0; color:var(--muted); font-size:.82rem; }
+      .since > .since-none { padding:0 1rem 1rem; }
+      .panel-empty { margin:0; padding:1rem; color:var(--muted); font-size:.88rem; }
+      @media (max-width: 960px) { .since-chips { grid-template-columns:repeat(2,minmax(0,1fr)); padding:.75rem; } .since-cols { grid-template-columns:1fr; padding:0 .75rem .75rem; } .controls { justify-items:stretch; margin-top:1rem; } }
     </style>
   </head>
   <body>
+<AdminNav />
     <header class="topbar">
-      <div class="brand">NC Digital Admin</div>
-      <nav class="nav">
-        <a href="/admin/links/">Internal Links</a>
-        <a href="/admin/backlinks/">Backlinks</a>
-        <a href="/admin/keywords/">Keywords</a>
-        <a href="/admin/keyword-research/">Keyword Research</a>
-        <a href="/admin/indexing/">Indexing</a>
-        <a href="/admin/gsc/" class="active">GSC</a>
-        <a href="/admin/emd-finder/">EMD Finder</a>
-      </nav>
+      <div class="brand">Search Console</div>
     </header>
 
     <main>
@@ -404,325 +301,18 @@ function issueType(row: GscRow) {
         <div>
           <h1>GSC Insights</h1>
           <p class="sub">
-            Google Search Console clicks, impressions, CTR, position, query/page pairings, and suggested next actions. Refresh it whenever you want current GSC data rebuilt into the admin page.
+            Live Google Search Console clicks, impressions, CTR, position, query/page pairings and suggested next actions for any property you manage. Data refreshes automatically when it is more than 12 hours old.
           </p>
         </div>
-        <div class="cmd">node scripts/gsc-report.mjs && npm run build && npx wrangler deploy</div>
-      </section>
-
-      {!hasData ? (
-        <div class="empty">
-          No GSC JSON report found yet. Run <code>node scripts/gsc-report.mjs</code>, then <code>npm run build && npx wrangler deploy</code>.
+        <div class="controls">
+          <select id="site" aria-label="Search Console property"><option>Loading properties…</option></select>
+          <button id="refresh" class="refresh" type="button">Refresh from Google</button>
+          <div id="age" class="age"></div>
         </div>
-      ) : (
-        <>
-          <section class="stats">
-            <div class="stat">
-              <div class="label">Last Refresh</div>
-              <div class="value" style="font-size:1rem;">{fmtDate(report.generatedAt)}</div>
-            </div>
-            <div class="stat">
-              <div class="label">Clicks</div>
-              <div class="value">{fmtNumber(current.clicks)}</div>
-              <div class="delta">Prior: {fmtNumber(previous.clicks)} · {report.overview?.change?.clicks ?? '-'}</div>
-            </div>
-            <div class="stat">
-              <div class="label">Impressions</div>
-              <div class="value">{fmtNumber(current.impressions)}</div>
-              <div class="delta">Prior: {fmtNumber(previous.impressions)} · {report.overview?.change?.impressions ?? '-'}</div>
-            </div>
-            <div class="stat">
-              <div class="label">Avg CTR / Position</div>
-              <div class="value">{fmtPct(current.ctr)} / {fmtPos(current.position)}</div>
-              <div class="delta">{report.period?.startDate} to {report.period?.endDate}</div>
-            </div>
-          </section>
-
-          <section class="stats">
-            <button class="stat" type="button" data-jump="opportunities">
-              <div class="label">Quick Wins</div>
-              <div class="value">{opportunities.length}</div>
-            </button>
-            <button class="stat" type="button" data-jump="lost">
-              <div class="label">Position Losers</div>
-              <div class="value">{lost.length}</div>
-            </button>
-            <button class="stat" type="button" data-jump="gained">
-              <div class="label">Position Gainers</div>
-              <div class="value">{gained.length}</div>
-            </button>
-            <button class="stat" type="button" data-jump="query-pages">
-              <div class="label">Query/Page Pairs</div>
-              <div class="value">{queryPages.length}</div>
-            </button>
-          </section>
-
-          <section class="panel" id="priority-actions">
-            <div class="panel-head">
-              <div>
-                <div class="panel-title">Priority Actions</div>
-                <div class="panel-note">A short list of the clearest things to work on next from GSC data.</div>
-              </div>
-              <span class="pill quick-win">{priorityActions.length} actions</span>
-            </div>
-            <table>
-              <thead><tr><th>Issue</th><th>Query</th><th>Why it matters</th><th>Next move</th></tr></thead>
-              <tbody>
-                {priorityActions.map((item) => (
-                  <tr>
-                    <td data-label="Issue"><span class={`pill ${item.tone}`}>{item.type}</span></td>
-                    <td data-label="Query"><span class="query">{item.title}</span></td>
-                    <td data-label="Why"><span class="muted">{item.detail}</span></td>
-                    <td data-label="Next move"><span class="muted">{item.action}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          <div class="filters">
-            <input id="search" type="search" placeholder="Search query, page, intent, or action" />
-            <select id="issue">
-              <option value="">All issue types</option>
-              <option value="quick-win">Quick wins</option>
-              <option value="low-ctr">High impressions / low CTR</option>
-              <option value="page-two-plus">Page 2+</option>
-              <option value="monitor">Monitor</option>
-            </select>
-            <select id="intent">
-              <option value="">All intents</option>
-              <option value="local">Local</option>
-              <option value="commercial">Commercial</option>
-              <option value="informational">Informational</option>
-              <option value="mixed">Mixed</option>
-            </select>
-            <button id="reset-filters" type="button">Reset filters</button>
-          </div>
-
-          <section class="panel" id="opportunities">
-            <div class="panel-head">
-              <div>
-                <div class="panel-title">Suggested Next Actions</div>
-                <div class="panel-note">Queries with impressions but weak click-through or positions close enough to push.</div>
-              </div>
-              <span class="pill quick-win">{opportunities.length} opportunities</span>
-            </div>
-            <table id="insights">
-              <thead>
-                <tr>
-                  <th>Query</th>
-                  <th><button class="sort-button" type="button" data-sort="clicks" data-type="number">Clicks</button></th>
-                  <th><button class="sort-button" type="button" data-sort="impressions" data-type="number">Impressions</button></th>
-                  <th><button class="sort-button" type="button" data-sort="ctr" data-type="number">CTR</button></th>
-                  <th><button class="sort-button" type="button" data-sort="position" data-type="number">Position</button></th>
-                  <th>Intent</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {opportunities.map((row) => (
-                  <tr
-                    data-search={`${row.query} ${queryIntent(row.query)} ${recommendedAction(row)}`.toLowerCase()}
-                    data-issue={issueType(row)}
-                    data-intent={queryIntent(row.query)}
-                    data-clicks={row.clicks}
-                    data-impressions={row.impressions}
-                    data-ctr={row.ctr}
-                    data-position={row.position}
-                  >
-                    <td data-label="Query"><span class="query">{row.query}</span><span class={`pill ${issueType(row)}`}>{issueType(row).replaceAll('-', ' ')}</span></td>
-                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
-                    <td data-label="Impressions"><span class="num">{fmtNumber(row.impressions)}</span></td>
-                    <td data-label="CTR"><span class="num">{fmtPct(row.ctr)}</span></td>
-                    <td data-label="Position"><span class="num">{fmtPos(row.position)}</span></td>
-                    <td data-label="Intent"><span class={`pill ${queryIntent(row.query)}`}>{queryIntent(row.query)}</span></td>
-                    <td data-label="Action"><span class="muted">{recommendedAction(row)}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          <section class="panel" id="query-pages">
-            <div class="panel-head">
-              <div>
-                <div class="panel-title">Queries By Ranking Page</div>
-                <div class="panel-note">Shows which page Google is pairing with each query so you can spot mismatches or pages that need strengthening.</div>
-              </div>
-              <span class="pill">{queryPages.length} rows</span>
-            </div>
-            <table>
-              <thead>
-                <tr><th>Query / Page</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th><th>Action</th></tr>
-              </thead>
-              <tbody>
-                {queryPages.map((row) => (
-                  <tr>
-                    <td data-label="Query"><span class="query">{row.query}</span><a class="url" href={row.page} target="_blank" rel="noopener">{pagePath(row.page)}</a></td>
-                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
-                    <td data-label="Impressions"><span class="num">{fmtNumber(row.impressions)}</span></td>
-                    <td data-label="CTR"><span class="num">{fmtPct(row.ctr)}</span></td>
-                    <td data-label="Position"><span class="num">{fmtPos(row.position)}</span></td>
-                    <td data-label="Action"><span class="muted">{recommendedAction(row)}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          <section class="panel">
-            <div class="panel-head">
-              <div>
-                <div class="panel-title">Top Queries</div>
-                <div class="panel-note">Queries with the most clicks in the last 28 days.</div>
-              </div>
-            </div>
-            <table>
-              <thead><tr><th>Query</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th></tr></thead>
-              <tbody>
-                {topQueries.map((row) => (
-                  <tr>
-                    <td data-label="Query"><span class="query">{row.query}</span></td>
-                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
-                    <td data-label="Impressions"><span class="num">{fmtNumber(row.impressions)}</span></td>
-                    <td data-label="CTR"><span class="num">{fmtPct(row.ctr)}</span></td>
-                    <td data-label="Position"><span class="num">{fmtPos(row.position)}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          <section class="panel">
-            <div class="panel-head">
-              <div>
-                <div class="panel-title">Top Pages</div>
-                <div class="panel-note">Pages with the most clicks in the last 28 days.</div>
-              </div>
-            </div>
-            <table>
-              <thead><tr><th>Page</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th></tr></thead>
-              <tbody>
-                {topPages.map((row) => (
-                  <tr>
-                    <td data-label="Page"><a class="query" href={row.page || row.query} target="_blank" rel="noopener">{pagePath(row.page || row.query)}</a></td>
-                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
-                    <td data-label="Impressions"><span class="num">{fmtNumber(row.impressions)}</span></td>
-                    <td data-label="CTR"><span class="num">{fmtPct(row.ctr)}</span></td>
-                    <td data-label="Position"><span class="num">{fmtPos(row.position)}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          <section class="panel" id="lost">
-            <div class="panel-head">
-              <div>
-                <div class="panel-title">Position Losers</div>
-                <div class="panel-note">Queries that fell over the last 7 days compared with the prior 7 days.</div>
-              </div>
-            </div>
-            <table>
-              <thead><tr><th>Query</th><th>Current</th><th>Previous</th><th>Change</th><th>Clicks</th><th>Action</th></tr></thead>
-              <tbody>
-                {lost.map((row) => (
-                  <tr>
-                    <td data-label="Query"><span class="query">{row.query}</span></td>
-                    <td data-label="Current"><span class="num">{fmtPos(row.pos)}</span></td>
-                    <td data-label="Previous"><span class="num">{fmtPos(row.prev)}</span></td>
-                    <td data-label="Change"><span class="down">{row.delta.toFixed(1)}</span></td>
-                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
-                    <td data-label="Action"><span class="muted">Check the ranking page, add internal links, and compare the page title against current SERP intent.</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-
-          <section class="panel" id="gained">
-            <div class="panel-head">
-              <div>
-                <div class="panel-title">Position Gainers</div>
-                <div class="panel-note">Queries that improved over the last 7 days compared with the prior 7 days.</div>
-              </div>
-            </div>
-            <table>
-              <thead><tr><th>Query</th><th>Current</th><th>Previous</th><th>Change</th><th>Clicks</th><th>Action</th></tr></thead>
-              <tbody>
-                {gained.map((row) => (
-                  <tr>
-                    <td data-label="Query"><span class="query">{row.query}</span></td>
-                    <td data-label="Current"><span class="num">{fmtPos(row.pos)}</span></td>
-                    <td data-label="Previous"><span class="num">{fmtPos(row.prev)}</span></td>
-                    <td data-label="Change"><span class="up">+{row.delta.toFixed(1)}</span></td>
-                    <td data-label="Clicks"><span class="num">{fmtNumber(row.clicks)}</span></td>
-                    <td data-label="Action"><span class="muted">Protect the gain with relevant internal links and avoid changing the page intent.</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-        </>
-      )}
+      </section>
+      <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+      <div id="out"><div class="empty">Loading…</div></div>
     </main>
-
-    <script>
-      const search = document.getElementById('search');
-      const issue = document.getElementById('issue');
-      const intent = document.getElementById('intent');
-      const resetFilters = document.getElementById('reset-filters');
-      const insightRows = Array.from(document.querySelectorAll('#insights tbody tr'));
-      const tbody = document.querySelector('#insights tbody');
-      const sortButtons = Array.from(document.querySelectorAll('.sort-button'));
-
-      function applyFilters() {
-        const query = search?.value.trim().toLowerCase() || '';
-        const issueValue = issue?.value || '';
-        const intentValue = intent?.value || '';
-        for (const row of insightRows) {
-          const matchesQuery = !query || row.dataset.search.includes(query);
-          const matchesIssue = !issueValue || row.dataset.issue === issueValue;
-          const matchesIntent = !intentValue || row.dataset.intent === intentValue;
-          row.style.display = matchesQuery && matchesIssue && matchesIntent ? '' : 'none';
-        }
-      }
-
-      search?.addEventListener('input', applyFilters);
-      issue?.addEventListener('change', applyFilters);
-      intent?.addEventListener('change', applyFilters);
-      resetFilters?.addEventListener('click', () => {
-        search.value = '';
-        issue.value = '';
-        intent.value = '';
-        for (const button of sortButtons) delete button.dataset.direction;
-        applyFilters();
-      });
-
-      for (const button of document.querySelectorAll('[data-jump]')) {
-        button.addEventListener('click', () => {
-          document.getElementById(button.dataset.jump)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }
-
-      for (const button of sortButtons) {
-        button.addEventListener('click', () => {
-          const key = button.dataset.sort;
-          const type = button.dataset.type;
-          const direction = button.dataset.direction === 'asc' ? 'desc' : 'asc';
-          for (const other of sortButtons) delete other.dataset.direction;
-          button.dataset.direction = direction;
-          insightRows.sort((a, b) => {
-            const aRaw = a.dataset[key] ?? '';
-            const bRaw = b.dataset[key] ?? '';
-            const comparison = type === 'number'
-              ? Number(aRaw) - Number(bRaw)
-              : aRaw.localeCompare(bRaw);
-            return direction === 'asc' ? comparison : -comparison;
-          });
-          for (const row of insightRows) tbody?.appendChild(row);
-        });
-      }
-    </script>
+    <script>import '../../scripts/gsc-insights.js';</script>
   </body>
 </html>
