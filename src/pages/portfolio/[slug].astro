@@ -1,4 +1,5 @@
 ---
+import { portfolioFolders } from '../../data/portfolio-folders';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import JsonLD from '../../components/JsonLD.astro';
 import { getCollection, render } from 'astro:content';
@@ -21,26 +22,7 @@ const { Content } = await render(project);
 const slug = project.id.replace('/index.mdoc', '');
 
 // Map slug → subfolder name
-const folderMap: Record<string, string> = {
-  '3d-framing':                  '3D Framing',
-  'ak-promotions':               'AK Promotions',
-  'creative-redevelopments':     'Creative Redevelopment',
-  'ds-carpentry':                'DS Carpentry',
-  'davies-property-development': 'Davies Property Development',
-  'ir-energy':                   'IR Energy',
-  'k-williams-roofing':          'K Williams Roofing',
-  'lr-building-roofing':         'L&R Building and Roofing',
-  'mj-roofing':                  'M&J Roofing',
-  'rap-roofing':                 'RAP Roofing and Building',
-  'pro-tech-plumbing':           'Pro Tech Plumbing and Bathrooms',
-  'whats-on-merthyr-tydfil':      "What's On Merthyr Tydfil",
-  'electrician-merthyr-tydfil':  'Electrician Merthyr Tydfil',
-  'electrician-barry':          'Electrician Barry',
-  'web-design-south-wales':      'Web Design South Wales',
-  'sell-my-caravan-right':       'Sell My Caravan Right',
-  'utopia-design':              'Utopia Design',
-  'c-morgan-pallets':           'C Morgan Pallets',
-};
+const folderMap = portfolioFolders;
 
 const allImages = import.meta.glob<{ default: ImageMetadata }>(
   '../../assets/portfolio/**/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG}',
@@ -48,6 +30,13 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
 );
 
 const folder = folderMap[slug] || '';
+const isMilne = slug === 'milne-industrial';
+const milneImageAlts = [
+  'Milne Industrial opening banner displayed on a desktop monitor',
+  'Milne Industrial services section displayed on a laptop',
+  'Milne Industrial company introduction displayed on a mobile phone',
+  'Milne Industrial global operations displayed on desktop and mobile',
+];
 const galleryImages = Object.entries(allImages)
   .filter(([path]) => {
     if (!folder || !path.includes(`/${folder}/`)) return false;
@@ -141,14 +130,14 @@ const serviceLinks: Record<string, string> = {
 
         <!-- Right: gallery -->
         {galleryImages.length > 0 && (
-          <div data-animate="fade-up" class="hero-gallery">
+          <div data-animate="fade-up" class:list={['hero-gallery', { 'portrait-gallery': isMilne }]}>
             <!-- Featured image -->
             <div class="gallery-featured lb-trigger">
               <Image
                 src={galleryImages[0]}
-                alt={`${project.data.title} — screenshot 1`}
+                alt={isMilne ? milneImageAlts[0] : `${project.data.title} — screenshot 1`}
                 width={800}
-                height={500}
+                height={isMilne ? Math.round(800 * galleryImages[0].height / galleryImages[0].width) : 500}
                 class="gallery-img"
               />
               <span class="lb-hint">Click to enlarge</span>
@@ -161,9 +150,9 @@ const serviceLinks: Record<string, string> = {
                   <div class="gallery-thumb lb-trigger">
                     <Image
                       src={img}
-                      alt={`${project.data.title} — screenshot ${i + 2}`}
+                      alt={isMilne ? milneImageAlts[i + 1] : `${project.data.title} — screenshot ${i + 2}`}
                       width={400}
-                      height={260}
+                      height={isMilne ? Math.round(400 * img.height / img.width) : 260}
                       class="gallery-img"
                     />
                   </div>
@@ -190,7 +179,7 @@ const serviceLinks: Record<string, string> = {
   <section style="padding:4rem 0 5rem;">
     <div class="container site-pad layout-sidebar">
 
-      <div data-animate="fade-up" class="prose">
+      <div data-animate={isMilne ? undefined : 'fade-up'} class="prose">
         <Content />
       </div>
 
@@ -359,6 +348,13 @@ const serviceLinks: Record<string, string> = {
     }
 
     /* Prose */
+    .portrait-gallery .gallery-img {
+      object-fit: contain;
+      background: var(--bg-3);
+    }
+    .portrait-gallery .gallery-featured .gallery-img { height: 420px; max-height: 420px; }
+    .portrait-gallery .gallery-thumb .gallery-img { height: 140px; max-height: 140px; }
+
     .prose {
       color: var(--text);
       font-size: 1rem;

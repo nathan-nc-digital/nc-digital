@@ -1,0 +1,27 @@
+---
+import AdminNav from '../components/AdminNav.astro';
+const { slug, name } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>{name} — NC Digital Showcase</title>
+<style is:global>
+*{box-sizing:border-box}body{margin:0;background:#090f18;color:#edf4ff;font-family:Arial,sans-serif}main{max-width:1200px;margin:auto;padding:40px 24px}small{color:#55adff;letter-spacing:3px}h1{font-size:clamp(32px,5vw,54px);margin:18px 0 10px}p{color:#a9b8ca;line-height:1.6}a{color:#85c6ff}button,select,textarea{font:inherit}button,a.button{cursor:pointer;border:1px solid #355a80;border-radius:8px;padding:12px 16px;background:#121d2b;color:#dbeeff;text-decoration:none;display:inline-block;font-size:14px}button[aria-pressed=true],a.primary{background:#1675cd;border-color:#328fe2;color:white}button:focus-visible,a:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #85c6ff;outline-offset:3px}.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.intro{display:flex;justify-content:space-between;gap:20px;align-items:center}.panel{background:#121d2b;border:1px solid #28384b;border-radius:16px;padding:24px;margin:28px 0}fieldset{border:0;padding:0;margin:0;min-width:0}.caption-head{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap}h2{font-size:19px;margin:0}select{background:#0b1522;color:#edf4ff;border:1px solid #355a80;padding:10px;border-radius:8px;max-width:100%}textarea{width:100%;background:#0b1522;color:#dbe8f5;border:1px solid #355a80;border-radius:8px;padding:16px;line-height:1.6;margin-top:16px;min-height:210px;resize:vertical}.hint{font-size:13px;overflow-wrap:anywhere}.grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:24px}article{background:#121d2b;border:1px solid #28384b;border-radius:16px;overflow:hidden}img{display:block;width:100%;height:auto}.card-footer{padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px}.card-footer h2{font-size:17px}.card-footer a{white-space:nowrap;text-decoration:none;padding:12px;border:1px solid #355a80;border-radius:8px}[hidden]{display:none!important}@media(max-width:650px){.grid{grid-template-columns:1fr}main{padding:28px 16px}.intro{align-items:flex-start;flex-direction:column}.panel{padding:18px}.card-footer{padding:16px}.card-footer h2{font-size:15px}}
+</style></head>
+<body data-showcase={slug}><AdminNav /><main>
+<small>NC DIGITAL / WEBSITE SHOWCASE</small>
+<div class="intro"><div><h1>{name}.</h1><p>Portfolio images, branded social images and captions ready to use.</p></div></div>
+<nav class="actions" aria-label="Showcase projects"><a href="/admin/showcase/priva-cy/">Priva-Cy</a><a href="/admin/showcase/milne-industrial/">Milne Industrial</a></nav><br />
+<div class="actions"><button type="button" data-version="branded" aria-pressed="true">Branded for socials</button><button type="button" data-version="clean" aria-pressed="false">Clean for portfolio</button><a id="download-set" class="button" href={`${slug}-social-branded.zip`} download>Download branded set (ZIP)</a></div>
+<p id="version-description">NC Digital branded images for social media.</p>
+<section class="panel" aria-labelledby="caption-heading"><fieldset id="caption-controls" disabled>
+<div class="caption-head"><h2 id="caption-heading">Your social captions</h2><label>Platform <select id="platform"></select></label></div>
+<textarea id="caption-preview" aria-label="Caption preview" readonly></textarea>
+<p id="caption-note" class="hint">Loading captions…</p>
+<div class="actions"><a class="button primary" href={`/admin/social/?showcase=${slug}`}>Open in Social Posts →</a><button id="copy-caption" type="button">Copy caption</button><span id="copy-status" role="status"></span></div>
+<p class="hint">Loads all four branded images and separate captions for Facebook, Instagram, LinkedIn, X and Google Business Profile. Review and edit in Social Posts, then choose your accounts and publishing time.</p>
+</fieldset></section>
+<section id="gallery" class="grid" aria-label="Website mockups"></section>
+<p class="hint">AI-generated device scenes based on live website screenshots. Small screen details may differ from the original.</p>
+<noscript>Enable JavaScript to preview the gallery. <a href={`${slug}-mockups.zip`}>Download clean originals</a> or <a href={`${slug}-social-branded.zip`}>download branded images</a>.</noscript>
+</main><script is:inline src="../gallery.js" defer></script></body></html>

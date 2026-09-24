@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import worker, { resolveRole, listJobs, createJob, updateJob, deleteJob, runScheduledJobs } from '../../src/worker.js';
+import worker, { resolveRole, listJobs, createJob, updateJob, deleteJob, runScheduledJobs, jobsForCron } from '../../src/worker.js';
 
 const authEnv = { ADMIN_PASSWORD: 'test-admin-password', BEN_PASSWORD: 'test-ben-password' };
 
@@ -277,6 +277,27 @@ describe('scheduled jobs', () => {
     assert.deepEqual(logged.map(l => l.job).sort(), ['crm', 'workspace']);
     assert(logged.every(l => l.event === 'scheduled_job_failed'));
     assert(!JSON.stringify(logged).includes('provider down'), 'error messages are not logged');
+  });
+
+  test('customer email sending has its own cron invocation, separate from heavier jobs', () => {
+    assert.deepEqual(Object.keys(jobsForCron('* * * * *')), ['crmOutbox', 'reportAlerts']);
+    const shared = Object.keys(jobsForCron('*/2 * * * *'));
+    assert(!shared.includes('crmOutbox'));
+    assert.deepEqual(shared.sort(), ['backup', 'buffer', 'crmSync', 'meta', 'workspace']);
+    assert.deepEqual(Object.keys(jobsForCron(undefined)).sort(), ['backup', 'buffer', 'crmOutbox', 'crmSync', 'meta', 'reportAlerts', 'workspace']);
+  });
+
+  test('shared report links serve the public report page without login, never indexed or cached', async () => {
+    const requested = [];
+    const env = { ...authEnv, ASSETS: { async fetch(req) { requested.push(new URL(req.url).pathname); return new Response('<html>report</html>', { headers: { 'Content-Type': 'text/html' } }); } } };
+    const res = await worker.fetch(new Request('https://nc-digital.co.uk/report/AbCdEfGhIjKlMnOpQrStUv_-'), env);
+    assert.equal(res.status, 200);
+    assert.deepEqual(requested, ['/report/']);
+    assert.match(res.headers.get('X-Robots-Tag'), /noindex/);
+    assert.equal(res.headers.get('Referrer-Policy'), 'no-referrer');
+    assert.match(res.headers.get('Cache-Control'), /no-store/);
+    const api = await worker.fetch(new Request('https://nc-digital.co.uk/api/report/AbCdEfGhIjKlMnOpQrStUv_-'), env);
+    assert.equal(api.status, 404, 'unknown links are not found, and the API needs no admin login');
   });
 
   test('the Worker scheduled handler resolves even when every job fails', async () => {

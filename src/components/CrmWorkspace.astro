@@ -2,6 +2,7 @@
 import '@fontsource/sora/400.css';
 import '@fontsource/sora/600.css';
 import '../styles/crm-workspace.css';
+import AdminNav from './AdminNav.astro';
 ---
 <!doctype html>
 <html lang="en-GB">
@@ -15,6 +16,7 @@ import '../styles/crm-workspace.css';
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <aside class="sidebar">
       <a href="/admin/crm/" class="brand"><span class="brand-mark">NC</span><span>Digital<small>CLIENT WORKSPACE</small></span></a>
+      <AdminNav variant="compact" />
       <p class="nav-label">YOUR WORKSPACE</p>
       <nav aria-label="CRM navigation">
         <a href="?view=today" data-view="today"><span aria-hidden="true">◷</span> Today</a>
@@ -28,7 +30,7 @@ import '../styles/crm-workspace.css';
         <a href="?view=health" data-view="health"><span aria-hidden="true">◇</span> Mailbox health</a>
         <a href="?view=tasks" data-view="tasks"><span aria-hidden="true">✓</span> Tasks</a>
       </nav>
-      <div class="sidebar-bottom"><a href="/admin/jobs/">Jobs board ↗</a><a href="/admin/links/">All tools ↗</a><div class="profile"><span>N</span><div>Nathan<small>Europe/London · GBP</small></div></div></div>
+      <div class="sidebar-bottom"><div class="profile"><span>N</span><div>Nathan<small>Europe/London · GBP</small></div></div></div>
     </aside>
     <div class="workspace-main">
       <header class="topbar">

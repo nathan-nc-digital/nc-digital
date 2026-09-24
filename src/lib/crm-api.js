@@ -33,14 +33,16 @@ export async function handleEnquiry(request, env) {
     const id = crypto.randomUUID();
     const reference = 'NC-' + crypto.randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase();
     const now = new Date().toISOString();
-    // The enquiry and notification are committed atomically before success is returned.
-    // A competing retry cannot insert partial or duplicate ticket/message records.
+    const confirmationBody = `Hi ${data.name},\n\nThanks for getting in touch with NC Digital. Your enquiry has been received and a ticket has been opened for it — reference ${reference}.\n\nWe'll review your message and be in touch shortly to discuss it. If you'd like to add anything in the meantime, just reply directly to this email and it'll come straight through to us.`;
+    // The enquiry, its confirmation and the internal notification are committed atomically
+    // before success is returned. A competing retry cannot insert partial or duplicate records.
     try {
       await db.batch([
         db.prepare('INSERT INTO crm_tickets(id,reference,submission_key,submission_hash,name,email,phone,company,subject,service,source_page,metadata,created_at,updated_at,last_inbound_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(id, reference, data.submission_key, hash, data.name, data.email, data.phone, data.company, data.subject, data.service, data.source_page, data.metadata, now, now, now),
         db.prepare("INSERT INTO crm_messages(id,ticket_id,kind,author,body,created_at,updated_at) VALUES(?,?,'inbound',?,?,?,?)").bind(crypto.randomUUID(), id, data.email, data.body, now, now),
         db.prepare('INSERT INTO crm_tasks(id,title,ticket_id,due_date,external_key,created_at,updated_at) VALUES(?,?,?,?,?,?,?)').bind('followup-'+id,'Review enquiry: '+data.name,id,londonToday(),'ticket-followup:'+id,now,now),
         db.prepare("INSERT INTO crm_messages(id,ticket_id,kind,author,body,delivery,created_at,updated_at) VALUES(?,?,'notification',?,?,'queued',?,?)").bind(crypto.randomUUID(), id, CRM_MAILBOX, `${data.body}\n\nName: ${data.name}\nEmail: ${data.email}\nCompany: ${data.company}\nPhone: ${data.phone}\nService: ${data.service}\nPage: ${data.source_page}`, now, now),
+        db.prepare("INSERT INTO crm_messages(id,ticket_id,kind,author,body,delivery,created_at,updated_at) VALUES(?,?,'confirmation','system',?,'queued',?,?)").bind(crypto.randomUUID(), id, confirmationBody, now, now),
       ]);
     } catch (error) {
       const winner=await db.prepare('SELECT submission_hash FROM crm_tickets WHERE submission_key=?').bind(data.submission_key).first();
@@ -77,7 +79,7 @@ async function list(db, url) {
   if (search) { where.push('(name LIKE ? OR email LIKE ? OR subject LIKE ? OR reference LIKE ? OR company LIKE ?)'); args.push(...Array(5).fill(`%${search}%`)); }
   const filter = where.length ? ' WHERE ' + where.join(' AND ') : '';
   const total = await db.prepare(`SELECT COUNT(*) AS count FROM crm_tickets${filter}`).bind(...args).first();
-  const { results: tickets } = await db.prepare(`SELECT id,reference,name,email,company,subject,status,priority,assigned_to,follow_up_at,updated_at,metadata,tags FROM crm_tickets${filter} ORDER BY updated_at DESC LIMIT 50 OFFSET ?`).bind(...args, Math.floor(page) * 50).all();
+  const { results: tickets } = await db.prepare(`SELECT id,reference,name,email,company,subject,status,priority,assigned_to,follow_up_at,updated_at,metadata,tags,json_extract(metadata,'$.audit_id') AS review_audit,(SELECT a.share_last_viewed_at FROM website_audits a WHERE a.id=json_extract(crm_tickets.metadata,'$.audit_id') AND a.share_last_viewed_at>crm_tickets.created_at) AS review_opened_at FROM crm_tickets${filter} ORDER BY updated_at DESC LIMIT 50 OFFSET ?`).bind(...args, Math.floor(page) * 50).all();
   const { results: counts } = await db.prepare(`SELECT status,COUNT(*) AS count FROM crm_tickets WHERE ${where[0]} GROUP BY status`).all();
   const overdue = await db.prepare("SELECT COUNT(*) AS count FROM crm_tickets WHERE archived_at IS NULL AND follow_up_at<=? AND status NOT IN ('closed','spam')").bind(new Date().toISOString()).first();
   return { tickets, total: total.count, page: Math.floor(page), counts, overdue: overdue.count };
@@ -92,7 +94,7 @@ async function updateTicket(db, body, author) {
   if(body.lead_source!==undefined)metadata.lead_source=text(body.lead_source,80);
   if(body.lead_temperature!==undefined)metadata.lead_temperature=choice(body.lead_temperature,['cold','warm','hot'],'warm');
   const updatedTags=body.tags===undefined?(ticket.tags||'[]'):tags(body.tags);
-  if(!updatedEmail&&ticket.email&&await db.prepare("SELECT id FROM crm_messages WHERE ticket_id=? AND kind='outbound' AND delivery IN ('queued','sending') LIMIT 1").bind(ticket.id).first())throw crmError('Finish or cancel the queued reply before removing the customer email.');
+  if(!updatedEmail&&ticket.email&&await db.prepare("SELECT id FROM crm_messages WHERE ticket_id=? AND kind IN ('outbound','confirmation') AND delivery IN ('queued','sending') LIMIT 1").bind(ticket.id).first())throw crmError('Finish or cancel the queued reply before removing the customer email.');
   let follow = null;
   if (body.follow_up_at) {
     const time = new Date(body.follow_up_at);
@@ -105,7 +107,7 @@ async function updateTicket(db, body, author) {
   const result = await db.batch([
     db.prepare("INSERT INTO crm_messages(id,ticket_id,kind,author,body,created_at,updated_at) SELECT ?,id,'event',?,?,?,? FROM crm_tickets WHERE id=? AND version=?").bind(auditId, author, changes, now, now, ticket.id, ticket.version),
     db.prepare('UPDATE crm_tickets SET email=?,status=?,assigned_to=?,priority=?,follow_up_at=?,metadata=?,tags=?,updated_at=?,version=version+1 WHERE id=? AND version=?').bind(updatedEmail, body.status, body.assigned_to, body.priority, follow, JSON.stringify(metadata), updatedTags, now, ticket.id, ticket.version),
-    db.prepare("UPDATE crm_messages SET delivery='cancelled',updated_at=? WHERE ticket_id=? AND kind='outbound' AND delivery IN ('queued','failed') AND EXISTS(SELECT 1 FROM crm_tickets WHERE id=? AND status='spam')").bind(now, ticket.id, ticket.id),
+    db.prepare("UPDATE crm_messages SET delivery='cancelled',updated_at=? WHERE ticket_id=? AND kind IN ('outbound','confirmation') AND delivery IN ('queued','failed') AND EXISTS(SELECT 1 FROM crm_tickets WHERE id=? AND status='spam')").bind(now, ticket.id, ticket.id),
     db.prepare("INSERT INTO crm_tasks(id,title,ticket_id,account_id,due_date,external_key,created_at,updated_at) SELECT ?,?,?,?,?,?,?,? WHERE ? IS NOT NULL AND ? NOT IN ('closed','spam') AND EXISTS(SELECT 1 FROM crm_messages WHERE id=?) ON CONFLICT(external_key) DO UPDATE SET title=excluded.title,due_date=excluded.due_date,status='open',completed_at=NULL,version=crm_tasks.version+1,updated_at=excluded.updated_at").bind('followup-'+ticket.id,'Follow up: '+ticket.name,ticket.id,ticket.account_id,follow?londonToday(new Date(follow)):null,'ticket-followup:'+ticket.id,now,now,follow,body.status,auditId),
     db.prepare("UPDATE crm_tasks SET status='cancelled',version=version+1,updated_at=? WHERE ticket_id=? AND status='open' AND ((external_key=? AND ? IS NULL AND ? IS NOT NULL) OR ? IN ('closed','spam')) AND EXISTS(SELECT 1 FROM crm_messages WHERE id=?)").bind(now,ticket.id,'ticket-followup:'+ticket.id,follow,ticket.follow_up_at,body.status,auditId),
   ]);

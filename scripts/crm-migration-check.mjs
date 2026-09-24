@@ -31,6 +31,10 @@ const tagsFlag=db.prepare("SELECT value FROM crm_state WHERE key='tags_schema'")
 const tagsInstalled=['crm_accounts','crm_contacts','crm_opportunities','crm_tickets'].every(name=>db.prepare(`PRAGMA table_info("${name}")`).all().some(column=>column.name==='tags'));
 if(tagsInstalled!==tagsFlag)throw Error('An incomplete migration needs review before rehearsal: 0020_crm_tags.sql');
 if(!tagsFlag)pending.push('0020_crm_tags.sql');
+const confirmationFlag=db.prepare("SELECT value FROM crm_state WHERE key='confirmation_schema'").get()?.value==='1';
+const confirmationInstalled=(db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='crm_messages'").get()?.sql||'').includes("'confirmation'");
+if(confirmationInstalled!==confirmationFlag)throw Error('An incomplete migration needs review before rehearsal: 0021_crm_confirmation_kind.sql');
+if(!confirmationFlag)pending.push('0021_crm_confirmation_kind.sql');
 assert.equal(db.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
 assert.equal(db.prepare('PRAGMA foreign_key_check').all().length,0,'Existing foreign-key errors must be resolved before migration.');
 const tables=db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all();
@@ -47,6 +51,7 @@ try{
   assert.equal(db.prepare("SELECT value FROM crm_state WHERE key='task_dates_schema'").get().value,'1');
   assert.equal(db.prepare("SELECT value FROM crm_state WHERE key='saved_views_schema'").get().value,'1');
   assert.equal(db.prepare("SELECT value FROM crm_state WHERE key='tags_schema'").get().value,'1');
+  assert.equal(db.prepare("SELECT value FROM crm_state WHERE key='confirmation_schema'").get().value,'1');
   const newTables=db.prepare("SELECT COUNT(*) AS count FROM sqlite_master WHERE type='table'").get().count;
   db.exec('ROLLBACK');
   for(const table of before)assert.deepEqual(fingerprint(table.name,table.columns),{count:table.count,digest:table.digest},'Rollback did not preserve '+table.name);

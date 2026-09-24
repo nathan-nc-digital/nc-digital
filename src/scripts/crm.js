@@ -98,6 +98,8 @@ async function loadList() {
     button.setAttribute('aria-label', `${ticket.name}: ${ticket.subject}`);
     const top = node('div', undefined, 'row-top'); top.append(node('strong', ticket.name), node('time', time(ticket.updated_at)));
     const bottom = node('div', undefined, 'row-bottom');let metadata={};try{metadata=JSON.parse(ticket.metadata||'{}');}catch{}const source=metadata.lead_source||'manual';bottom.append(node('span', labels[ticket.status], 'badge ' + ticket.status), node('span', `${ticket.priority === 'high' ? 'High priority · ' : ''}${source} · ${ticket.assigned_to}`));
+    // Website review emails show whether the prospect has opened their review since it was sent.
+    if (ticket.review_audit) bottom.append(node('span', ticket.review_opened_at ? 'Review opened ' + time(ticket.review_opened_at) : 'Review not opened yet', 'review-status ' + (ticket.review_opened_at ? 'opened' : 'unopened')));
     button.append(top, node('p', ticket.subject), bottom);
     button.addEventListener('click', () => { if (!state.busy) { saveDraft(); action(() => openTicket(ticket.id)); } });
     fragment.append(button);
@@ -110,11 +112,11 @@ async function loadList() {
 function renderMessage(message) {
   const el = node('article', undefined, `message ${message.kind}`);
   const header = node('div', undefined, 'message-header');
-  const types = { inbound: 'Customer', outbound: 'Email reply', note: 'Private note', event: 'Activity', notification: 'Inbox notification' };
+  const types = { inbound: 'Customer', outbound: 'Email reply', note: 'Private note', event: 'Activity', notification: 'Inbox notification', confirmation: 'Auto-confirmation' };
   header.append(node('strong', `${types[message.kind]} · ${message.author}`), node('time', time(message.created_at)));
   el.append(header, node('p', message.kind === 'notification' ? 'Email alert to nathan@nc-digital.co.uk' : message.body, 'message-body'));
   if(message.has_original){const details=node('details',undefined,'original-message');details.append(node('summary','Show full original message'));let loaded=false;details.addEventListener('toggle',async()=>{if(!details.open||loaded)return;try{const original=await api('original?id='+encodeURIComponent(message.id));details.append(node('p',original.body,'message-body'));loaded=true;}catch(error){notice(error.message,true);}});el.append(details);}
-  if (['outbound','notification'].includes(message.kind)) {
+  if (['outbound','notification','confirmation'].includes(message.kind)) {
     const delivery = node('div', undefined, `message-delivery ${message.delivery}`);
     delivery.append(node('span', message.delivery === 'sent' ? (message.delivery_confirmed_by ? 'Manually confirmed in Zoho by '+message.delivery_confirmed_by : 'Accepted by email provider') : message.delivery === 'unknown' ? 'Delivery unconfirmed — check Zoho before resending' : message.delivery === 'queued' ? 'Queued — awaiting scheduled delivery' : message.delivery));
     if(message.delivery_confirmed_by)delivery.append(node('span',time(message.delivery_confirmed_at)+' · '+message.delivery_confirmation_note));

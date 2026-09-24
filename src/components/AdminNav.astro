@@ -1,0 +1,139 @@
+---
+// Shared admin menu: the same grouped links on every admin tool, with the current page marked.
+// Groups are native <details> dropdowns, so the menu works without the small enhancement script.
+// variant="compact" renders a single "Admin tools" dropdown for layouts with their own sidebar.
+interface Props { variant?: 'bar' | 'compact' }
+const { variant = 'bar' } = Astro.props;
+
+const groups = [
+  { label: 'Clients', links: [
+    { href: '/admin/', label: 'Dashboard' },
+    { href: '/admin/crm/', label: 'CRM workspace' },
+    { href: '/admin/crm/inbox/', label: 'Enquiries inbox' },
+    { href: '/admin/jobs/', label: 'Jobs board' },
+    { href: '/admin/social/', label: 'Social posts' },
+    { href: '/admin/showcase/priva-cy/', label: 'Showcase: Priva-cy' },
+    { href: '/admin/showcase/milne-industrial/', label: 'Showcase: Milne Industrial' },
+  ] },
+  { label: 'Research', links: [
+    { href: '/admin/keyword-research/', label: 'Keyword research' },
+    { href: '/admin/keywords/', label: 'Keyword rankings' },
+    { href: '/admin/competitor-gaps/', label: 'Competitor gaps' },
+    { href: '/admin/emd-finder/', label: 'EMD finder' },
+    { href: '/admin/backlinks/', label: 'Backlinks' },
+  ] },
+  { label: 'Site health', links: [
+    { href: '/admin/website-audit/', label: 'Website audit' },
+    { href: '/admin/seo-quick-wins/', label: 'SEO quick wins' },
+    { href: '/admin/analytics-reports/', label: 'SEO & analytics reports' },
+    { href: '/admin/gsc/', label: 'Search Console' },
+    { href: '/admin/indexing/', label: 'Indexing' },
+    { href: '/admin/links/', label: 'Internal link map' },
+  ] },
+];
+
+const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : Astro.url.pathname + '/';
+// Longest matching link wins, so /admin/crm/inbox/ marks the inbox rather than the workspace.
+const current = groups.flatMap(g => g.links).filter(l => path.startsWith(l.href)).sort((a, b) => b.href.length - a.href.length)[0]?.href;
+const currentGroup = groups.find(g => g.links.some(l => l.href === current))?.label;
+---
+{variant === 'bar' ? (
+  <div class="admin-nav" data-admin-nav>
+    <a class="admin-nav-brand" href="/admin/">NC <span>Digital</span> <small>Admin</small></a>
+    <nav class="admin-nav-groups" aria-label="Admin tools">
+      {groups.map(group => (
+        <details class="admin-nav-group">
+          <summary class:list={{ 'is-current': group.label === currentGroup }}>{group.label}</summary>
+          <ul>
+            {group.links.map(link => (
+              <li><a href={link.href} aria-current={link.href === current ? 'page' : undefined}>{link.label}</a></li>
+            ))}
+          </ul>
+        </details>
+      ))}
+    </nav>
+    <a class="admin-nav-site" href="/" target="_blank" rel="noopener">View site ↗</a>
+  </div>
+) : (
+  <nav class="admin-nav admin-nav-compact" data-admin-nav aria-label="Admin tools">
+    <details class="admin-nav-group">
+      <summary>Admin tools</summary>
+      <div class="admin-nav-panel">
+        {groups.map(group => (
+          <div>
+            <p>{group.label}</p>
+            <ul>
+              {group.links.map(link => (
+                <li><a href={link.href} aria-current={link.href === current ? 'page' : undefined}>{link.label}</a></li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        <a class="admin-nav-site" href="/" target="_blank" rel="noopener">View site ↗</a>
+      </div>
+    </details>
+  </nav>
+)}
+
+<script is:inline>
+  // One dropdown open at a time; close on outside click or Escape.
+  (() => {
+    if (window.__adminNavReady) return; window.__adminNavReady = true;
+    const groups = () => document.querySelectorAll('[data-admin-nav] details');
+    document.addEventListener('toggle', e => {
+      const el = e.target;
+      if (el instanceof HTMLDetailsElement && el.open && el.closest('[data-admin-nav]')) groups().forEach(d => { if (d !== el) d.open = false; });
+    }, true);
+    document.addEventListener('click', e => { if (!e.target.closest('[data-admin-nav] details')) groups().forEach(d => { d.open = false; }); });
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape') return;
+      const open = document.querySelector('[data-admin-nav] details[open]');
+      if (open) { open.open = false; open.querySelector('summary')?.focus(); }
+    });
+  })();
+</script>
+
+<style>
+  /* Selectors are class-qualified so each page's own element rules (header, nav, a) cannot restyle the menu. */
+  .admin-nav { --an-bg:#0b0b12; --an-line:#26263a; --an-text:#d9d9e6; --an-muted:#8d8da6; --an-accent:#a78bfa;
+    box-sizing:border-box; position:relative; z-index:100; display:flex; align-items:center; gap:18px; min-height:48px; padding:0 20px;
+    background:var(--an-bg); border-bottom:1px solid var(--an-line); color:var(--an-text); font:400 13px/1.4 Sora,Arial,sans-serif; }
+  .admin-nav *, .admin-nav *::before, .admin-nav *::after { box-sizing:border-box; }
+  .admin-nav a.admin-nav-brand { color:#fff; text-decoration:none; font-weight:600; font-size:15px; white-space:nowrap; margin-right:6px; }
+  .admin-nav a.admin-nav-brand span { color:var(--an-accent); }
+  .admin-nav a.admin-nav-brand small { color:var(--an-muted); font-weight:400; font-size:11px; letter-spacing:.08em; text-transform:uppercase; margin-left:4px; }
+  .admin-nav .admin-nav-groups { display:flex; gap:4px; flex:1; margin:0; padding:0; background:none; border:0; }
+  .admin-nav .admin-nav-group { position:relative; margin:0; }
+  .admin-nav .admin-nav-group summary { list-style:none; cursor:pointer; padding:8px 12px; border-radius:6px; color:var(--an-text); white-space:nowrap; user-select:none; }
+  .admin-nav .admin-nav-group summary::-webkit-details-marker { display:none; }
+  .admin-nav .admin-nav-group summary::after { content:'▾'; margin-left:6px; font-size:10px; color:var(--an-muted); }
+  .admin-nav .admin-nav-group summary:hover, .admin-nav .admin-nav-group[open] summary { background:#1a1a28; color:#fff; }
+  .admin-nav .admin-nav-group summary.is-current { color:#fff; box-shadow:inset 0 -2px 0 var(--an-accent); border-radius:6px 6px 0 0; }
+  .admin-nav .admin-nav-group summary:focus-visible, .admin-nav a:focus-visible { outline:2px solid var(--an-accent); outline-offset:2px; }
+  .admin-nav ul { list-style:none; margin:0; padding:0; }
+  .admin-nav .admin-nav-group > ul, .admin-nav .admin-nav-panel { position:absolute; top:calc(100% + 6px); left:0; min-width:230px; padding:6px;
+    background:#13131d; border:1px solid var(--an-line); border-radius:10px; box-shadow:0 14px 34px rgba(0,0,0,.45); }
+  .admin-nav li a, .admin-nav .admin-nav-panel a { display:block; padding:8px 10px; border-radius:6px; color:var(--an-text); text-decoration:none; white-space:nowrap; }
+  .admin-nav li a:hover { background:#1f1f30; color:#fff; }
+  .admin-nav li a[aria-current='page'] { background:rgba(167,139,250,.14); color:#fff; font-weight:600; }
+  .admin-nav li a[aria-current='page']::before { content:'● '; color:var(--an-accent); font-size:9px; vertical-align:2px; }
+  .admin-nav a.admin-nav-site { color:var(--an-muted); text-decoration:none; white-space:nowrap; margin-left:auto; }
+  .admin-nav a.admin-nav-site:hover { color:#fff; }
+
+  /* Compact: a single dropdown for layouts that already have their own sidebar. */
+  .admin-nav.admin-nav-compact { display:block; min-height:0; padding:0; margin:0 0 18px; background:none; border:0; }
+  .admin-nav-compact .admin-nav-group summary { display:block; }
+  .admin-nav-compact .admin-nav-group summary { border:1px solid var(--an-line); color:var(--an-muted); font-size:12px; }
+  .admin-nav-compact .admin-nav-panel { min-width:250px; max-height:70vh; overflow:auto; }
+  .admin-nav-compact .admin-nav-panel p { margin:8px 10px 2px; color:var(--an-muted); font-size:10px; letter-spacing:.1em; text-transform:uppercase; }
+  .admin-nav-compact a.admin-nav-site { display:block; margin:6px 0 0; border-top:1px solid var(--an-line); border-radius:0; }
+
+  @media (max-width: 700px) {
+    .admin-nav { flex-wrap:wrap; gap:4px 8px; padding:8px 16px; }
+    .admin-nav .admin-nav-groups { order:3; flex-basis:100%; }
+    .admin-nav .admin-nav-group { position:static; }
+    .admin-nav .admin-nav-group > ul { left:16px; right:16px; min-width:0; }
+    .admin-nav .admin-nav-group summary { padding:8px 10px; }
+  }
+  @media print { .admin-nav { display:none; } }
+</style>

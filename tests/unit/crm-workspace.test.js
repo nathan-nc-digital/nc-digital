@@ -239,7 +239,7 @@ test('reports use complete London dates across summer time and reject reversed r
   assert.equal((await call(e,'reports?from=2026-09-18&to=2026-09-17')).status,400);
 });
 test('two queued replies include original context exactly once; no provider receipt stays unknown',async t=>{
-  const e=env(t),ticket=await capture(e);e.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind='notification'").run();
+  const e=env(t),ticket=await capture(e);e.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind IN ('notification','confirmation')").run();
   for(const body of ['First','Second'])await ok(handleCrmApi(req('/admin/crm/api/message',{id:ticket.id,body,kind:'outbound',request_key:uid()}),e,'nathan'));
   const payloads=[];provider(t,(_url,options)=>{payloads.push(JSON.parse(options.body));return Response.json({data:{messageId:String(1000+payloads.length)}});});
   await deliverCrmOutbox(e);assert.equal(payloads.filter(p=>p.content.includes('Your original message:')).length,1);assert(payloads[0].content.includes('Original form details'));

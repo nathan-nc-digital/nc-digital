@@ -7,7 +7,7 @@ import { handleCrmApi,handleEnquiry } from '../src/lib/crm-api.js';
 import { handleWorkspace } from '../src/lib/crm-workspace.js';
 import { londonToday,plusDays } from '../src/lib/crm-domain.js';
 const sqlite=new DatabaseSync(':memory:');sqlite.exec('PRAGMA foreign_keys=ON');
-for(const name of ['0001_create_jobs_table.sql','0002_create_job_notes_table.sql','0003_add_completed_at.sql','0015_crm.sql','0016_crm_workspace.sql','0017_crm_reliability.sql','0018_crm_undated_tasks.sql','0019_crm_saved_views.sql','0020_crm_tags.sql'])sqlite.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
+for(const name of ['0001_create_jobs_table.sql','0002_create_job_notes_table.sql','0003_add_completed_at.sql','0015_crm.sql','0016_crm_workspace.sql','0017_crm_reliability.sql','0018_crm_undated_tasks.sql','0019_crm_saved_views.sql','0020_crm_tags.sql','0021_crm_confirmation_kind.sql'])sqlite.exec(readFileSync(new URL('../migrations/'+name,import.meta.url),'utf8'));
 const db={prepare(sql){const s=sqlite.prepare(sql);return {args:[],bind(...args){this.args=args;return this;},async first(){return s.get(...this.args)||null;},async all(){return {results:s.all(...this.args)};},async run(){const r=s.run(...this.args);return {meta:{changes:Number(r.changes),last_row_id:Number(r.lastInsertRowid)}};}};},async batch(statements){sqlite.exec('BEGIN');try{const out=[];for(const s of statements)out.push(await s.run());sqlite.exec('COMMIT');return out;}catch(error){sqlite.exec('ROLLBACK');throw error;}}};
 const env={JOBS_DB:db,CRM_ENABLED:'true'},origin='https://nc-digital.co.uk',root=path.resolve('dist');
 const request=(route,body)=>new Request(origin+route,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(body)});

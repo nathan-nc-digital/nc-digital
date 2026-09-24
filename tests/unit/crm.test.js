@@ -16,6 +16,9 @@ function database(t) {
   sqlite.exec(readFileSync('migrations/0018_crm_undated_tasks.sql','utf8'));
   sqlite.exec(readFileSync('migrations/0019_crm_saved_views.sql','utf8'));
   sqlite.exec(readFileSync('migrations/0020_crm_tags.sql','utf8'));
+  sqlite.exec(readFileSync('migrations/0021_crm_confirmation_kind.sql','utf8'));
+  // The inbox list reports whether website review emails were opened, so it reads the audit tables too.
+  for (const file of ['0008_website_audits.sql','0022_website_audit_share.sql','0023_website_audit_open_alerts.sql','0024_website_audit_rerun.sql','0010_analytics_reports.sql','0025_seo_clients.sql']) sqlite.exec(readFileSync('migrations/'+file,'utf8'));
   t.after(() => sqlite.close());
   const db = { sqlite, prepare(sql) {
     const statement = sqlite.prepare(sql);
@@ -128,6 +131,7 @@ test('tampered token cache is discarded and short-lived tokens are not cached', 
 test('notification redirects stay unconfirmed and are not retried automatically', async t => {
   const env = setup(t, true);
   await create(env);
+  env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind='confirmation'").run();
   let calls = 0;
   t.mock.method(globalThis, 'fetch', async (url, options) => {
     calls++; assert.equal(options.redirect, 'manual');
@@ -140,12 +144,14 @@ test('notification redirects stay unconfirmed and are not retried automatically'
   assert.equal(row.delivery, 'unknown'); assert(!row.error.includes('private-test')); assert.equal(calls, 2);
 });
 
-test('form capture stores details and notification atomically and deduplicates retries',async t=>{
+test('form capture stores details, notification and confirmation atomically and deduplicates retries',async t=>{
   const env=setup(t),data=input({utm_source:'facebook',phone:'07123456789'});
   const first=await handleEnquiry(request('/api/enquiries',data),env);assert.equal(first.status,201);
   assert.equal((await handleEnquiry(request('/api/enquiries',data),env)).status,200);
   const rows=env.JOBS_DB.sqlite.prepare('SELECT * FROM crm_tickets').all();assert.equal(rows.length,1);assert.equal(rows[0].email,'customer@example.com');assert.equal(JSON.parse(rows[0].metadata).utm_source,'facebook');
-  assert.equal(env.JOBS_DB.sqlite.prepare('SELECT COUNT(*) AS n FROM crm_messages').get().n,2);
+  assert.equal(env.JOBS_DB.sqlite.prepare('SELECT COUNT(*) AS n FROM crm_messages').get().n,3);
+  const confirmation=env.JOBS_DB.sqlite.prepare("SELECT * FROM crm_messages WHERE kind='confirmation'").get();
+  assert.equal(confirmation.author,'system');assert.equal(confirmation.delivery,'queued');assert(confirmation.body.includes(rows[0].reference));assert(confirmation.body.includes('Test Customer'));
 });
 test('calculator captures its quote details as searchable lead metadata', async t => {
   const env = setup(t);
@@ -214,7 +220,7 @@ test('converting a ticket creates one linked job and preserves the assigned pers
 });
 test('outbox sends as NC Digital from Nathan’s mailbox, uses fixed recipient and records provider confirmation',async t=>{
   const env=setup(t,true),ticket=await create(env);await ok(admin(env,'message',{id:ticket.id,kind:'outbound',body:'Thanks for getting in touch.',request_key:crypto.randomUUID()}));
-  env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind='notification'").run();
+  env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind IN ('notification','confirmation')").run();
   let sends=0;mockProvider(t,(url,options)=>{sends++;assert(url.endsWith('/messages'));const payload=JSON.parse(options.body);assert.equal(payload.fromAddress,`NC Digital <${CRM_MAILBOX}>`);assert.equal(payload.toAddress,ticket.email);assert.equal(payload.mailFormat,'html');assert(payload.content.includes('NC Digital'));assert(payload.content.includes('Your original message:'));assert(payload.content.includes('Please help with my website.'));assert(payload.content.includes('Name: Test Customer'));assert(payload.content.includes('Service: new-website'));assert(payload.subject.includes(ticket.reference));return Response.json({status:{code:200},data:{messageId:'987654321'}});});
   await deliverCrmOutbox(env);await deliverCrmOutbox(env);assert.equal(sends,1);assert.equal(env.JOBS_DB.sqlite.prepare("SELECT delivery FROM crm_messages WHERE kind='outbound'").get().delivery,'sent');
 });
@@ -226,6 +232,7 @@ test('customer emails use a plain subject that keeps the reference but drops for
   assert(!customerSubject(ticket).includes('£'));assert(!customerSubject(ticket).includes('(Meta)'));
   assert.equal(ticketSubject(ticket),'[NC-0123456789ABCDEF] New website enquiry — websites from £170 + VAT (Meta)');
   const env=setup(t,true),created=await create(env,{subject:'New website enquiry — websites from £170 + VAT (Meta)'});
+  env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind='confirmation'").run();
   const subjects={};mockProvider(t,(url,options)=>{const payload=JSON.parse(options.body);subjects[payload.toAddress===CRM_MAILBOX?'notification':'customer']=payload.subject;return Response.json({status:{code:200},data:{messageId:String(Object.keys(subjects).length)}});});
   await ok(admin(env,'message',{id:created.id,kind:'outbound',body:'Thanks for getting in touch.',request_key:crypto.randomUUID()}));
   await deliverCrmOutbox(env);await deliverCrmOutbox(env);
@@ -233,7 +240,7 @@ test('customer emails use a plain subject that keeps the reference but drops for
   assert.equal(subjects.customer,`Your enquiry to NC Digital [${created.reference}]`);
 });
 test('original form details are included only on the first CRM reply',async t=>{
-  const env=setup(t,true),ticket=await create(env);env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind='notification'").run();
+  const env=setup(t,true),ticket=await create(env);env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind IN ('notification','confirmation')").run();
   const payloads=[];mockProvider(t,(url,options)=>{payloads.push(JSON.parse(options.body));return Response.json({status:{code:200},data:{messageId:String(9000+payloads.length)}});});
   await ok(admin(env,'message',{id:ticket.id,kind:'outbound',body:'First reply',request_key:crypto.randomUUID()}));await deliverCrmOutbox(env);
   await ok(admin(env,'message',{id:ticket.id,kind:'outbound',body:'Second reply',request_key:crypto.randomUUID()}));await deliverCrmOutbox(env);
@@ -241,7 +248,7 @@ test('original form details are included only on the first CRM reply',async t=>{
 });
 test('unconfirmed sends are not automatically repeated; explicit rejections can be retried',async t=>{
   const env=setup(t,true),ticket=await create(env);await ok(admin(env,'message',{id:ticket.id,kind:'outbound',body:'Hello',request_key:crypto.randomUUID()}));
-  env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind='notification'").run();
+  env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind IN ('notification','confirmation')").run();
   let calls=0;mockProvider(t,()=>{calls++;throw Error('Network disconnected');});await deliverCrmOutbox(env);await deliverCrmOutbox(env);assert.equal(calls,1);
   const row=env.JOBS_DB.sqlite.prepare("SELECT * FROM crm_messages WHERE kind='outbound'").get();assert.equal(row.delivery,'unknown');assert.equal((await admin(env,'retry',{message_id:row.id})).status,409);
 });
@@ -253,10 +260,22 @@ test('Zoho sync matches ticket token AND customer address, imports plain text an
 });
 test('later replies use Zoho reply endpoint with the received message ID',async t=>{
   const env=setup(t,true),ticket=await create(env);env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET provider_id='4444' WHERE kind='inbound'").run();
-  env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind='notification'").run();
+  env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind IN ('notification','confirmation')").run();
   await ok(admin(env,'message',{id:ticket.id,kind:'outbound',body:'Following up.',request_key:crypto.randomUUID()}));
   const requests=[];mockProvider(t,(url,options)=>{requests.push({url,payload:JSON.parse(options.body)});return Response.json({status:{code:200},data:{messageId:'5555'}});});await deliverCrmOutbox(env);
   assert.equal(requests.length,1);assert(requests[0].url.endsWith('/messages/4444'));assert.equal(requests[0].payload.action,'reply');assert.equal(requests[0].payload.fromAddress,`NC Digital <${CRM_MAILBOX}>`);assert(requests[0].payload.content.includes('Your original message:'));assert(requests[0].payload.content.includes('Please help with my website.'));assert.equal(env.JOBS_DB.sqlite.prepare("SELECT delivery FROM crm_messages WHERE kind='outbound'").get().delivery,'sent');
+});
+test('the auto-confirmation is emailed to the customer and a later staff reply threads onto it',async t=>{
+  const env=setup(t,true),ticket=await create(env);
+  env.JOBS_DB.sqlite.prepare("UPDATE crm_messages SET delivery='sent' WHERE kind='notification'").run();
+  const requests=[];mockProvider(t,(url,options)=>{requests.push({url,payload:JSON.parse(options.body)});return Response.json({status:{code:200},data:{messageId:String(6000+requests.length)}});});
+  await deliverCrmOutbox(env);
+  assert.equal(requests.length,1);assert.equal(requests[0].payload.toAddress,ticket.email);assert.equal(requests[0].payload.subject,`Your enquiry to NC Digital [${ticket.reference}]`);assert(!requests[0].payload.action);assert(requests[0].payload.content.includes('ticket has been opened'));assert(requests[0].payload.content.includes(ticket.reference));assert(requests[0].payload.content.includes('Your original message:'));
+  const confirmation=env.JOBS_DB.sqlite.prepare("SELECT * FROM crm_messages WHERE kind='confirmation'").get();assert.equal(confirmation.delivery,'sent');assert.equal(confirmation.provider_id,'6001');
+
+  await ok(admin(env,'message',{id:ticket.id,kind:'outbound',body:'Thanks for the details.',request_key:crypto.randomUUID()}));
+  await deliverCrmOutbox(env);
+  assert.equal(requests.length,2);assert(requests[1].url.endsWith('/messages/'+confirmation.provider_id));assert.equal(requests[1].payload.action,'reply');assert.equal(requests[1].payload.subject,`Re: Your enquiry to NC Digital [${ticket.reference}]`);
 });
 test('sync backlog progresses to next page and preserves cursor if the provider fails',async t=>{
   const env=setup(t,true);let fail=false;

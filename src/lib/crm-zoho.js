@@ -91,22 +91,26 @@ export async function deliverCrmOutbox(env) {
   try {
     const stale = new Date(Date.now() - 300000).toISOString();
     await db.prepare("UPDATE crm_messages SET delivery='unknown',error='Delivery was interrupted. Check Zoho before resending.' WHERE delivery='sending' AND updated_at < ?").bind(stale).run();
-    const { results } = await db.prepare("SELECT m.*,t.email,t.subject,t.reference,t.name,t.phone,t.company,t.service FROM crm_messages m JOIN crm_tickets t ON t.id=m.ticket_id WHERE m.delivery='queued' AND t.archived_at IS NULL AND t.status<>'spam' ORDER BY m.rowid LIMIT 3").all();
+    const { results } = await db.prepare("SELECT m.*,t.email,t.subject,t.source_page,t.reference,t.name,t.phone,t.company,t.service FROM crm_messages m JOIN crm_tickets t ON t.id=m.ticket_id WHERE m.delivery='queued' AND t.archived_at IS NULL AND t.status<>'spam' ORDER BY m.rowid LIMIT 3").all();
     let api;
     for (const row of results) {
-      if ((row.kind === 'outbound' || row.kind === 'notification') && !zohoConfigured(env)) continue;
-      if ((row.kind === 'outbound' || row.kind === 'notification') && !api) api = await zohoClient(env); // Refresh before claiming; a refresh failure cannot have sent email.
+      const isDeliverable = row.kind === 'outbound' || row.kind === 'notification' || row.kind === 'confirmation';
+      if (isDeliverable && !zohoConfigured(env)) continue;
+      if (isDeliverable && !api) api = await zohoClient(env); // Refresh before claiming; a refresh failure cannot have sent email.
       const claim = await db.prepare("UPDATE crm_messages SET delivery='sending',updated_at=? WHERE id=? AND delivery='queued' AND EXISTS(SELECT 1 FROM crm_tickets t WHERE t.id=ticket_id AND t.archived_at IS NULL AND t.status<>'spam')").bind(new Date().toISOString(), row.id).run();
       if (!claim.meta.changes) continue;
       const attemptId = crypto.randomUUID();
       await db.prepare("INSERT INTO crm_message_attempts(id,message_id,started_at,outcome) VALUES(?,?,?,'sending')").bind(attemptId,row.id,new Date().toISOString()).run();
       try {
         let providerId = null;
-        if (row.kind === 'notification' || row.kind === 'outbound') {
+        if (isDeliverable) {
           const isNotification = row.kind === 'notification';
           const content = isNotification ? `${row.body}\n\nManage this enquiry: https://nc-digital.co.uk/admin/crm/?ticket=${row.ticket_id}` : row.body;
           const firstInbound = !isNotification ? await db.prepare("SELECT body FROM crm_messages WHERE ticket_id=? AND kind='inbound' ORDER BY created_at ASC,id ASC LIMIT 1").bind(row.ticket_id).first() : null;
-          const latestInbound = !isNotification ? await db.prepare("SELECT provider_id FROM crm_messages WHERE ticket_id=? AND kind='inbound' ORDER BY created_at DESC,id DESC LIMIT 1").bind(row.ticket_id).first() : null;
+          // Anchor a reply to whichever email — the customer's own reply, or our earlier
+          // confirmation — was actually last sent in this thread, so a staff reply lands in
+          // the same inbox conversation as the ticket-opened confirmation the customer got.
+          const latestThreadEmail = !isNotification ? await db.prepare("SELECT provider_id FROM crm_messages WHERE ticket_id=? AND kind IN ('inbound','confirmation') AND provider_id IS NOT NULL AND id<>? ORDER BY created_at DESC,rowid DESC LIMIT 1").bind(row.ticket_id, row.id).first() : null;
           const previousOutbound = !isNotification ? await db.prepare("SELECT id FROM crm_messages WHERE ticket_id=? AND kind='outbound' AND id<>? AND (rowid < (SELECT rowid FROM crm_messages WHERE id=?) OR delivery IN ('sent','unknown','sending')) AND delivery NOT IN ('failed','cancelled') LIMIT 1").bind(row.ticket_id, row.id, row.id).first() : null;
           const includeContext = row.send_context === null ? !previousOutbound : Boolean(row.send_context);
           if (!isNotification && row.send_context === null) await db.prepare('UPDATE crm_messages SET send_context=? WHERE id=?').bind(includeContext?1:0,row.id).run();
@@ -119,7 +123,7 @@ export async function deliverCrmOutbox(env) {
             row.company ? `Company: ${row.company}` : '',
             row.service ? `Service: ${row.service}` : '',
           ].filter(Boolean).join('\n') : '';
-          const replyId = !isNotification ? latestInbound?.provider_id : null;
+          const replyId = !isNotification ? latestThreadEmail?.provider_id : null;
           const payload = { fromAddress: CRM_FROM_ADDRESS, toAddress: isNotification ? CRM_MAILBOX : row.email, subject: isNotification ? `New CRM enquiry ${ticketSubject(row)}` : customerSubject(row, { reply: Boolean(replyId) }), content: crmEmailHtml(content, quoted), mailFormat: 'html', encoding: 'UTF-8', ...(replyId ? { action: 'reply' } : {}) };
           const result = await api(`/messages${replyId ? '/' + replyId : ''}`, payload);
           providerId = result.data?.messageId ? String(result.data.messageId) : null;
@@ -139,6 +143,18 @@ export async function deliverCrmOutbox(env) {
     }
     await stateSet(db,'last_send_check',new Date().toISOString());
   } finally { await releaseLock(db, 'send_lock', owner); }
+}
+// Split entry points so customer email delivery can run in its own cron invocation. On Workers
+// Free every invocation shares one small CPU/subrequest budget; sending alongside mailbox parsing
+// and backups let the runtime end the run after Zoho accepted an email but before its receipt
+// was recorded, leaving the message stuck in 'sending'.
+export async function runCrmOutbox(env) {
+  if (env.CRM_ENABLED !== 'true' || !env.JOBS_DB) return;
+  await deliverCrmOutbox(env);
+}
+export async function runCrmSync(env) {
+  if (env.CRM_ENABLED !== 'true' || !env.JOBS_DB || !zohoConfigured(env)) return;
+  await syncZoho(env);
 }
 export async function runCrmSchedule(env) {
   if (env.CRM_ENABLED !== 'true' || !env.JOBS_DB) return;

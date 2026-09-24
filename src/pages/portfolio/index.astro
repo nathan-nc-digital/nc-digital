@@ -1,4 +1,5 @@
 ---
+import { portfolioFolders } from '../../data/portfolio-folders';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
@@ -16,25 +17,7 @@ const fallbackImages = import.meta.glob<{ default: ImageMetadata }>(
   { eager: true }
 );
 
-const folderMap: Record<string, string> = {
-  '3d-framing':                  '3D Framing',
-  'ak-promotions':               'AK Promotions',
-  'creative-redevelopments':     'Creative Redevelopment',
-  'ds-carpentry':                'DS Carpentry',
-  'davies-property-development': 'Davies Property Development',
-  'ir-energy':                   'IR Energy',
-  'k-williams-roofing':          'K Williams Roofing',
-  'lr-building-roofing':         'L&R Building and Roofing',
-  'mj-roofing':                  'M&J Roofing',
-  'rap-roofing':                 'RAP Roofing and Building',
-  'pro-tech-plumbing':           'Pro Tech Plumbing and Bathrooms',
-  'whats-on-merthyr-tydfil':    "What's On Merthyr Tydfil",
-  'web-design-south-wales':      'Web Design South Wales',
-  'sell-my-caravan-right':       'Sell My Caravan Right',
-  'electrician-barry':          'Electrician Barry',
-  'utopia-design':              'Utopia Design',
-  'c-morgan-pallets':           'C Morgan Pallets',
-};
+const folderMap = portfolioFolders;
 
 function getProjectImage(slug: string) {
   const folder = folderMap[slug];
@@ -127,6 +110,7 @@ const serviceLinks: Record<string, string> = {
       <div class="filter-bar" id="portfolio-filters">
         <button class="filter-btn filter-btn--active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="trades">Trades</button>
+        <button class="filter-btn" data-filter="industrial">Industrial</button>
         <button class="filter-btn" data-filter="property">Property</button>
         <button class="filter-btn" data-filter="energy">Energy Renewal</button>
         <button class="filter-btn" data-filter="events">Events</button>

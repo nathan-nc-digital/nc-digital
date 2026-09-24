@@ -24,6 +24,7 @@ const portfolioSubfolderImages = import.meta.glob<{ default: ImageMetadata }>(
   { eager: true }
 );
 const folderMap: Record<string, string> = {
+  'milne-industrial':            'Milne Industrial',
   '3d-framing':                  '3D Framing',
   'ak-promotions':               'AK Promotions',
   'creative-redevelopments':     'Creative Redevelopment',
@@ -255,6 +256,7 @@ const reviews = [
   { name: 'Sean Hicks',       time: '2 months ago', href: '/portfolio/ds-carpentry/',                project: 'DS Carpentry',                context: 'Carpentry · Web design & local SEO', text: '10/10 for the service provided. Website is outstanding — detail is key and he delivers that. Anyone wanting a website, this is your guy 💯' },
   { name: 'Jamie Williams',   time: '5 months ago', href: '/portfolio/mj-roofing/',                  project: 'M&J Roofing',                 context: 'Roofing · Web design & local SEO',  text: 'Nathan done the website for us at M&J Roofing. Brilliant service and always keeps contact to see if everything is going well. Thanks Nathan.' },
   { name: 'Ryan Martin',      time: '5 months ago', href: '/portfolio/creative-redevelopments/',     project: 'Creative Redevelopment',      context: 'Property · Web design & build',    text: 'Top class service, website is quality 👌' },
+  { name: 'Sam Milne',        time: 'New',          href: '/portfolio/milne-industrial/',            project: 'Milne Industrial',            context: 'Industrial · Website development', text: 'Had a great experience working with NC Digital on the development of the Milne Industrial website. They took the time to understand our business, our requirements and the direction we wanted to take the website in. Very pleased with the finished result and would happily recommend their services to other businesses looking for a reliable and professional team.' },
 ];
 
 // Homepage-only structured data. The Organization/ProfessionalService entity lives in BaseHead

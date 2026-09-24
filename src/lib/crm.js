@@ -21,7 +21,7 @@ export function key(value) {
 }
 export function ticketSubject(ticket) { return `[${ticket.reference}] ${ticket.subject}`; }
 // Customer-facing subject: keeps the reference the mailbox sync matches on, but never the form/ad-source wording (e.g. "websites from £170 (Meta)"), which reads as promotional to spam filters and to the customer.
-export function customerSubject(ticket, { reply = false } = {}) { return `${reply ? 'Re: ' : ''}Your enquiry to NC Digital [${ticket.reference}]`; }
+export function customerSubject(ticket, { reply = false } = {}) { const topic = { 'website-audit': 'Your website review from NC Digital', 'seo-report': 'Your SEO report from NC Digital' }[ticket.source_page] || 'Your enquiry to NC Digital'; return `${reply ? 'Re: ' : ''}${topic} [${ticket.reference}]`; }
 export function cleanSubject(value) { return text(value, 180, 'Website enquiry').replace(/[\r\n]/g, ' '); }
 export async function enquiryHash(data) {
   const { submission_key, ...payload } = data;

@@ -185,7 +185,7 @@ async function accountDetail(db,accountId) {
     rows(db,'SELECT * FROM crm_activities WHERE account_id=? ORDER BY pinned DESC,created_at DESC LIMIT 100',account.id),
     rows(db,'SELECT id,reference,subject,status,email,updated_at,job_id FROM crm_tickets WHERE account_id=? AND archived_at IS NULL ORDER BY updated_at DESC LIMIT 100',account.id),
   ]);
-  const messages=await rows(db,"SELECT m.id,m.ticket_id,m.kind,m.author,m.body,m.delivery,m.created_at FROM crm_messages m JOIN crm_tickets t ON t.id=m.ticket_id WHERE t.account_id=? AND m.kind IN ('inbound','outbound','note') ORDER BY m.created_at DESC LIMIT 100",account.id);
+  const messages=await rows(db,"SELECT m.id,m.ticket_id,m.kind,m.author,m.body,m.delivery,m.created_at FROM crm_messages m JOIN crm_tickets t ON t.id=m.ticket_id WHERE t.account_id=? AND m.kind IN ('inbound','outbound','note','confirmation') ORDER BY m.created_at DESC LIMIT 100",account.id);
   // Keep each related-record lookup as a separate IN subquery. D1's SQLite
   // runtime has a lower compound-SELECT limit than local SQLite, so a UNION
   // chain here can make an otherwise valid account detail request fail.
@@ -259,7 +259,7 @@ async function todayView(db) {
     rows(db,"SELECT q.*,a.name AS account_name FROM crm_quotes q JOIN crm_accounts a ON a.id=q.account_id WHERE q.archived_at IS NULL AND q.status IN ('queued','sent') ORDER BY q.expires_on LIMIT 30"),
     rows(db,"SELECT account_id,price_pence,frequency,starts_on,ends_on,status,archived_at FROM crm_services WHERE archived_at IS NULL"),
     rows(db,"SELECT s.id,s.name,s.position,s.outcome,s.probability,COUNT(o.id) AS count,COALESCE(SUM(o.value_pence),0) AS value_pence FROM crm_stages s LEFT JOIN crm_opportunities o ON o.stage_id=s.id AND o.archived_at IS NULL WHERE s.archived_at IS NULL GROUP BY s.id ORDER BY s.position"),
-    rows(db,"SELECT delivery,COUNT(*) AS count,MIN(created_at) AS oldest FROM crm_messages WHERE kind IN ('outbound','notification') AND delivery IN ('queued','sending','failed','unknown') GROUP BY delivery"),
+    rows(db,"SELECT delivery,COUNT(*) AS count,MIN(created_at) AS oldest FROM crm_messages WHERE kind IN ('outbound','notification','confirmation') AND delivery IN ('queued','sending','failed','unknown') GROUP BY delivery"),
   ]);
   const weightedPipelinePence=pipeline.filter(stage=>stage.outcome==='open').reduce((sum,stage)=>sum+ratioRound(Number(stage.value_pence||0),Number(stage.probability||0),100),0);
   return {today,tasks,enquiries,no_action:noAction,stale,renewals,quotes,revenue:revenue(services,today),pipeline,weighted_pipeline_pence:weightedPipelinePence,health,last_sync:await stateGet(db,'last_sync'),sync_error:await stateGet(db,'sync_error'),last_send_check:await stateGet(db,'last_send_check')};

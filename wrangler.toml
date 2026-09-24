@@ -6,7 +6,7 @@ main = "src/worker.js"
 CRM_ENABLED = "true"
 
 [triggers]
-crons = ["* * * * *"]
+crons = ["* * * * *", "*/2 * * * *"]
 
 # Routes (nc-digital.co.uk/* and www.nc-digital.co.uk/*) are managed in the
 # Cloudflare dashboard. Kept out of this file because the deploy API token

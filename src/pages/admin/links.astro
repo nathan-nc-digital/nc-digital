@@ -1,4 +1,5 @@
 ---
+import AdminNav from '../../components/AdminNav.astro';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import { BLOG_CATEGORY_META } from '../../data/blogCategories';
@@ -438,24 +439,12 @@ const clientData = Object.fromEntries(
   </style>
 </head>
 <body>
+<AdminNav />
 
 <div class="topbar">
   <h1>Internal Link Map</h1>
   <div class="topbar-right">
-    <a href="/admin/crm/">CRM / Enquiries →</a>
-    <a href="/admin/social/">Social Posts ↗</a>
     <span class="build-note">Built at compile time · {pages.length} pages tracked</span>
-    <a href="/admin/backlinks/">Backlinks →</a>
-    <a href="/admin/keywords/">Keywords →</a>
-    <a href="/admin/keyword-research/">Keyword Research →</a>
-    <a href="/admin/website-audit/">Website Audit →</a>
-    <a href="/admin/seo-quick-wins/">SEO Quick Wins →</a>
-    <a href="/admin/analytics-reports/">SEO & Analytics Reports →</a>
-    <a href="/admin/competitor-gaps/">Competitor Gap Finder →</a>
-    <a href="/admin/indexing/">Indexing →</a>
-    <a href="/admin/gsc/">GSC →</a>
-    <a href="/admin/emd-finder/">EMD Finder →</a>
-    <a href="/">← Back to site</a>
   </div>
 </div>
 

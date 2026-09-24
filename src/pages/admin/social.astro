@@ -1,4 +1,5 @@
 ---
+import AdminNav from '../../components/AdminNav.astro';
 import '@fontsource/sora/400.css';
 import '@fontsource/sora/600.css';
 ---
@@ -11,10 +12,12 @@ import '@fontsource/sora/600.css';
   <title>Social Posts | NC Digital</title>
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="/admin/jobs/">NC <span>Digital</span> <small>/ Social Posts</small></a><a href="/admin/links/">Admin tools ↗</a></header>
+<AdminNav />
+  <header class="topbar"><a class="brand" href="/admin/jobs/">Social Posts</a></header>
   <main>
     <div class="intro"><div><p class="eyebrow">CREATE & SHARE</p><h1>One launch. Every channel.</h1><p>Upload your images, write your post and choose where it goes.</p></div><a class="button secondary" href="https://publish.buffer.com/" target="_blank" rel="noopener noreferrer">Manage Buffer accounts ↗</a></div>
     <div id="notice" class="notice" role="status" aria-live="polite">Checking your publishing setup…</div>
+    <div id="showcase-import-panel" class="notice" hidden><p>Load the showcase’s branded images and platform captions into a new draft.</p><button id="showcase-import" class="button secondary" type="button">Load showcase draft</button></div>
     <details class="notice"><summary>Connecting all five accounts on the free plan</summary><p>Use Buffer’s three free connections for <strong>X, LinkedIn and Google Business Profile</strong>. Connect your <strong>Facebook Page and its linked professional Instagram account</strong> directly through Meta.</p><p>Facebook and Instagram schedules are managed here. Manage the other three queues in <a href="https://publish.buffer.com/" target="_blank" rel="noopener noreferrer">Buffer</a>, which allows 10 queued posts per channel on its free plan. <a href="https://business.facebook.com/" target="_blank" rel="noopener noreferrer">Open Meta Business Suite ↗</a></p><p>Meta publishing requires a one-time developer app and Page token setup. Scheduled Meta posts normally start within a minute of the selected time; Instagram may need a little longer to prepare images.</p></details>
     <div class="workspace">
       <form id="composer" class="panel">

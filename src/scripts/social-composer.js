@@ -1,4 +1,5 @@
 import { SOCIAL_PLATFORMS, postText, validatePost, MEDIA_KEY } from '../lib/social-posts.js';
+import { showcasePath, validateShowcaseDraft } from '../lib/showcase-draft.js';
 
 const $ = id => document.getElementById(id);
 const KEY = 'nc-social-draft-v1';
@@ -127,14 +128,15 @@ function renderPreviews() {
     label.append(textarea); details.append(label); card.append(details, count); return card;
   }));
 }
-async function normalizeImage(file) {
+async function normalizeImage(file, preserveAspect = false) {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 20 * 1024 * 1024) throw new Error('Choose JPG, PNG or WebP images under 20 MB each.');
   const bitmap = await createImageBitmap(file);
-  const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1200;
-  const context = canvas.getContext('2d'); context.fillStyle = '#ffffff'; context.fillRect(0, 0, 1200, 1200);
-  const scale = Math.min(1200 / bitmap.width, 1200 / bitmap.height);
+  const canvas = document.createElement('canvas'); canvas.width = 1200;
+  canvas.height = preserveAspect ? Math.round(1200 * bitmap.height / bitmap.width) : 1200;
+  const context = canvas.getContext('2d'); context.fillStyle = '#ffffff'; context.fillRect(0, 0, canvas.width, canvas.height);
+  const scale = Math.min(canvas.width / bitmap.width, canvas.height / bitmap.height);
   const width = bitmap.width * scale, height = bitmap.height * scale;
-  context.drawImage(bitmap, (1200 - width) / 2, (1200 - height) / 2, width, height); bitmap.close();
+  context.drawImage(bitmap, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height); bitmap.close();
   return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Could not prepare this image.')), 'image/jpeg', .92));
 }
 $('images').addEventListener('change', async event => {
@@ -242,6 +244,45 @@ $('composer').onsubmit = async event => {
   }
   finally { setBusy(false); }
 };
+const showcaseSlug = new URLSearchParams(location.search).get('showcase');
+const showcaseUploads = new Map();
+async function importShowcase() {
+  if (!showcaseSlug || busy) return;
+  if (!uploadsReady) { notify('Image storage is unavailable. Your current draft is unchanged. Refresh to retry the showcase import.', true); return; }
+  if ((draft.caption || draft.images.length || draft.link) && !confirm('Replace your current draft with the showcase captions and four branded images? Nothing will be published.')) return;
+  setBusy(true);
+  $('showcase-import').disabled = true;
+  try {
+    const base = showcasePath(showcaseSlug);
+    const response = await fetch(`${base}social-draft.json`, { signal: AbortSignal.timeout(30000) });
+    if (!response.ok) throw new Error('Could not load the showcase. Your current draft is unchanged.');
+    const incoming = validateShowcaseDraft(await response.json(), showcaseSlug);
+    const keys = [];
+    for (const [index, path] of incoming.images.entries()) {
+      notify(`Preparing showcase image ${index + 1} of ${incoming.images.length}…`);
+      let key = showcaseUploads.get(path);
+      if (!key) {
+        const imageResponse = await fetch(path, { signal: AbortSignal.timeout(30000) });
+        if (!imageResponse.ok) throw new Error('A showcase image could not be loaded.');
+        const blob = await normalizeImage(await imageResponse.blob(), true);
+        const upload = await fetch('/admin/social/api/upload', { method: 'POST', headers: { 'Content-Type': 'image/jpeg' }, body: blob, signal: AbortSignal.timeout(60000) });
+        const data = await upload.json();
+        if (!upload.ok || !MEDIA_KEY.test(data.key)) throw new Error(data.error || 'A showcase image could not be uploaded.');
+        key = data.key; showcaseUploads.set(path, key);
+      }
+      keys.push(key);
+    }
+    draft = { ...empty(), caption: incoming.caption, link: incoming.link, overrides: incoming.overrides, images: keys };
+    submissionStarted = false; save(); hydrate(); renderChannels();
+    const url = new URL(location.href); url.searchParams.delete('showcase'); history.replaceState(null, '', url);
+    $('showcase-import-panel').hidden = true;
+    notify('Showcase imported: four branded images and captions for all five platforms. Choose your accounts, review the previews, then publish or schedule.');
+  } catch (error) {
+    notify(`${error.message} Your current draft is unchanged. Use Load showcase draft to retry.`, true);
+  } finally { setBusy(false); $('showcase-import').disabled = false; }
+}
+$('showcase-import').onclick = () => void importShowcase();
+$('showcase-import-panel').hidden = !showcaseSlug;
 hydrate();
 async function init() {
   try {
@@ -253,5 +294,6 @@ async function init() {
     notify(warnings.length ? warnings.join(' ') : ready && channels.length ? 'Connected. Choose the accounts you want to publish to.' : 'Setup needed: connect X, LinkedIn and Google Business Profile in Buffer, then Facebook and Instagram through Meta. You can prepare your caption here in the meantime.', Boolean(warnings.length));
   } catch (error) { ready = false; notify(error.message, true); renderChannels(); }
   setBusy(false);
+  if (showcaseSlug && uploadsReady) await importShowcase();
 }
 void init();

@@ -1,11 +1,13 @@
 ---
+import AdminNav from '../../../components/AdminNav.astro';
 import '@fontsource/sora/400.css';
 import '@fontsource/sora/600.css';
 import '../../../styles/crm.css';
 ---
 <!doctype html><html lang="en-GB"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="robots" content="noindex,nofollow"/><title>Enquiries | NC Digital Admin</title></head>
 <body>
-<header class="crm-top"><a class="crm-brand" href="/admin/links/">NC <span>Digital</span><small>/ Enquiries</small></a><nav aria-label="Admin navigation"><a href="/admin/crm/">Today &amp; CRM</a><a href="/admin/jobs/">Jobs board ↗</a><a href="/admin/links/">All tools</a><button id="refresh">Refresh</button></nav></header>
+<AdminNav />
+<header class="crm-top"><a class="crm-brand" href="/admin/links/">Enquiries</a><nav aria-label="Admin navigation"><button id="refresh">Refresh</button></nav></header>
 <main>
 <section class="crm-heading"><div><p class="eyebrow">YOUR CUSTOMER CONVERSATIONS</p><h1>A good first impression.<br/><span>A better follow-up.</span></h1></div><div class="mailbox"><span class="connection-dot" id="connection-dot"></span><div><strong>nathan@nc-digital.co.uk</strong><p id="connection-status">Checking mailbox…</p></div><button id="sync" disabled>Sync replies ↻</button></div></section>
 <div id="notice" role="status" aria-live="polite" hidden></div>
