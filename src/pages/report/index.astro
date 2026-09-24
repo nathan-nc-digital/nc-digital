@@ -1,0 +1,73 @@
+---
+// Public, read-only client view of a shared website audit. The Worker serves this page for
+// /report/<token>; the script loads only the client-safe data for that token.
+import { Image } from 'astro:assets';
+import logo from '../../assets/logo.png';
+import '@fontsource/sora/400.css';
+import '@fontsource/sora/600.css';
+import '@fontsource/sora/700.css';
+import '@fontsource/sora/800.css';
+import '../../styles/website-audit.css';
+import '../../styles/seo-report.css';
+import '../../styles/public-report.css';
+---
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="theme-color" content="#0c1115" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <title>Your website review | NC Digital</title>
+</head>
+<body class="public-report">
+  <header class="pr-nav">
+    <div class="pr-wrap pr-nav-inner">
+      <a href="/" class="pr-logo" aria-label="NC Digital home">
+        <Image src={logo} alt="NC Digital" height={36} densities={[1, 2, 3]} quality={100} style="display:block;height:36px;width:auto;" />
+      </a>
+      <div class="pr-actions">
+        <button id="print" type="button" class="pr-btn pr-btn-outline" hidden>Save as PDF</button>
+        <a class="pr-btn pr-btn-primary" id="cta-quote" href="#get-in-touch">Get a free quote <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main class="pr-wrap">
+    <div id="status" class="pr-status" role="status">Loading your website review…</div>
+    <div id="report"></div>
+
+    <section id="cta" class="pr-cta" hidden>
+      <div id="get-in-touch" class="pr-anchor"></div>
+      <p class="pr-eyebrow" id="cta-eyebrow">Get a free quote</p>
+      <h2 id="cta-title">Want these fixed?</h2>
+      <p id="cta-copy">Add your details and this goes straight to Nathan. We have filled in the rest from your review, so it takes less than a minute. No obligation.</p>
+      <form id="quote-form" class="pr-form" novalidate>
+        <div aria-hidden="true" class="pr-honeypot"><label>Leave this field empty<input type="text" name="botcheck" tabindex="-1" autocomplete="off" /></label></div>
+        <div class="pr-form-grid">
+          <label>Your name<input name="name" autocomplete="name" required maxlength="120" placeholder="Your name" /></label>
+          <label>Email address<input name="email" type="email" autocomplete="email" required maxlength="254" placeholder="you@yourbusiness.co.uk" /></label>
+          <label><span class="pr-label">Phone number <em>(optional)</em></span><input name="phone" type="tel" autocomplete="tel" maxlength="60" placeholder="07700 000000" /></label>
+          <label>Business name<input name="company" autocomplete="organization" maxlength="160" /></label>
+        </div>
+        <label>Message<textarea name="message" rows="4" maxlength="4000"></textarea></label>
+        <button type="submit" class="pr-btn pr-btn-primary pr-submit">Send to Nathan <span aria-hidden="true">→</span></button>
+        <p id="quote-error" class="pr-form-error" role="alert" hidden></p>
+      </form>
+      <div id="quote-success" class="pr-success" role="status" tabindex="-1" hidden>
+        <p class="pr-success-icon" aria-hidden="true">✓</p>
+        <h3>Thanks, that is with Nathan.</h3>
+        <p>You will get a confirmation email in a few minutes. If it does not arrive, check your junk or spam folder and mark it as not spam so Nathan’s reply reaches you.</p>
+      </div>
+      <p class="pr-cta-mail">Prefer email? <a href="mailto:info@nc-digital.co.uk">info@nc-digital.co.uk</a></p>
+    </section>
+  </main>
+
+  <footer class="pr-foot">
+    <div class="pr-wrap">NC Digital · Web design &amp; SEO for South Wales businesses · <a href="/">nc-digital.co.uk</a></div>
+  </footer>
+  <script>import '../../scripts/public-report.js';</script>
+</body>
+</html>

@@ -6,12 +6,14 @@ import { runMetaSchedule } from './lib/social-meta.js';
 import { runBufferQueue } from './lib/social-api.js';
 import { handleKeywordResearch } from './lib/keyword-research.js';
 import { handleEmd } from './lib/emd-api.js';
-import { handleWebsiteAudit } from './lib/website-audit-api.js';
+import { handleWebsiteAudit, handlePublicReport, runReportAlerts } from './lib/website-audit-api.js';
 import { handleSeoWins } from './lib/seo-quick-wins-api.js';
 import { handleAnalyticsReport } from './lib/analytics-report-api.js';
 import { handleCompetitorGaps } from './lib/competitor-gaps-api.js';
+import { handleGscLive } from './lib/gsc-live-api.js';
+import { handleDashboard } from './lib/admin-dashboard-api.js';
 import { handleCrmApi, handleEnquiry } from './lib/crm-api.js';
-import { runCrmSchedule } from './lib/crm-zoho.js';
+import { runCrmOutbox, runCrmSync } from './lib/crm-zoho.js';
 import { readJson, sameOrigin, failure } from './lib/crm.js';
 import { runWorkspaceSchedule } from './lib/crm-commercial.js';
 import {accessEnabled, resolveAccessRole, accessDenied} from './lib/admin-access.js';
@@ -20,7 +22,17 @@ import {runCloudBackup} from './lib/crm-cloud-backup.js';
 const VALID_STATUSES = ['not_started', 'doing', 'done'];
 const VALID_ASSIGNEES = ['nathan', 'ben'];
 
-const SCHEDULED_JOBS = { meta: runMetaSchedule, buffer: runBufferQueue, crm: runCrmSchedule, workspace: runWorkspaceSchedule, backup: runCloudBackup };
+// Each cron expression is a separate invocation with its own CPU and subrequest budget.
+// Customer email sending runs alone every minute so heavier jobs cannot cut a send short
+// between Zoho accepting it and its receipt being recorded. Keep in sync with wrangler.toml.
+const CRON_JOBS = {
+  '* * * * *': { crmOutbox: runCrmOutbox, reportAlerts: runReportAlerts },
+  '*/2 * * * *': { meta: runMetaSchedule, buffer: runBufferQueue, crmSync: runCrmSync, workspace: runWorkspaceSchedule, backup: runCloudBackup },
+};
+const SCHEDULED_JOBS = Object.assign({}, ...Object.values(CRON_JOBS));
+export function jobsForCron(cron) {
+  return CRON_JOBS[cron] || SCHEDULED_JOBS;
+}
 
 // Every job runs to completion regardless of its siblings: a rejected Promise.all would end the
 // invocation while a backup or mailbox sync is still mid-flight. Failures are logged by name only.
@@ -34,7 +46,7 @@ export async function runScheduledJobs(env, jobs = SCHEDULED_JOBS) {
 
 export default {
   async scheduled(controller, env) {
-    await runScheduledJobs(env);
+    await runScheduledJobs(env, jobsForCron(controller?.cron));
   },
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -48,6 +60,16 @@ export default {
     if (url.pathname.startsWith('/social-media/')) return serveSocialMedia(request, env);
 
     if (url.pathname === '/api/enquiries' || url.pathname === '/api/enquiries/config') return handleEnquiry(request, env);
+    // Shared website audit reports: public by unguessable link, never indexed, never cached.
+    if (url.pathname.startsWith('/api/report/')) return handlePublicReport(request, env);
+    if (/^\/report\/[A-Za-z0-9_-]{24}\/?$/.test(url.pathname)) {
+      const page = await env.ASSETS.fetch(new Request(new URL('/report/', url), request));
+      const res = new Response(page.body, page);
+      res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+      res.headers.set('Referrer-Policy', 'no-referrer');
+      res.headers.set('Cache-Control', 'no-store, private');
+      return res;
+    }
 
     // Once Access is enabled, a Basic password can never bypass it, including on workers.dev.
     let managedRole=null;
@@ -99,6 +121,18 @@ export default {
       const role = await requestRole();
       if (role !== 'nathan') return unauthorizedResponse();
       return handleEmd(request, env);
+    }
+
+    if (url.pathname.startsWith('/admin/gsc/api/') || url.pathname.startsWith('/admin/indexing/api/')) {
+      const role = await requestRole();
+      if (role !== 'nathan') return unauthorizedResponse();
+      return handleGscLive(request, env);
+    }
+
+    if (url.pathname.startsWith('/admin/dashboard/api/')) {
+      const role = await requestRole();
+      if (role !== 'nathan') return unauthorizedResponse();
+      return handleDashboard(request, env);
     }
 
     if (url.pathname.startsWith('/admin/social/api/')) {
