@@ -5,6 +5,7 @@ import EnquiryForm from '../../components/EnquiryForm.astro';
 import { Image } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
 import { getBlogCategoryLabel } from '../../data/blogCategories';
+import { relatedPosts } from '../../lib/related-posts.js';
 
 export const prerender = true;
 
@@ -29,13 +30,8 @@ const formattedDate = post.data.pubDate
   : '';
 
 const allPosts = await getCollection('blog');
-const sameCategory = allPosts
-  .filter(p => p.data.category === post.data.category && p.id !== post.id && p.data.pubDate)
-  .sort((a, b) => new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime());
-const otherPosts = allPosts
-  .filter(p => p.data.category !== post.data.category && p.id !== post.id && p.data.pubDate)
-  .sort((a, b) => new Date(b.data.pubDate!).getTime() - new Date(a.data.pubDate!).getTime());
-const related = [...sameCategory, ...otherPosts].slice(0, 2);
+// Chosen by topic, not date, so links spread across the whole blog (see lib/related-posts.js).
+const related = relatedPosts(post, allPosts, 4);
 
 const heroImage = post.data.heroImage;
 ---

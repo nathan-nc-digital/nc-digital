@@ -43,7 +43,9 @@ export default defineConfig({
     markdoc(),
     sitemap({
       filter: (page) => {
-        if (page.includes('/admin/')) return false;
+        if (page.includes('/admin/') || page.includes('/report/')) return false;
+        // Deliberately noindex (form confirmation), so it must not be listed either.
+        if (page.endsWith('/thank-you/')) return false;
         const path = new URL(page).pathname;
         return !outOfAreaSlugs.has(path);
       },

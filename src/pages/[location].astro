@@ -1,4 +1,5 @@
 ---
+import { hiddenPaths, withoutHidden } from '../lib/hidden-pages';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import JsonLD from '../components/JsonLD.astro';
 import ReviewsStrip from '../components/ReviewsStrip.astro';
@@ -72,6 +73,9 @@ function getPortfolioImage(slug: string) {
   }
   return null;
 }
+
+// Links to out-of-area pages hidden from Google are left out of the automatic lists.
+const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths());
 ---
 
 <BaseLayout
@@ -201,7 +205,7 @@ function getPortfolioImage(slug: string) {
     </section>
   )}
 
-  {loc.data.locationLinks && loc.data.locationLinks.length > 0 && (
+  {locationLinks.length > 0 && (
     <section class="loc-section">
       <div class="container site-pad">
         <div class="loc-header">
@@ -211,7 +215,7 @@ function getPortfolioImage(slug: string) {
           <p>Find out more about our services in your area:</p>
         </div>
         <div class="loc-grid">
-          {loc.data.locationLinks.map((l: { label: string; href: string }) => (
+          {locationLinks.map((l: { label: string; href: string }) => (
             <a href={l.href} class="loc-pill">
               <svg class="loc-pin" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="13" height="13">
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
