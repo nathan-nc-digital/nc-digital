@@ -2,6 +2,7 @@ import { CRM_MAILBOX, CRM_STATUSES, CRM_ASSIGNEES, CRM_PRIORITIES, crmError, tex
 import { zohoSetup, zohoConfigured, syncZoho } from './crm-zoho.js';
 import { handleWorkspace } from './crm-workspace.js';
 import { londonToday, plusDays, choice, tags } from './crm-domain.js';
+import { enquiryOrigin, withCors, preflight } from './enquiry-cors.js';
 
 async function rateLimit(request, db) {
   const ip = request.headers.get('CF-Connecting-IP') || 'local';
@@ -13,15 +14,21 @@ async function rateLimit(request, db) {
   if (!result) throw crmError('Too many enquiries. Please wait a few minutes and try again.', 429);
 }
 export async function handleEnquiry(request, env) {
+  if (request.method === 'OPTIONS') return preflight(request);
+  return withCors(await enquiryResponse(request, env), request.headers.get('Origin'));
+}
+async function enquiryResponse(request, env) {
   try {
     const url = new URL(request.url);
     if (url.pathname === '/api/enquiries/config' && request.method === 'GET') return crmResponse({ enabled: env.CRM_ENABLED === 'true' });
     if (url.pathname !== '/api/enquiries' || request.method !== 'POST') throw crmError('Not found.', 404);
-    sameOrigin(request);
+    const { origin, external } = enquiryOrigin(request);
     if (env.CRM_ENABLED !== 'true' || !env.JOBS_DB) throw crmError('Enquiries are temporarily unavailable. Please email us directly.', 503);
     const raw = await readJson(request);
     if (raw.botcheck) return crmResponse({ success: true });
     const data = normaliseEnquiry(raw);
+    // Partner sites send a path; store the full URL so the CRM shows which site the lead came from.
+    if (external) data.source_page = origin + (data.source_page || '/');
     const db = env.JOBS_DB;
     const hash = await enquiryHash(data);
     const existing = await db.prepare('SELECT id,submission_hash FROM crm_tickets WHERE submission_key=?').bind(data.submission_key).first();
