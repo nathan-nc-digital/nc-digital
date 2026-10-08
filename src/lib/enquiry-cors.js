@@ -1,7 +1,10 @@
 import { crmError } from './crm.js';
 
 // Partner sites allowed to post to the public enquiry endpoints. Admin/CRM routes stay same-origin only.
-export const ENQUIRY_ORIGINS = new Set(['https://plumberwebsitedesign.co.uk', 'https://www.plumberwebsitedesign.co.uk']);
+export const ENQUIRY_ORIGINS = new Set([
+  'https://plumberwebsitedesign.co.uk', 'https://www.plumberwebsitedesign.co.uk',
+  'https://websitesfortradesmen.com', 'https://www.websitesfortradesmen.com',
+]);
 
 export function enquiryOrigin(request) {
   const origin = request.headers.get('Origin');

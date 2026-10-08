@@ -44,8 +44,15 @@ test('preflight answers allowlisted origins and refuses others', () => {
   assert.equal(bad.headers.get('Access-Control-Allow-Origin'), null);
 });
 
-test('allowlist is exactly the plumber domains', () => {
-  assert.deepEqual([...ENQUIRY_ORIGINS].sort(), [PLUMBER, 'https://www.plumberwebsitedesign.co.uk']);
+test('allowlist is exactly the partner trade domains', () => {
+  assert.deepEqual([...ENQUIRY_ORIGINS].sort(), [PLUMBER, 'https://websitesfortradesmen.com', 'https://www.plumberwebsitedesign.co.uk', 'https://www.websitesfortradesmen.com']);
+});
+
+test('tradesmen origins are accepted as external', () => {
+  for (const o of ['https://websitesfortradesmen.com', 'https://www.websitesfortradesmen.com']) {
+    assert.deepEqual(enquiryOrigin(req(API, o)), { origin: o, external: true });
+  }
+  assert.throws(() => enquiryOrigin(req(API, 'https://websitesfortradesmen.co.uk')), e => e.status === 403);
 });
 
 function database(t) {
