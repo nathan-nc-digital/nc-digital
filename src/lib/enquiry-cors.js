@@ -4,6 +4,8 @@ import { crmError } from './crm.js';
 export const ENQUIRY_ORIGINS = new Set([
   'https://plumberwebsitedesign.co.uk', 'https://www.plumberwebsitedesign.co.uk',
   'https://websitesfortradesmen.com', 'https://www.websitesfortradesmen.com',
+  'https://websitespaymonthly.co.uk', 'https://www.websitespaymonthly.co.uk',
+  'https://webdesignforconstruction.co.uk', 'https://www.webdesignforconstruction.co.uk',
 ]);
 
 export function enquiryOrigin(request) {

@@ -45,7 +45,8 @@ test('preflight answers allowlisted origins and refuses others', () => {
 });
 
 test('allowlist is exactly the partner trade domains', () => {
-  assert.deepEqual([...ENQUIRY_ORIGINS].sort(), [PLUMBER, 'https://websitesfortradesmen.com', 'https://www.plumberwebsitedesign.co.uk', 'https://www.websitesfortradesmen.com']);
+  const domains = ['plumberwebsitedesign.co.uk', 'websitesfortradesmen.com', 'websitespaymonthly.co.uk', 'webdesignforconstruction.co.uk'];
+  assert.deepEqual([...ENQUIRY_ORIGINS].sort(), domains.flatMap(d => [`https://${d}`, `https://www.${d}`]).sort());
 });
 
 test('tradesmen origins are accepted as external', () => {
