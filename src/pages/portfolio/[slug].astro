@@ -30,8 +30,18 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
 );
 
 const folder = folderMap[slug] || '';
-const isMilne = slug === 'milne-industrial';
-const milneImageAlts = [
+const isPortraitProject = ['milne-industrial', 'kb-trees-and-grounds', 'priva-cy'].includes(slug);
+const portraitImageAlts = slug === 'priva-cy' ? [
+  'Priva-Cy homepage with the Your Digital Privacy Matters headline and About section',
+  'Priva-Cy Why It Matters section and example Personal Privacy Score dashboard',
+  'Priva-Cy homepage opening section on a mobile phone',
+  'Priva-Cy About section on a mobile phone',
+] : slug === 'kb-trees-and-grounds' ? [
+  'KB Trees and Grounds homepage displayed on a desktop monitor',
+  'KB Trees and Grounds services gallery displayed on a laptop',
+  'KB Trees and Grounds homepage displayed on a mobile phone',
+  'KB Trees and Grounds website displayed on desktop and mobile',
+] : [
   'Milne Industrial opening banner displayed on a desktop monitor',
   'Milne Industrial services section displayed on a laptop',
   'Milne Industrial company introduction displayed on a mobile phone',
@@ -130,14 +140,14 @@ const serviceLinks: Record<string, string> = {
 
         <!-- Right: gallery -->
         {galleryImages.length > 0 && (
-          <div data-animate="fade-up" class:list={['hero-gallery', { 'portrait-gallery': isMilne }]}>
+          <div data-animate="fade-up" class:list={['hero-gallery', { 'portrait-gallery': isPortraitProject }]}>
             <!-- Featured image -->
             <div class="gallery-featured lb-trigger">
               <Image
                 src={galleryImages[0]}
-                alt={isMilne ? milneImageAlts[0] : `${project.data.title} — screenshot 1`}
+                alt={isPortraitProject ? portraitImageAlts[0] : `${project.data.title} — screenshot 1`}
                 width={800}
-                height={isMilne ? Math.round(800 * galleryImages[0].height / galleryImages[0].width) : 500}
+                height={isPortraitProject ? Math.round(800 * galleryImages[0].height / galleryImages[0].width) : 500}
                 class="gallery-img"
               />
               <span class="lb-hint">Click to enlarge</span>
@@ -150,9 +160,9 @@ const serviceLinks: Record<string, string> = {
                   <div class="gallery-thumb lb-trigger">
                     <Image
                       src={img}
-                      alt={isMilne ? milneImageAlts[i + 1] : `${project.data.title} — screenshot ${i + 2}`}
+                      alt={isPortraitProject ? portraitImageAlts[i + 1] : `${project.data.title} — screenshot ${i + 2}`}
                       width={400}
-                      height={isMilne ? Math.round(400 * img.height / img.width) : 260}
+                      height={isPortraitProject ? Math.round(400 * img.height / img.width) : 260}
                       class="gallery-img"
                     />
                   </div>
@@ -179,7 +189,7 @@ const serviceLinks: Record<string, string> = {
   <section style="padding:4rem 0 5rem;">
     <div class="container site-pad layout-sidebar">
 
-      <div data-animate={isMilne ? undefined : 'fade-up'} class="prose">
+      <div data-animate={isPortraitProject ? undefined : 'fade-up'} class="prose">
         <Content />
       </div>
 

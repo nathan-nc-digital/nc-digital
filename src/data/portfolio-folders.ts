@@ -1,6 +1,8 @@
 // Portfolio slug → screenshot folder in src/assets/portfolio/. The single list used by the
 // portfolio pages and the website review's case-study feed; add new case studies here.
 export const portfolioFolders: Record<string, string> = {
+  'priva-cy':                    'Priva-Cy',
+  'kb-trees-and-grounds':       'KB Trees and Grounds',
   'milne-industrial':            'Milne Industrial',
   '3d-framing':                  '3D Framing',
   'ak-promotions':               'AK Promotions',

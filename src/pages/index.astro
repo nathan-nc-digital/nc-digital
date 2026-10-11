@@ -24,6 +24,8 @@ const portfolioSubfolderImages = import.meta.glob<{ default: ImageMetadata }>(
   { eager: true }
 );
 const folderMap: Record<string, string> = {
+  'priva-cy':                    'Priva-Cy',
+  'kb-trees-and-grounds':       'KB Trees and Grounds',
   'milne-industrial':            'Milne Industrial',
   '3d-framing':                  '3D Framing',
   'ak-promotions':               'AK Promotions',
@@ -247,6 +249,7 @@ const whyPoints = [
 
 // Google reviews (verbatim). Project context is added only where the review links to a case study.
 const reviews = [
+  { name: 'Shauni Morgan',    time: 'New',          href: '/portfolio/c-morgan-pallets/',            project: 'C Morgan Pallets',            context: 'Pallet supplier · Web design & build', text: 'Brilliant service from NC Digital. We’re extremely pleased with our new website. They listened to what we wanted, paid attention to the details and delivered everything we asked for. The turnaround was quick, and nothing was too much trouble. They kept in regular contact throughout and answered our questions promptly, even late at night. I’d highly recommend NC Digital to any business looking for a new website.' },
   { name: 'Jake Lewis',       time: '1 hour ago',   href: '',                                        project: '',                            context: '',                                text: 'I couldn\'t be happier with the website that was designed for my business. From the very beginning, the team was professional, responsive, and easy to work with. They took the time to understand exactly what I wanted and turned my ideas into a modern, professional, and user-friendly website that exceeded my expectations. Communication was excellent throughout the entire process, and any questions or changes I had were handled quickly and efficiently. The attention to detail and quality of their work really stands out. I would highly recommend them to anyone looking for a reliable, talented web design company. Thank you for delivering a website I\'m genuinely proud of!' },
   { name: 'Laura Ann',        time: '2 months ago', href: '/portfolio/ir-energy/',                  project: 'IR Energy',                   context: 'Renewable energy · Homepage redesign & local SEO', text: 'Nathan redesigned our website homepage exactly the way we envisioned it. He was attentive to what we wanted, incredibly helpful throughout the process and very knowledgeable. Nathan made everything smooth and easy, we\'re so happy with the final result. Our team from IR Energy would highly recommend him!' },
   { name: 'Chris Davies',     time: '1 month ago',  href: '/portfolio/davies-property-development/', project: 'Davies Property Development', context: 'Property · Website redesign',      text: 'I contacted Nathan to redesign my website. Nathan was quick and efficient and explained how to carry on going forward with my new site. Excellent value for money and my new site looks so much more professional.' },
@@ -257,6 +260,7 @@ const reviews = [
   { name: 'Jamie Williams',   time: '5 months ago', href: '/portfolio/mj-roofing/',                  project: 'M&J Roofing',                 context: 'Roofing · Web design & local SEO',  text: 'Nathan done the website for us at M&J Roofing. Brilliant service and always keeps contact to see if everything is going well. Thanks Nathan.' },
   { name: 'Ryan Martin',      time: '5 months ago', href: '/portfolio/creative-redevelopments/',     project: 'Creative Redevelopment',      context: 'Property · Web design & build',    text: 'Top class service, website is quality 👌' },
   { name: 'Sam Milne',        time: 'New',          href: '/portfolio/milne-industrial/',            project: 'Milne Industrial',            context: 'Industrial · Website development', text: 'Had a great experience working with NC Digital on the development of the Milne Industrial website. They took the time to understand our business, our requirements and the direction we wanted to take the website in. Very pleased with the finished result and would happily recommend their services to other businesses looking for a reliable and professional team.' },
+  { name: 'DSymonds',         time: 'New',          href: '/portfolio/priva-cy/',                    project: 'Priva-Cy',                    context: 'Privacy start-up · Web design & build', text: 'Professional service, excellent results, listens to needs of the customer and easy to do business with!' },
 ];
 
 // Homepage-only structured data. The Organization/ProfessionalService entity lives in BaseHead
