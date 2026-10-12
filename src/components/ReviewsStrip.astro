@@ -14,9 +14,10 @@ const reviews = [
   { name: 'DSymonds',         text: 'Professional service, excellent results, listens to needs of the customer and easy to do business with!', href: '/portfolio/priva-cy/' },
 ];
 
-// Show 3 rotating reviews based on a simple hash so different pages show different ones
-// Falls back gracefully — just slice the first 3
-const shown = reviews.slice(0, 3);
+// Pages can pick their reviews by name (e.g. clients near that town); otherwise show the first 3
+const { names } = Astro.props as { names?: string[] };
+const picked = (names ?? []).map((n) => reviews.find((r) => r.name === n)).filter((r) => r !== undefined);
+const shown = picked.length ? picked.slice(0, 3) : reviews.slice(0, 3);
 ---
 
 <section class="reviews-strip">

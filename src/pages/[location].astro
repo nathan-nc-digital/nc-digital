@@ -51,8 +51,11 @@ function hashStr(input: string) {
 }
 const pageSeed = hashStr(Astro.params.location as string);
 const allPortfolioEntries = await getCollection('portfolio');
+const featured = loc.data.featuredProjects ?? [];
 const portfolioEntries = [...allPortfolioEntries].sort((a, b) => {
   const score = (p: typeof a) => {
+    const f = featured.indexOf(p.id.replace('/index.mdoc', ''));
+    if (f !== -1) return 100 - f;
     let s = 0;
     if (p.data.location === townSlug) s += 2;
     if (p.data.services?.includes(loc.data.serviceType)) s += 1;
@@ -228,7 +231,7 @@ const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths())
     </section>
   )}
 
-  <ReviewsStrip />
+  <ReviewsStrip names={loc.data.featuredReviews} />
 
   <!-- CTA -->
   <section style="padding:5rem 0; border-top:1px solid var(--border);">
@@ -278,6 +281,16 @@ const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths())
       border-radius: 0 8px 8px 0; color: var(--text-muted); font-style: italic;
     }
     .loc-prose :global(blockquote p) { margin: 0; }
+    .loc-prose :global(table) {
+      width: 100%; border-collapse: collapse; margin: 1.5rem 0;
+      background: var(--bg-2); border-radius: 8px; overflow: hidden; font-size: 0.9375rem;
+    }
+    .loc-prose :global(th), .loc-prose :global(td) {
+      text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); vertical-align: top;
+    }
+    .loc-prose :global(th) { color: var(--white); font-weight: 600; }
+    .loc-prose :global(tr:last-child td) { border-bottom: 0; }
+    .loc-prose :global(td:last-child) { color: var(--white); }
 
     /* Location pill grid */
     .loc-section {

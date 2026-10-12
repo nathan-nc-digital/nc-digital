@@ -62,6 +62,9 @@ const locations = defineCollection({
     locationSectionTitle: z.string().optional(),
     services: z.array(z.object({ name: z.string(), description: z.string(), href: z.string() })).optional(),
     noindex: z.boolean().optional(),
+    // Portfolio slugs to show first in "Recent work" (e.g. nearby projects), and review names for the strip
+    featuredProjects: z.array(z.string()).optional(),
+    featuredReviews: z.array(z.string()).optional(),
   }),
 });
 
