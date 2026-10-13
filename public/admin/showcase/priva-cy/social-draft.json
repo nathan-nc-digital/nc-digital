@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "name": "Priva-Cy",
+  "caption": "A closer look at the Priva-Cy website we built.\n\nDark styling, electric blue accents and a responsive layout across desktop and mobile. The site introduces Priva-Cy's planned privacy platform and lets visitors register their interest while it is in development.\n\nTake a look: https://priva-cy.nc-digital.co.uk/\n\nWant a website like this? Get in touch today.",
+  "link": "https://nc-digital.co.uk/contact/",
+  "images": [
+    "/admin/showcase/priva-cy/responsive-branded.png",
+    "/admin/showcase/priva-cy/desktop-branded.png",
+    "/admin/showcase/priva-cy/laptop-branded.png",
+    "/admin/showcase/priva-cy/mobile-branded.png"
+  ],
+  "overrides": {
+    "facebook": "A closer look at the Priva-Cy website we built.\n\nDark styling, electric blue accents and a responsive layout across desktop and mobile. The site introduces Priva-Cy's planned privacy platform and lets visitors register their interest while it is in development.\n\nTake a look: https://priva-cy.nc-digital.co.uk/\n\nWant a website like this? Get in touch today.",
+    "linkedin": "A website built to introduce an idea and help people take the next step.\n\nWe built the Priva-Cy website with dark styling, blue accents and layouts for desktop and mobile. Visitors can learn about the planned privacy platform, explore how it will work and register their interest.\n\nPriva-Cy is still in development. This is a look at the website, rather than a launch announcement for the platform.\n\nView the site: https://priva-cy.nc-digital.co.uk/\n\nWant a website like this for your business? Get in touch today.",
+    "instagram": "A closer look at our website work for Priva-Cy.\n\nDark styling, electric blue accents and a layout that works across desktop and mobile. Swipe through the four views.\n\nThe site introduces a privacy platform in development and lets visitors register their interest.\n\nWant a website like this? Send us a message.\n\n#NCDigital #WebDesign #SouthWales",
+    "twitter": "Our website work for Priva-Cy, across desktop and mobile.\n\nhttps://priva-cy.nc-digital.co.uk/\n\nWant a website like this? Get in touch.",
+    "googlebusiness": "A look at the Priva-Cy website we built, with dark styling, blue accents and layouts for desktop and mobile.\n\nThe site introduces a privacy platform in development and lets visitors register their interest.\n\nView the project: https://priva-cy.nc-digital.co.uk/\n\nWant a website like this? Use Learn more to get in touch with NC Digital."
+  }
+}

@@ -35,8 +35,8 @@ const messageId = `${id}-message`;
     <input id={emailId} type="email" name="email" placeholder="you@yourbusiness.co.uk" autocomplete="email" required />
   </div>
   <div class="enq-field">
-    <label for={phoneId}>Phone number{websiteOffer && <span> (optional)</span>}</label>
-    <input id={phoneId} type="tel" name="phone" placeholder="07700 000000" autocomplete="tel" />
+    <label for={phoneId}>Phone number</label>
+    <input id={phoneId} type="tel" name="phone" placeholder="07700 000000" autocomplete="tel" required={websiteOffer} pattern={websiteOffer ? '[\\d\\s\\(\\)+\\-]{10,}' : undefined} title={websiteOffer ? 'Enter a phone number we can call you on' : undefined} />
   </div>
   {websiteOffer ? <>
     <input type="hidden" name="service" value="Website enquiry" />

@@ -78,7 +78,7 @@ export function crmEmailHtml(value, quoted = '') {
   const paragraphs = body.split(/\n{2,}/).map(part => `<p style="margin:0 0 16px;">${part.replace(/\n/g, '<br>')}</p>`).join('');
   const quotedText = typeof quoted === 'string' ? quoted : quoted?.body;
   const quote = quotedText ? `<div style="margin-top:28px;padding:14px 16px;border-left:3px solid #d8d2ff;color:#667085;font-size:13px;line-height:1.5;"><p style="margin:0 0 8px;font-weight:700;color:#52606d;">Your original message:</p><div>${htmlEscape(String(quotedText).slice(0, 16000)).replace(/\n/g, '<br>')}</div></div>` : '';
-  return `<div style="font-family:Arial,Helvetica,sans-serif;color:#1b2430;font-size:15px;line-height:1.6;max-width:640px;">${paragraphs}<p style="margin:24px 0 0;">Kind regards,<br>Nathan</p><img src="https://nc-digital.co.uk/images/email-signature.jpg" alt="NC Digital email signature" width="500" style="display:block;width:100%;max-width:500px;height:auto;margin-top:12px;border:0;">${quote}</div>`;
+  return `<div style="font-family:Arial,Helvetica,sans-serif;color:#1b2430;font-size:15px;line-height:1.6;max-width:640px;">${paragraphs}<p style="margin:24px 0 0;">Kind regards,<br>Nathan<br>NC Digital</p>${quote}</div>`;
 }
 export async function syncZoho(env) {
   return syncMailbox(env,zohoClient,{mailText,trimQuotedReply,messageTicketReference,senderAddress});

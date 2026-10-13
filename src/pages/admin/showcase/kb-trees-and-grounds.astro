@@ -1,0 +1,48 @@
+---
+import AdminNav from '../../../components/AdminNav.astro';
+const images = [
+  { file: 'desktop', title: 'Desktop · Homepage', alt: 'KB Trees and Grounds homepage shown on a desktop monitor' },
+  { file: 'laptop', title: 'Laptop · Services', alt: 'KB Trees and Grounds services gallery shown on a laptop' },
+  { file: 'mobile', title: 'Mobile · Homepage', alt: 'KB Trees and Grounds mobile homepage shown on a phone' },
+  { file: 'responsive', title: 'Desktop + mobile', alt: 'KB Trees and Grounds website shown on desktop and mobile together' },
+];
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>KB Trees &amp; Grounds — NC Digital Showcase</title>
+</head>
+<body>
+  <AdminNav />
+  <main>
+    <p class="eyebrow">WEBSITE SHOWCASE</p>
+    <h1>KB Trees &amp; Grounds.</h1>
+    <p>Four clean website mockups, with no added logos or promotional text.</p>
+    <div class="actions"><a class="button" href="kb-trees-and-grounds-mockups.zip?v=2" download>Download all four images (ZIP)</a><a href="/portfolio/kb-trees-and-grounds/">View project</a></div>
+    <p class="note">Image review only. No social post has been loaded or scheduled.</p>
+    <section class="grid" aria-label="Website mockups">
+      {images.map(image => <article>
+        <a href={`${image.file}.png?v=2`} target="_blank" rel="noopener"><img src={`${image.file}.png?v=2`} alt={image.alt} width="1122" height="1402" loading="lazy" /></a>
+        <div class="footer"><h2>{image.title}</h2><a href={`${image.file}.png?v=2`} download={`kb-trees-and-grounds-${image.file}.png`}>Save PNG</a></div>
+      </article>)}
+    </section>
+    <p class="note">AI-generated device scenes based on saved website screenshots. Small screen details may differ from the live website.</p>
+  </main>
+</body>
+</html>
+<style>
+  :global(body){margin:0;background:#090f18;color:#edf4ff;font-family:Arial,sans-serif}
+  main{max-width:1200px;margin:auto;padding:40px 24px}
+  .eyebrow{font-size:12px;letter-spacing:3px;color:#85c6ff}
+  h1{font-size:clamp(32px,5vw,54px);margin:18px 0 10px}
+  p{color:#a9b8ca;line-height:1.6}a{color:#85c6ff}a:focus-visible{outline:3px solid #85c6ff;outline-offset:4px}
+  .actions{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin:24px 0}
+  .button{display:inline-block;background:#1675cd;color:white;padding:14px 18px;border-radius:8px;text-decoration:none}
+  .note{font-size:13px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;margin:28px 0}
+  article{background:#121d2b;border:1px solid #28384b;border-radius:16px;overflow:hidden}
+  img{display:block;width:100%;height:auto}.footer{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:20px}
+  h2{font-size:17px;margin:0}.footer a{white-space:nowrap;padding:10px;border:1px solid #355a80;border-radius:8px;text-decoration:none}
+  @media(max-width:650px){main{padding:28px 16px}.grid{grid-template-columns:1fr}.footer{padding:16px}h2{font-size:15px}}
+</style>

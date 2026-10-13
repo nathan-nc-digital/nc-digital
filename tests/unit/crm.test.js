@@ -57,15 +57,12 @@ test('Zoho token redirects are rejected without following them or exposing respo
   assert.equal(calls, 2);
 });
 
-test('CRM email HTML escapes message text and includes the NC Digital signature', () => {
+test('CRM email HTML escapes message text and signs off in plain text without an image', () => {
   const html = crmEmailHtml('Hello <script>alert(1)</script>\n\nKind regards,\nNathan');
   assert(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
   assert(!html.includes('<script>'));
-  assert(html.includes('NC Digital'));
-  assert(html.includes('Kind regards,<br>Nathan'));
-  assert(html.includes('https://nc-digital.co.uk/images/email-signature.jpg'));
-  assert(html.includes('width="500"'));
-  assert(html.includes('max-width:500px'));
+  assert(html.includes('Kind regards,<br>Nathan<br>NC Digital'));
+  assert(!html.includes('<img'));
   assert(!html.includes('Web design, SEO &amp; digital growth'));
   const quoted = crmEmailHtml('Following up.', 'Their original <message>');
   assert(quoted.includes('Your original message:'));
@@ -173,6 +170,13 @@ test('calculator captures its quote details as searchable lead metadata', async 
     calculator_hosting: 'Annual hosting & domain — £250/year inc. VAT',
     calculator_breakdown: '5–10 pages: £699 | Online shop: £500',
   });
+});
+test('web design offer enquiries must include a callable phone number', async t => {
+  const env = setup(t);
+  assert.equal((await handleEnquiry(request('/api/enquiries', input({ from_page: '/web-design-offer/', phone: '' })), env)).status, 400);
+  assert.equal((await handleEnquiry(request('/api/enquiries', input({ from_page: '/web-design-offer/', phone: '0123' })), env)).status, 400);
+  assert.equal((await handleEnquiry(request('/api/enquiries', input({ from_page: '/web-design-offer/', phone: '07700 900123' })), env)).status, 201);
+  assert.equal((await handleEnquiry(request('/api/enquiries', input({ from_page: '/contact/', phone: '' })), env)).status, 201);
 });
 test('disabled capture is explicit; foreign origins, injection addresses and oversized bodies are rejected',async t=>{
   const env=setup(t);assert.equal((await handleEnquiry(request('/api/enquiries',input(),{Origin:'https://evil.example'}),env)).status,403);

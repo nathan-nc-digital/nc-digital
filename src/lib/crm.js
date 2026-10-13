@@ -41,7 +41,10 @@ export function normaliseEnquiry(body) {
   }
   const source = text(body.from_page, 500);
   if (source && (!source.startsWith('/') || source.startsWith('//'))) throw crmError('Invalid form page.');
-  return { name, email: email(body.email), phone: text(body.phone, 60), company: text(body.company, 160),
+  const phone = text(body.phone, 60);
+  // Paid-ad leads must be reachable by phone if they go quiet on email.
+  if (source.startsWith('/web-design-offer') && (phone.match(/\d/g) || []).length < 10) throw crmError('Please enter a phone number we can call you on.');
+  return { name, email: email(body.email), phone, company: text(body.company, 160),
     subject: cleanSubject(body.subject), service: text(body.service, 180), source_page: source,
     metadata: JSON.stringify(metadata), body: text(body.message, 16000) || 'Customer requested a website quote. No additional message provided.',
     submission_key: key(body.submission_key) };
