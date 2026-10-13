@@ -26,6 +26,18 @@ if (!loc) {
 
 const { Content } = await render(loc);
 
+// FAQPage schema built from the page's own "Frequently asked questions" section
+// (bold question line followed by an answer paragraph). Enabled per page.
+const faqSchemaPages = new Set(['web-design-cardiff']);
+const stripMd = (t: string) => t.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\*\*/g, '').trim();
+const faqItems: { q: string; a: string }[] = [];
+if (faqSchemaPages.has(Astro.params.location as string) && loc.body) {
+  const faqSection = loc.body.split(/^## Frequently asked questions\s*$/m)[1]?.split(/^## /m)[0] ?? '';
+  for (const m of faqSection.matchAll(/^\*\*(.+\?)\*\*\s*\n\s*\n(.+)$/gm)) {
+    faqItems.push({ q: stripMd(m[1]), a: stripMd(m[2]) });
+  }
+}
+
 const serviceLabel = loc.data.serviceType === 'seo'
   ? 'Local SEO'
   : loc.data.serviceType === 'both'
@@ -105,6 +117,19 @@ const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths())
       "name": loc.data.town
     }
   }} />
+
+  {faqItems.length > 0 && (
+    <JsonLD schema={{
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "@id": `https://nc-digital.co.uk/${Astro.params.location}/#faq`,
+      "mainEntity": faqItems.map((f) => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a }
+      }))
+    }} />
+  )}
 
   <!-- Hero -->
   <section style="padding:4rem 0 3rem;">
