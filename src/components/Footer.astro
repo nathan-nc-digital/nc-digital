@@ -213,3 +213,13 @@ const seoLinks = [
 
   </div>
 </footer>
+
+<script is:inline>
+  // GA4: track clicks on any mailto link as a secondary lead signal (via GTM).
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="mailto:"]');
+    if (!a) return;
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'email_click', link_url: a.getAttribute('href'), form_location: window.location.pathname });
+  });
+</script>

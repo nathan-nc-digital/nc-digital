@@ -50,4 +50,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     </div>
   </section>
 
+  <script is:inline>
+    // GA4 key event: only count arrivals from a real form submit (not refreshes or direct visits).
+    (function () {
+      var from = null;
+      try { from = sessionStorage.getItem('nc_lead_from'); sessionStorage.removeItem('nc_lead_from'); } catch (e) {}
+      if (!from) return;
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: 'generate_lead', form_location: from });
+    })();
+  </script>
 </BaseLayout>
