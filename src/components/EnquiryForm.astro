@@ -217,6 +217,15 @@ const messageId = `${id}-message`;
           // Let pages hook into a successful submit (e.g. ad landing pages firing
           // a Meta Pixel Lead event). Other pages simply ignore this event.
           document.dispatchEvent(new CustomEvent('nc-enquiry-success', { detail: { formId: form.id } }));
+          // GA4 key event via GTM. Pages that stay put push now; redirects to
+          // /thank-you/ hand over form_location so the event fires there (GTM
+          // loads lazily, so pushing just before navigating would be lost).
+          if (form.dataset.websiteOffer) {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({ event: 'generate_lead', form_location: window.location.pathname, form_id: form.id });
+          } else {
+            try { sessionStorage.setItem('nc_lead_from', window.location.pathname); } catch (e) {}
+          }
           if (form.dataset.websiteOffer) {
             form.style.display = 'none';
             successEl.style.display = 'block';
