@@ -1,4 +1,6 @@
 ---
+import logo from '../assets/logo.png';
+
 export interface Props {
   title: string;
   description: string;
@@ -21,36 +23,8 @@ function trimAtWord(value: string, maxLength: number) {
   return `${trimmed}...`;
 }
 
-const fullTitle = title.includes('NC Digital') ? title : `${title} | NC Digital`;
-const unbrandedTitle = fullTitle.replace(/\s+\|\s+NC Digital$/, '');
-const siteTitle = fullTitle.length > 70 ? trimAtWord(unbrandedTitle, 70) : fullTitle;
-const metaDescription = trimAtWord(description, 155);
----
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>{siteTitle}</title>
-<meta name="description" content={metaDescription} />
-<link rel="canonical" href={canonical} />
-{noindex && <meta name="robots" content="noindex,follow" />}
-
-<meta property="og:type" content="website" />
-<meta property="og:url" content={canonical} />
-<meta property="og:title" content={siteTitle} />
-<meta property="og:description" content={metaDescription} />
-<meta property="og:image" content={new URL(image, Astro.site).href} />
-
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content={siteTitle} />
-<meta name="twitter:description" content={metaDescription} />
-<meta name="twitter:image" content={new URL(image, Astro.site).href} />
-
-<link rel="preload" href="/fonts/sora-400.woff2" as="font" type="font/woff2" crossorigin />
-<meta name="indexnow-verification" content="4c2616a9e08e4ce49f8a9f51d60b2228" />
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-<link rel="shortcut icon" href="/favicon.png" />
-
-<script type="application/ld+json">
-{
+const logoUrl = new URL(logo.src, Astro.site).href;
+const businessSchema = {
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
   "@id": "https://nc-digital.co.uk/#localbusiness",
@@ -84,7 +58,7 @@ const metaDescription = trimAtWord(description, 155);
   },
   "logo": {
     "@type": "ImageObject",
-    "url": "https://nc-digital.co.uk/og-default.png"
+    "url": logoUrl
   },
   "image": "https://nc-digital.co.uk/og-default.png",
   "knowsAbout": ["Web Design", "WordPress", "WooCommerce", "Shopify", "Ecommerce Development", "Local SEO", "Website Hosting", "Website Maintenance", "Logo Design"],
@@ -116,5 +90,33 @@ const metaDescription = trimAtWord(description, 155);
     "https://www.google.com/maps?cid=7723341431959722234",
     "https://clutch.co/profile/nc-digital"
   ]
-}
-</script>
+};
+const fullTitle = title.includes('NC Digital') ? title : `${title} | NC Digital`;
+const unbrandedTitle = fullTitle.replace(/\s+\|\s+NC Digital$/, '');
+const siteTitle = fullTitle.length > 70 ? trimAtWord(unbrandedTitle, 70) : fullTitle;
+const metaDescription = trimAtWord(description, 155);
+---
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{siteTitle}</title>
+<meta name="description" content={metaDescription} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex,follow" />}
+
+<meta property="og:type" content="website" />
+<meta property="og:url" content={canonical} />
+<meta property="og:title" content={siteTitle} />
+<meta property="og:description" content={metaDescription} />
+<meta property="og:image" content={new URL(image, Astro.site).href} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={siteTitle} />
+<meta name="twitter:description" content={metaDescription} />
+<meta name="twitter:image" content={new URL(image, Astro.site).href} />
+
+<link rel="preload" href="/fonts/sora-400.woff2" as="font" type="font/woff2" crossorigin />
+<meta name="indexnow-verification" content="4c2616a9e08e4ce49f8a9f51d60b2228" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+<link rel="shortcut icon" href="/favicon.png" />
+
+<script type="application/ld+json" set:html={JSON.stringify(businessSchema)} />
