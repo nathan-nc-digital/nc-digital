@@ -5,6 +5,7 @@ import JsonLD from '../components/JsonLD.astro';
 import ReviewsStrip from '../components/ReviewsStrip.astro';
 import { getCollection, render } from 'astro:content';
 import { Image } from 'astro:assets';
+import logo from '../assets/logo.png';
 
 export const prerender = true;
 
@@ -91,6 +92,17 @@ function getPortfolioImage(slug: string) {
 
 // Links to out-of-area pages hidden from Google are left out of the automatic lists.
 const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths());
+
+// Absolute URL of the logo Astro emits from src/assets/logo.png.
+const logoUrl = new URL(logo.src, Astro.site).href;
+const openingHours = [
+  {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "opens": "09:00",
+    "closes": "17:00"
+  }
+];
 ---
 
 <BaseLayout
@@ -108,6 +120,11 @@ const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths())
     "description": "Custom web design for Cardiff and South Wales businesses.",
     "url": "https://nc-digital.co.uk/web-design-cardiff/",
     "email": "info@nc-digital.co.uk",
+    "logo": {
+      "@type": "ImageObject",
+      "url": logoUrl
+    },
+    "openingHoursSpecification": openingHours,
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "70 Brynhyfryd St",
@@ -210,6 +227,12 @@ const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths())
           <a href="/free-website-plan/" class="btn-primary" style="width:100%; justify-content:center; display:flex;">
             Get started →
           </a>
+          {Astro.params.location === 'web-design-cardiff' && (
+            <p style="color:var(--text-muted); font-size:0.8125rem; line-height:1.6; margin:1.25rem 0 0; padding-top:1.25rem; border-top:1px solid var(--border);">
+              <span style="display:block; color:var(--white); font-weight:600; margin-bottom:0.25rem;">Opening hours</span>
+              Monday–Sunday, 09:00–17:00
+            </p>
+          )}
         </div>
       </aside>
 
