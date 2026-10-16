@@ -111,53 +111,17 @@ const openingHours = [
   noindex={loc.data.noindex}
 >
 
-  {Astro.params.location === 'web-design-cardiff' ? (
   <JsonLD schema={{
     "@context": "https://schema.org",
-    "@type": "ProfessionalService",
-    "@id": "https://nc-digital.co.uk/#organization",
-    "name": "NC Digital",
-    "description": "Custom web design for Cardiff and South Wales businesses.",
-    "url": "https://nc-digital.co.uk/web-design-cardiff/",
-    "email": "info@nc-digital.co.uk",
-    "logo": {
-      "@type": "ImageObject",
-      "url": logoUrl
-    },
-    "openingHoursSpecification": openingHours,
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "70 Brynhyfryd St",
-      "addressLocality": "Merthyr Tydfil",
-      "addressRegion": "Wales",
-      "postalCode": "CF47 9YW",
-      "addressCountry": "GB"
-    },
-    "areaServed": [
-      { "@type": "City", "name": "Cardiff" },
-      { "@type": "AdministrativeArea", "name": "South Wales" }
-    ]
-  }} />
-  ) : (
-  <JsonLD schema={{
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "NC Digital",
+    "@type": "Service",
+    "@id": `https://nc-digital.co.uk/${Astro.params.location}/#service`,
+    "name": `${serviceLabel} ${loc.data.town}`,
+    "serviceType": serviceLabel,
     "description": `${serviceLabel} for ${loc.data.town} businesses.`,
-    "url": `https://nc-digital.co.uk/${Astro.params.location}`,
-    "email": "info@nc-digital.co.uk",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Merthyr Tydfil",
-      "addressRegion": "South Wales",
-      "addressCountry": "GB"
-    },
-    "areaServed": {
-      "@type": "City",
-      "name": loc.data.town
-    }
+    "url": `https://nc-digital.co.uk/${Astro.params.location}/`,
+    "provider": { "@id": "https://nc-digital.co.uk/#localbusiness" },
+    "areaServed": { "@type": "City", "name": loc.data.town }
   }} />
-  )}
 
   {faqItems.length > 0 && (
     <JsonLD schema={{
