@@ -103,6 +103,63 @@ const openingHours = [
     "closes": "17:00"
   }
 ];
+
+const isCardiffWebDesign = Astro.params.location === 'web-design-cardiff';
+const cardiffPageSchema = isCardiffWebDesign
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebPage",
+          "@id": "https://nc-digital.co.uk/web-design-cardiff/#webpage",
+          "url": "https://nc-digital.co.uk/web-design-cardiff/",
+          "name": "Web Design Cardiff | Affordable Website Design Cardiff | NC Digital",
+          "isPartOf": { "@id": "https://nc-digital.co.uk/#website" },
+          "about": { "@id": "https://nc-digital.co.uk/web-design-cardiff/#service" },
+          "breadcrumb": { "@id": "https://nc-digital.co.uk/web-design-cardiff/#breadcrumb" }
+        },
+        {
+          "@type": "Service",
+          "@id": "https://nc-digital.co.uk/web-design-cardiff/#service",
+          "name": "Web Design Cardiff",
+          "serviceType": "Web Design",
+          "url": "https://nc-digital.co.uk/web-design-cardiff/",
+          "provider": { "@id": "https://nc-digital.co.uk/#localbusiness" },
+          "description": "Affordable web design for Cardiff small businesses, delivered by NC Digital (based in Merthyr Tydfil).",
+          "areaServed": [
+            { "@type": "City", "name": "Cardiff" },
+            { "@type": "AdministrativeArea", "name": "Vale of Glamorgan" }
+          ],
+          "offers": {
+            "@type": "Offer",
+            "description": "One-page WordPress website (from)",
+            "price": "199",
+            "priceCurrency": "GBP"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://nc-digital.co.uk/web-design-cardiff/#breadcrumb",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://nc-digital.co.uk/" },
+            { "@type": "ListItem", "position": 2, "name": "Web Design Cardiff", "item": "https://nc-digital.co.uk/web-design-cardiff/" }
+          ]
+        },
+        ...(faqItems.length > 0
+          ? [{
+              "@type": "FAQPage",
+              "@id": "https://nc-digital.co.uk/web-design-cardiff/#faq",
+              "url": "https://nc-digital.co.uk/web-design-cardiff/",
+              "mainEntity": faqItems.map((f) => ({
+                "@type": "Question",
+                "name": f.q,
+                "acceptedAnswer": { "@type": "Answer", "text": f.a }
+              }))
+            }]
+          : [])
+      ]
+    }
+  : null;
 ---
 
 <BaseLayout
@@ -111,19 +168,23 @@ const openingHours = [
   noindex={loc.data.noindex}
 >
 
-  <JsonLD schema={{
-    "@context": "https://schema.org",
-    "@type": "Service",
-    "@id": `https://nc-digital.co.uk/${Astro.params.location}/#service`,
-    "name": `${serviceLabel} ${loc.data.town}`,
-    "serviceType": serviceLabel,
-    "description": `${serviceLabel} for ${loc.data.town} businesses.`,
-    "url": `https://nc-digital.co.uk/${Astro.params.location}/`,
-    "provider": { "@id": "https://nc-digital.co.uk/#localbusiness" },
-    "areaServed": { "@type": "City", "name": loc.data.town }
-  }} />
+  {cardiffPageSchema ? (
+    <JsonLD schema={cardiffPageSchema} />
+  ) : (
+    <JsonLD schema={{
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "@id": `https://nc-digital.co.uk/${Astro.params.location}/#service`,
+      "name": `${serviceLabel} ${loc.data.town}`,
+      "serviceType": serviceLabel,
+      "description": `${serviceLabel} for ${loc.data.town} businesses.`,
+      "url": `https://nc-digital.co.uk/${Astro.params.location}/`,
+      "provider": { "@id": "https://nc-digital.co.uk/#localbusiness" },
+      "areaServed": { "@type": "City", "name": loc.data.town }
+    }} />
+  )}
 
-  {faqItems.length > 0 && (
+  {!cardiffPageSchema && faqItems.length > 0 && (
     <JsonLD schema={{
       "@context": "https://schema.org",
       "@type": "FAQPage",
