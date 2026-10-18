@@ -30,8 +30,13 @@ const allImages = import.meta.glob<{ default: ImageMetadata }>(
 );
 
 const folder = folderMap[slug] || '';
-const isPortraitProject = ['milne-industrial', 'kb-trees-and-grounds', 'priva-cy'].includes(slug);
-const portraitImageAlts = slug === 'priva-cy' ? [
+const isPortraitProject = ['milne-industrial', 'kb-trees-and-grounds', 'priva-cy', 'the-revenue-talent-group'].includes(slug);
+const portraitImageAlts = slug === 'the-revenue-talent-group' ? [
+  'The Revenue Talent Group homepage with the Talent That Drives Growth headline and hiring brief form',
+  'The Revenue Talent Group About Us page introducing the founder',
+  'The Revenue Talent Group homepage opening section on a mobile phone',
+  'The Revenue Talent Group Meet the Founder section on a mobile phone',
+] : slug === 'priva-cy' ? [
   'Priva-Cy homepage with the Your Digital Privacy Matters headline and About section',
   'Priva-Cy Why It Matters section and example Personal Privacy Score dashboard',
   'Priva-Cy homepage opening section on a mobile phone',
