@@ -130,12 +130,90 @@ const cardiffPageSchema = isCardiffWebDesign
             { "@type": "City", "name": "Cardiff" },
             { "@type": "AdministrativeArea", "name": "Vale of Glamorgan" }
           ],
-          "offers": {
-            "@type": "Offer",
-            "description": "One-page WordPress website (from)",
-            "price": "199",
-            "priceCurrency": "GBP"
-          }
+          "offers": [
+            {
+              "@type": "Offer",
+              "description": "One-page WordPress website (from)",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "PriceSpecification",
+                "minPrice": "199",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Ecommerce website (from)",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "PriceSpecification",
+                "minPrice": "800",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Managed starter website (from)",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "minPrice": "20",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true,
+                "unitText": "MONTH"
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Essential maintenance",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "price": "50",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true,
+                "unitText": "MONTH"
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Growth maintenance",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "price": "75",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true,
+                "unitText": "MONTH"
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Pro maintenance",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "price": "99",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true,
+                "unitText": "MONTH"
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Local SEO (from)",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "minPrice": "200",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true,
+                "unitText": "MONTH"
+              }
+            }
+          ]
         },
         {
           "@type": "BreadcrumbList",
@@ -209,6 +287,11 @@ const cardiffPageSchema = isCardiffWebDesign
         <a href="/contact/" class="btn-primary">Get a free quote →</a>
         <a href="/portfolio/" class="btn-outline">See our work</a>
       </div>
+      {Astro.params.location === 'web-design-cardiff' && (
+        <p data-animate="fade-up" style="margin:1.25rem 0 0;">
+          <a href="https://www.google.com/maps?cid=7723341431959722234" style="color:var(--text-muted); font-size:0.9375rem;">5.0 on Google from 16 reviews</a>
+        </p>
+      )}
     </div>
   </section>
 
