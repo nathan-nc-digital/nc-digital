@@ -1,4 +1,6 @@
 ---
+import logo from '../assets/logo.png';
+
 export interface Props {
   title: string;
   description: string;
@@ -21,6 +23,7 @@ function trimAtWord(value: string, maxLength: number) {
   return `${trimmed}...`;
 }
 
+const logoUrl = new URL(logo.src, Astro.site).href;
 // Sitewide entities. ProfessionalService keeps @id #localbusiness. The founder is a
 // separate Person node so that @id is not declared twice. WebSite lives here so
 // page-level isPartOf references resolve on every page, including the homepage.
@@ -50,9 +53,15 @@ const businessSchema = {
       "hasMap": "https://www.google.com/maps?cid=7723341431959722234",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://nc-digital.co.uk/og-default.png"
+        "url": logoUrl
       },
       "image": "https://nc-digital.co.uk/og-default.png",
+      "knowsAbout": ["Web Design", "WordPress", "WooCommerce", "Shopify", "Ecommerce Development", "Local SEO", "Website Hosting", "Website Maintenance", "Logo Design"],
+      "memberOf": {
+        "@type": "ProgramMembership",
+        "programName": "Shopify Partners",
+        "hostingOrganization": { "@type": "Organization", "name": "Shopify", "url": "https://www.shopify.com/" }
+      },
       "areaServed": [
         { "@type": "City", "name": "Merthyr Tydfil" },
         { "@type": "City", "name": "Cardiff" },
