@@ -164,10 +164,7 @@ const serviceLocationLinks = withoutHidden(service.data.locationLinks, hiddenPag
     "name": service.data.title,
     "description": service.data.description,
     "url": Astro.url.href,
-    "provider": {
-      "@type": "LocalBusiness",
-      "@id": "https://nc-digital.co.uk/#localbusiness"
-    },
+    "provider": { "@id": "https://nc-digital.co.uk/#localbusiness" },
     "areaServed": [
       { "@type": "City", "name": "Merthyr Tydfil" },
       { "@type": "City", "name": "Cardiff" },

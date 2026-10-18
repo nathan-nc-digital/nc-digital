@@ -263,22 +263,14 @@ const reviews = [
   { name: 'DSymonds',         time: 'New',          href: '/portfolio/priva-cy/',                    project: 'Priva-Cy',                    context: 'Privacy start-up · Web design & build', text: 'Professional service, excellent results, listens to needs of the customer and easy to do business with!' },
 ];
 
-// Homepage-only structured data. The Organization/ProfessionalService entity lives in BaseHead
-// (@id #localbusiness) on every page, so it is referenced here rather than repeated.
+// Homepage-only structured data. ProfessionalService (#localbusiness), the founder
+// Person (#nathan), and WebSite (#website) live in BaseHead on every page.
 const siteUrl = 'https://nc-digital.co.uk';
 const businessId = `${siteUrl}/#localbusiness`;
 const stripHtml = (html: string) => html.replace(/<[^>]+>/g, '');
 const homeSchema = {
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'WebSite',
-      '@id': `${siteUrl}/#website`,
-      url: `${siteUrl}/`,
-      name: 'NC Digital',
-      inLanguage: 'en-GB',
-      publisher: { '@id': businessId },
-    },
     {
       '@type': 'WebPage',
       '@id': `${siteUrl}/#webpage`,

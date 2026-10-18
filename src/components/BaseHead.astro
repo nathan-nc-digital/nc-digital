@@ -1,6 +1,4 @@
 ---
-import logo from '../assets/logo.png';
-
 export interface Props {
   title: string;
   description: string;
@@ -23,73 +21,83 @@ function trimAtWord(value: string, maxLength: number) {
   return `${trimmed}...`;
 }
 
-const logoUrl = new URL(logo.src, Astro.site).href;
+// Sitewide entities. ProfessionalService keeps @id #localbusiness. The founder is a
+// separate Person node so that @id is not declared twice. WebSite lives here so
+// page-level isPartOf references resolve on every page, including the homepage.
 const businessSchema = {
   "@context": "https://schema.org",
-  "@type": "ProfessionalService",
-  "@id": "https://nc-digital.co.uk/#localbusiness",
-  "name": "NC Digital",
-  "url": "https://nc-digital.co.uk",
-  "email": "info@nc-digital.co.uk",
-  "telephone": "+447397504779",
-  "description": "Web design and SEO agency in Merthyr Tydfil, South Wales. Founded in 2025 by Nathan Constance, a professional web developer since 2015 who built and ranked his first website in 2008.",
-  "foundingDate": "2025",
-  "founder": {
-    "@type": "Person",
-    "@id": "https://nc-digital.co.uk/#nathan",
-    "name": "Nathan Constance",
-    "jobTitle": "Founder & Web Developer",
-    "url": "https://nc-digital.co.uk/about/",
-    "description": "Web designer and SEO specialist from Merthyr Tydfil. Professional web developer since 2015 (Rhino Rugby 2015–2020, Rhys Welsh 2020–present); built and did the SEO on his first website in 2008. Founded NC Digital in 2025.",
-    "alumniOf": [
-      { "@type": "CollegeOrUniversity", "name": "University of South Wales" },
-      { "@type": "CollegeOrUniversity", "name": "Merthyr Tydfil College" }
-    ],
-    "knowsAbout": ["Web Design", "Web Development", "WordPress", "Local SEO", "Search Engine Optimisation", "Logo Design"],
-    "worksFor": { "@id": "https://nc-digital.co.uk/#localbusiness" }
-  },
-  "priceRange": "££",
-  "address": {
-    "@type": "PostalAddress",
-    "streetAddress": "70 Brynhyfryd St",
-    "addressLocality": "Merthyr Tydfil",
-    "addressRegion": "Wales",
-    "postalCode": "CF47 9YW",
-    "addressCountry": "GB"
-  },
-  "logo": {
-    "@type": "ImageObject",
-    "url": logoUrl
-  },
-  "image": "https://nc-digital.co.uk/og-default.png",
-  "knowsAbout": ["Web Design", "WordPress", "WooCommerce", "Shopify", "Ecommerce Development", "Local SEO", "Website Hosting", "Website Maintenance", "Logo Design"],
-  "memberOf": {
-    "@type": "ProgramMembership",
-    "programName": "Shopify Partners",
-    "hostingOrganization": { "@type": "Organization", "name": "Shopify", "url": "https://www.shopify.com/" }
-  },
-  "areaServed": [
-    { "@type": "City", "name": "Merthyr Tydfil" },
-    { "@type": "City", "name": "Cardiff" },
-    { "@type": "City", "name": "Swansea" },
-    { "@type": "City", "name": "Newport" },
-    { "@type": "AdministrativeArea", "name": "South Wales" }
-  ],
-  "openingHoursSpecification": [
+  "@graph": [
     {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
-      "opens": "09:00",
-      "closes": "17:00"
+      "@type": "ProfessionalService",
+      "@id": "https://nc-digital.co.uk/#localbusiness",
+      "name": "NC Digital",
+      "url": "https://nc-digital.co.uk/",
+      "email": "info@nc-digital.co.uk",
+      "description": "Web design and SEO agency in Merthyr Tydfil, South Wales, serving small businesses across Cardiff, Swansea, Newport and South Wales.",
+      "foundingDate": "2025",
+      "founder": {
+        "@id": "https://nc-digital.co.uk/#nathan"
+      },
+      "priceRange": "££",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "70 Brynhyfryd St",
+        "addressLocality": "Merthyr Tydfil",
+        "addressRegion": "Wales",
+        "postalCode": "CF47 9YW",
+        "addressCountry": "GB"
+      },
+      "hasMap": "https://www.google.com/maps?cid=7723341431959722234",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://nc-digital.co.uk/og-default.png"
+      },
+      "image": "https://nc-digital.co.uk/og-default.png",
+      "areaServed": [
+        { "@type": "City", "name": "Merthyr Tydfil" },
+        { "@type": "City", "name": "Cardiff" },
+        { "@type": "City", "name": "Swansea" },
+        { "@type": "City", "name": "Newport" },
+        { "@type": "AdministrativeArea", "name": "South Wales" }
+      ],
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+          "opens": "09:00",
+          "closes": "17:00"
+        }
+      ],
+      "sameAs": [
+        "https://www.facebook.com/profile.php?id=61575891781927",
+        "https://x.com/ncdigitaluk",
+        "https://www.instagram.com/ncdigitaluk/",
+        "https://www.linkedin.com/company/26759059/",
+        "https://clutch.co/profile/nc-digital"
+      ]
+    },
+    {
+      "@type": "Person",
+      "@id": "https://nc-digital.co.uk/#nathan",
+      "name": "Nathan Constance",
+      "jobTitle": "Founder & Web Developer",
+      "url": "https://nc-digital.co.uk/about/",
+      "description": "Web designer and SEO specialist from Merthyr Tydfil. Professional web developer since 2015 (Rhino Rugby 2015–2020, Rhys Welsh 2020–present); built and did the SEO on his first website in 2008. Founded NC Digital in 2025.",
+      "alumniOf": [
+        { "@type": "CollegeOrUniversity", "name": "University of South Wales" },
+        { "@type": "CollegeOrUniversity", "name": "Merthyr Tydfil College" }
+      ],
+      "knowsAbout": ["Web Design", "Web Development", "WordPress", "Local SEO", "Search Engine Optimisation", "Logo Design"],
+      "worksFor": { "@id": "https://nc-digital.co.uk/#localbusiness" }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://nc-digital.co.uk/#website",
+      "url": "https://nc-digital.co.uk/",
+      "name": "NC Digital",
+      "inLanguage": "en-GB",
+      "publisher": { "@id": "https://nc-digital.co.uk/#localbusiness" }
     }
-  ],
-  "sameAs": [
-    "https://www.facebook.com/profile.php?id=61575891781927",
-    "https://x.com/ncdigitaluk",
-    "https://www.instagram.com/ncdigitaluk/",
-    "https://www.linkedin.com/company/26759059/",
-    "https://www.google.com/maps?cid=7723341431959722234",
-    "https://clutch.co/profile/nc-digital"
   ]
 };
 const fullTitle = title.includes('NC Digital') ? title : `${title} | NC Digital`;
