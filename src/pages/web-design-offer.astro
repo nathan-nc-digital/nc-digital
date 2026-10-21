@@ -2,6 +2,7 @@
 import OfferLayout from '../layouts/OfferLayout.astro';
 import ArrowIcon from '../components/ArrowIcon.astro';
 import EnquiryForm from '../components/EnquiryForm.astro';
+import JsonLD from '../components/JsonLD.astro';
 import { Image } from 'astro:assets';
 import nathan from '../assets/nathan.webp';
 import framing from '../assets/portfolio/3d-framing.jpg';
@@ -33,12 +34,21 @@ const faqs = [
 ];
 ---
 
-<OfferLayout title="Websites from £199 | WordPress Web Design | NC Digital" description="WordPress websites for South Wales businesses, from £199 for one page. Multi-page sites start from £600. Get your free quote from Nathan.">
+<OfferLayout title="WordPress Websites from £199 | NC Digital" description="One-page WordPress websites from £199, with £300 of premium plugins included. Multi-page sites from £600. Hosting and domain confirmed separately.">
+  <JsonLD schema={{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(({ q, a }) => ({
+      "@type": "Question",
+      "name": q,
+      "acceptedAnswer": { "@type": "Answer", "text": a },
+    })),
+  }} />
   <section class="offer-hero">
     <div class="container site-pad hero-grid">
       <div class="hero-copy">
         <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span> Small business. Big first impression.</p>
-        <h1>Your business.<br />Your new website.<br /><span>Ready for enquiries.</span></h1>
+        <h1>WordPress websites<br />from £199.<br /><span>Built for enquiries.</span></h1>
         <p class="hero-intro">Professional WordPress websites built around your business — with space to showcase your services, your work and what makes you different.</p>
         <p class="price-from">Websites from</p>
         <div class="hero-price"><strong>£199</strong><span>from<small>One-page WordPress website</small></span></div>
@@ -58,6 +68,28 @@ const faqs = [
           <p class="form-privacy">Your details are used to respond to your enquiry. <a href="/privacy-policy/">Privacy policy</a></p>
         </div>
         <p class="email-alternative">Prefer email? <a href="mailto:nathan@nc-digital.co.uk?subject=Website%20design%20enquiry">Email Nathan directly <span aria-hidden="true"><ArrowIcon /></span></a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer-explain section-space">
+    <div class="container site-pad">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">The offer, in plain terms</p>
+          <h2>Who this is for,<br />and what £199 includes.</h2>
+        </div>
+        <p>A starting WordPress build for a small business that needs a professional site and a clear way for customers to enquire.</p>
+      </div>
+      <div class="explain-copy">
+        <p>You deal directly with Nathan, a web designer based in Merthyr Tydfil, working with businesses across South Wales. The quote is free, with no obligation to go ahead.</p>
+        <ul class="explain-list">
+          <li><strong>One-page starter, from £199.</strong> One scrolling page with sections for your business, services, work, reviews and contact details. Included: a mobile-friendly design, full WordPress setup, a contact form, and a premium plugin package worth £300, installed and configured.</li>
+          <li><strong>Multi-page website, from £600.</strong> Quoted around your pages, features and goals, when you need separate pages for services, an about page, a project gallery and contact details.</li>
+          <li><strong>Hosting, a domain and plugin renewals.</strong> These are confirmed before work starts, and they sit outside the £199 build price. If you already have a domain or hosting, mention it on the form.</li>
+        </ul>
+        <p>A straightforward starter website is usually ready within 7–14 days once the brief and content are in place. After launch you can update the site yourself, and extra pages can be quoted later.</p>
+        <p>The wider service is on <a href="/services/web-design/">WordPress web design</a>. The same starting prices, with worked examples, are in <a href="/blog/how-much-does-web-design-cost-in-cardiff/">how much web design costs in Cardiff</a> and on <a href="/web-design-cardiff/">web design Cardiff</a>. Recent builds, including 3D Framing, Davies Property Development and IR Energy, are in the <a href="/portfolio/">portfolio</a>.</p>
       </div>
     </div>
   </section>
@@ -158,6 +190,12 @@ const faqs = [
   .email-alternative { font-size: .67rem; text-align: center; color: #aeb7c1; margin: 1rem 0 0; }
   .email-alternative a { color: #cab0ff; }
   .section-space { padding: 4.75rem 0; border-top: 1px solid #283039; }
+  .explain-copy { max-width: 46rem; color: #b8bfc8; font-size: .9rem; line-height: 1.8; }
+  .explain-copy p { margin: 0 0 1rem; }
+  .explain-copy a { color: #cab0ff; text-decoration: underline; text-underline-offset: 3px; }
+  .explain-list { margin: 0 0 1rem; padding: 0; list-style: none; display: grid; gap: .9rem; }
+  .explain-list li { margin: 0; }
+  .explain-list strong { color: #f1eaf9; }
   .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 3rem; margin-bottom: 2.2rem; }
   .section-heading h2, .personal-copy h2, .faq-grid h2 { margin: 0; font-size: clamp(1.8rem, 3vw, 2.55rem); letter-spacing: -.045em; line-height: 1.15; }
   .section-heading > p { max-width: 22rem; color: #aeb7c1; font-size: .8rem; line-height: 1.8; margin: 0; }
