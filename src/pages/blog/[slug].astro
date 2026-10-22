@@ -151,6 +151,17 @@ const heroImage = post.data.heroImage;
           <!-- Main content -->
           <div class="prose" data-animate="fade-up">
             <Content />
+
+            <aside class="preferred-source" aria-label="Follow NC Digital in Google">
+              <p>
+                Read our tips in Google?
+                <a
+                  href="https://www.google.com/preferences/source?q=nc-digital.co.uk"
+                  target="_blank"
+                  rel="noopener"
+                >Add NC Digital as a preferred source<span class="sr-only"> (opens in a new tab)</span></a>
+              </p>
+            </aside>
           </div>
 
           <!-- Sidebar -->
@@ -470,6 +481,31 @@ const heroImage = post.data.heroImage;
       border: none;
       border-top: 1px solid var(--border);
       margin: 2.5rem 0;
+    }
+
+    /* ── Google preferred source link ──────────────────────── */
+    .preferred-source {
+      margin-top: 2.5rem;
+      padding: 0.875rem 1.125rem;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--purple);
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+    .preferred-source p { margin: 0; }
+    .preferred-source .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
 
     /* ── Responsive ────────────────────────────────────────── */
