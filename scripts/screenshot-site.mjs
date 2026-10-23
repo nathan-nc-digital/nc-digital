@@ -13,10 +13,10 @@ const browser = await chromium.launch();
 
 // 1. Homepage hero — header + hero only, no scroll
 console.log('Capturing homepage hero...');
-const heroCtx = await browser.newContext({ viewport: { width: 1440, height: 680 } });
+const heroCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const heroPage = await heroCtx.newPage();
 await heroPage.goto(URL, { waitUntil: 'networkidle', timeout: 30000 });
-await heroPage.waitForTimeout(1500);
+await heroPage.waitForTimeout(7000);
 await heroPage.screenshot({ path: path.join(outputDir, `${SLUG}-homepage.jpeg`), fullPage: false, type: 'jpeg', quality: 90 });
 await heroCtx.close();
 console.log('  Done.');
@@ -27,7 +27,11 @@ const svcCtx = await browser.newContext({ viewport: { width: 1440, height: 900 }
 const svcPage = await svcCtx.newPage();
 await svcPage.goto(URL + 'services/', { waitUntil: 'networkidle', timeout: 30000 });
 await svcPage.waitForTimeout(1500);
-await svcPage.evaluate(() => window.scrollTo(0, 400));
+await svcPage.evaluate(() => {
+  const h = [...document.querySelectorAll('h2')].find(el => /Domestic Electrical Services/i.test(el.textContent));
+  window.scrollTo(0, h ? h.getBoundingClientRect().top + window.scrollY - 140 : 400);
+});
+await svcPage.waitForTimeout(1500);
 await svcPage.waitForTimeout(300);
 await svcPage.screenshot({ path: path.join(outputDir, `${SLUG}-services.jpeg`), fullPage: false, type: 'jpeg', quality: 90 });
 await svcCtx.close();
@@ -48,7 +52,7 @@ console.log('Capturing mobile...');
 const mobCtx = await browser.newContext({ viewport: { width: 390, height: 844 } });
 const mobPage = await mobCtx.newPage();
 await mobPage.goto(URL, { waitUntil: 'networkidle', timeout: 30000 });
-await mobPage.waitForTimeout(1500);
+await mobPage.waitForTimeout(7000);
 await mobPage.screenshot({ path: path.join(outputDir, `${SLUG}-mobile.jpeg`), fullPage: false, type: 'jpeg', quality: 90 });
 await mobCtx.close();
 console.log('  Done.');
@@ -58,7 +62,7 @@ console.log('Capturing tablet...');
 const tabCtx = await browser.newContext({ viewport: { width: 768, height: 1024 } });
 const tabPage = await tabCtx.newPage();
 await tabPage.goto(URL, { waitUntil: 'networkidle', timeout: 30000 });
-await tabPage.waitForTimeout(1500);
+await tabPage.waitForTimeout(7000);
 await tabPage.screenshot({ path: path.join(outputDir, `${SLUG}-tablet.jpeg`), fullPage: false, type: 'jpeg', quality: 90 });
 await tabCtx.close();
 console.log('  Done.');
