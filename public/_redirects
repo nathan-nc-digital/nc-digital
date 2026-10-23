@@ -291,8 +291,10 @@
 /why-i-wont-start-building-until-i-know-what-you-need-the-website-to-do   /blog/why-i-wont-start-building-until-i-know-what-you-need-the-website-to-do/  301
 /why-i-talked-a-client-out-of-wix/                            /blog/why-i-talked-a-client-out-of-wix/                            301
 /why-i-talked-a-client-out-of-wix                             /blog/why-i-talked-a-client-out-of-wix/                            301
-/how-ir-energy-went-from-3-enquiries-a-month-to-25/           /blog/how-ir-energy-went-from-3-enquiries-a-month-to-25/           301
-/how-ir-energy-went-from-3-enquiries-a-month-to-25            /blog/how-ir-energy-went-from-3-enquiries-a-month-to-25/           301
+/how-ir-energy-went-from-3-enquiries-a-month-to-25/           /blog/how-ir-energy-went-from-3-enquiries-a-month-to-50/           301
+/how-ir-energy-went-from-3-enquiries-a-month-to-25            /blog/how-ir-energy-went-from-3-enquiries-a-month-to-50/           301
+/blog/how-ir-energy-went-from-3-enquiries-a-month-to-25/      /blog/how-ir-energy-went-from-3-enquiries-a-month-to-50/           301
+/blog/how-ir-energy-went-from-3-enquiries-a-month-to-25       /blog/how-ir-energy-went-from-3-enquiries-a-month-to-50/           301
 /why-barbers-and-pubs-in-south-wales-are-invisible-on-google/  /blog/why-barbers-and-pubs-in-south-wales-are-invisible-on-google/  301
 /why-barbers-and-pubs-in-south-wales-are-invisible-on-google   /blog/why-barbers-and-pubs-in-south-wales-are-invisible-on-google/  301
 /why-merthyr-businesses-see-a-website-as-a-cost/              /blog/why-merthyr-businesses-see-a-website-as-a-cost/              301
@@ -905,3 +907,7 @@
 /blog/how-much-does-a-website-cost-for-a-small-business-in-the-uk      /blog/how-much-should-a-website-cost-for-a-small-business-in-south-wales/ 301
 /local-seo-newport/                                                     /seo-newport/ 301
 /local-seo-newport                                                      /seo-newport/ 301
+
+# Affordable small business websites merged into managed starter websites
+/affordable-small-business-websites/    /services/managed-starter-websites/    301
+/affordable-small-business-websites     /services/managed-starter-websites/    301

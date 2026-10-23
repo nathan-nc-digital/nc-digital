@@ -202,7 +202,7 @@ const services = [
 const faqs = [
   {
     q: 'How much does a website cost?',
-    a: 'It depends on what you need. A one-page WordPress website starts from £199, a fully managed starter website is from £20/month inc. VAT with domain and hosting included, and ecommerce websites start from £800. Larger multi-page sites are quoted around your brief. Try the <a href="/website-cost-calculator/">website cost calculator</a> for an instant estimate, or see <a href="/services/web-design/">web design pricing</a>.',
+    a: 'It depends on what you need. A one-page WordPress website starts from £199, a fully managed starter website is from £20/month inc. VAT with domain and hosting included, and ecommerce websites start from £800. Multi-page sites start from £600. Try the <a href="/website-cost-calculator/">website cost calculator</a> for an instant estimate, or see <a href="/services/web-design/">web design pricing</a>.',
   },
   {
     q: 'How long does it take to build a website?',
@@ -265,22 +265,14 @@ const reviews = [
   { name: 'DSymonds',         time: 'New',          href: '/portfolio/priva-cy/',                    project: 'Priva-Cy',                    context: 'Privacy start-up · Web design & build', text: 'Professional service, excellent results, listens to needs of the customer and easy to do business with!' },
 ];
 
-// Homepage-only structured data. The Organization/ProfessionalService entity lives in BaseHead
-// (@id #localbusiness) on every page, so it is referenced here rather than repeated.
+// Homepage-only structured data. ProfessionalService (#localbusiness), the founder
+// Person (#nathan), and WebSite (#website) live in BaseHead on every page.
 const siteUrl = 'https://nc-digital.co.uk';
 const businessId = `${siteUrl}/#localbusiness`;
 const stripHtml = (html: string) => html.replace(/<[^>]+>/g, '');
 const homeSchema = {
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'WebSite',
-      '@id': `${siteUrl}/#website`,
-      url: `${siteUrl}/`,
-      name: 'NC Digital',
-      inLanguage: 'en-GB',
-      publisher: { '@id': businessId },
-    },
     {
       '@type': 'WebPage',
       '@id': `${siteUrl}/#webpage`,

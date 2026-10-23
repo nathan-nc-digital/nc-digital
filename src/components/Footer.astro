@@ -59,6 +59,19 @@ const seoLinks = [
     transform: translateY(-2px);
   }
 
+  .footer-listing {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    margin: 0 0 1.5rem;
+  }
+  .footer-listing a {
+    color: var(--text-muted);
+    font-size: inherit;
+    transition: color 0.2s;
+  }
+  .footer-listing a:hover { color: var(--white); }
+
   .footer-top {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -136,12 +149,13 @@ const seoLinks = [
           Affordable web design and local SEO for South Wales small businesses.
           Based in Merthyr Tydfil, serving clients across Wales. Founded in 2025 by Nathan Constance — a professional web developer since 2015 who built his first website in 2008.
         </p>
-        <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1.5rem;">
+        <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.625rem;">
           {socials.map(({ href, label, icon }) => (
             <a href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
               class="footer-social-icon" set:html={icon} />
           ))}
         </div>
+        <p class="footer-listing">Listed on <a href="https://www.cardiff.co.uk/">Cardiff.co.uk</a></p>
       </div>
 
       <!-- Right: contact + quick links -->
@@ -154,6 +168,10 @@ const seoLinks = [
             70 Brynhyfryd St<br>
             Merthyr Tydfil<br>
             CF47 9YW
+          </p>
+          <p style="color:var(--text-muted); font-size:0.8125rem; line-height:1.7; margin-bottom:0.75rem;">
+            <span style="color:var(--white); font-weight:600;">Opening hours</span><br>
+            Monday–Sunday, 09:00–17:00
           </p>
           <a href="mailto:info@nc-digital.co.uk" style="color:var(--purple-light); font-size:0.8125rem; transition:color 0.2s;">
             info@nc-digital.co.uk
@@ -213,3 +231,13 @@ const seoLinks = [
 
   </div>
 </footer>
+
+<script is:inline>
+  // GA4: track clicks on any mailto link as a secondary lead signal (via GTM).
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="mailto:"]');
+    if (!a) return;
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'email_click', link_url: a.getAttribute('href'), form_location: window.location.pathname });
+  });
+</script>

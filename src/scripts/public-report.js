@@ -55,6 +55,8 @@ form.addEventListener('submit', async event => {
     let result = {};
     try { result = await response.json(); } catch {}
     if (!response.ok || !result.success) throw new Error(result.error || 'Your message could not be sent. Please try again, or email info@nc-digital.co.uk.');
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'generate_lead', form_location: location.pathname, form_id: 'report-quote' });
     form.hidden = true;
     $('quote-success').hidden = false;
     $('quote-success').focus();

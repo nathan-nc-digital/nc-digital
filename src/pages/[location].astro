@@ -5,6 +5,7 @@ import JsonLD from '../components/JsonLD.astro';
 import ReviewsStrip from '../components/ReviewsStrip.astro';
 import { getCollection, render } from 'astro:content';
 import { Image } from 'astro:assets';
+import logo from '../assets/logo.png';
 
 export const prerender = true;
 
@@ -25,6 +26,22 @@ if (!loc) {
 }
 
 const { Content } = await render(loc);
+
+// FAQPage schema built from the page's own "Frequently asked questions" section
+// (bold question line followed by an answer paragraph). Enabled per page.
+const faqSchemaPages = new Set([
+  'web-design-cardiff',
+  'web-design-pontypridd',
+  'ecommerce-web-design-llanelli',
+]);
+const stripMd = (t: string) => t.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/\*\*/g, '').trim();
+const faqItems: { q: string; a: string }[] = [];
+if (faqSchemaPages.has(Astro.params.location as string) && loc.body) {
+  const faqSection = loc.body.split(/^## Frequently asked questions\s*$/m)[1]?.split(/^## /m)[0] ?? '';
+  for (const m of faqSection.matchAll(/^\*\*(.+\?)\*\*\s*\n\s*\n(.+)$/gm)) {
+    faqItems.push({ q: stripMd(m[1]), a: stripMd(m[2]) });
+  }
+}
 
 const serviceLabel = loc.data.serviceType === 'seo'
   ? 'Local SEO'
@@ -79,6 +96,152 @@ function getPortfolioImage(slug: string) {
 
 // Links to out-of-area pages hidden from Google are left out of the automatic lists.
 const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths());
+
+// Absolute URL of the logo Astro emits from src/assets/logo.png.
+const logoUrl = new URL(logo.src, Astro.site).href;
+const openingHours = [
+  {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "opens": "09:00",
+    "closes": "17:00"
+  }
+];
+
+const isCardiffWebDesign = Astro.params.location === 'web-design-cardiff';
+const cardiffPageSchema = isCardiffWebDesign
+  ? {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebPage",
+          "@id": "https://nc-digital.co.uk/web-design-cardiff/#webpage",
+          "url": "https://nc-digital.co.uk/web-design-cardiff/",
+          "name": "Web Design Cardiff | Affordable from £199 | NC Digital",
+          "isPartOf": { "@id": "https://nc-digital.co.uk/#website" },
+          "about": { "@id": "https://nc-digital.co.uk/web-design-cardiff/#service" },
+          "breadcrumb": { "@id": "https://nc-digital.co.uk/web-design-cardiff/#breadcrumb" }
+        },
+        {
+          "@type": "Service",
+          "@id": "https://nc-digital.co.uk/web-design-cardiff/#service",
+          "name": "Web Design Cardiff",
+          "serviceType": "Web Design",
+          "url": "https://nc-digital.co.uk/web-design-cardiff/",
+          "provider": { "@id": "https://nc-digital.co.uk/#localbusiness" },
+          "description": "Affordable web design for Cardiff small businesses, delivered by NC Digital (based in Merthyr Tydfil).",
+          "areaServed": [
+            { "@type": "City", "name": "Cardiff" },
+            { "@type": "AdministrativeArea", "name": "Vale of Glamorgan" }
+          ],
+          "offers": [
+            {
+              "@type": "Offer",
+              "description": "One-page WordPress website (from)",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "PriceSpecification",
+                "minPrice": "199",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Ecommerce website (from)",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "PriceSpecification",
+                "minPrice": "800",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Managed starter website (from)",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "minPrice": "20",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true,
+                "unitText": "MONTH"
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Essential maintenance",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "price": "50",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true,
+                "unitText": "MONTH"
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Growth maintenance",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "price": "75",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true,
+                "unitText": "MONTH"
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Pro maintenance",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "price": "99",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true,
+                "unitText": "MONTH"
+              }
+            },
+            {
+              "@type": "Offer",
+              "description": "Local SEO (from)",
+              "priceCurrency": "GBP",
+              "priceSpecification": {
+                "@type": "UnitPriceSpecification",
+                "minPrice": "200",
+                "priceCurrency": "GBP",
+                "valueAddedTaxIncluded": true,
+                "unitText": "MONTH"
+              }
+            }
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://nc-digital.co.uk/web-design-cardiff/#breadcrumb",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://nc-digital.co.uk/" },
+            { "@type": "ListItem", "position": 2, "name": "Web Design Cardiff", "item": "https://nc-digital.co.uk/web-design-cardiff/" }
+          ]
+        },
+        ...(faqItems.length > 0
+          ? [{
+              "@type": "FAQPage",
+              "@id": "https://nc-digital.co.uk/web-design-cardiff/#faq",
+              "url": "https://nc-digital.co.uk/web-design-cardiff/",
+              "mainEntity": faqItems.map((f) => ({
+                "@type": "Question",
+                "name": f.q,
+                "acceptedAnswer": { "@type": "Answer", "text": f.a }
+              }))
+            }]
+          : [])
+      ]
+    }
+  : null;
 ---
 
 <BaseLayout
@@ -87,24 +250,34 @@ const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths())
   noindex={loc.data.noindex}
 >
 
-  <JsonLD schema={{
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "NC Digital",
-    "description": `${serviceLabel} for ${loc.data.town} businesses.`,
-    "url": `https://nc-digital.co.uk/${Astro.params.location}`,
-    "email": "info@nc-digital.co.uk",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Merthyr Tydfil",
-      "addressRegion": "South Wales",
-      "addressCountry": "GB"
-    },
-    "areaServed": {
-      "@type": "City",
-      "name": loc.data.town
-    }
-  }} />
+  {cardiffPageSchema ? (
+    <JsonLD schema={cardiffPageSchema} />
+  ) : (
+    <JsonLD schema={{
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "@id": `https://nc-digital.co.uk/${Astro.params.location}/#service`,
+      "name": `${serviceLabel} ${loc.data.town}`,
+      "serviceType": serviceLabel,
+      "description": `${serviceLabel} for ${loc.data.town} businesses.`,
+      "url": `https://nc-digital.co.uk/${Astro.params.location}/`,
+      "provider": { "@id": "https://nc-digital.co.uk/#localbusiness" },
+      "areaServed": { "@type": "City", "name": loc.data.town }
+    }} />
+  )}
+
+  {!cardiffPageSchema && faqItems.length > 0 && (
+    <JsonLD schema={{
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "@id": `https://nc-digital.co.uk/${Astro.params.location}/#faq`,
+      "mainEntity": faqItems.map((f) => ({
+        "@type": "Question",
+        "name": f.q,
+        "acceptedAnswer": { "@type": "Answer", "text": f.a }
+      }))
+    }} />
+  )}
 
   <!-- Hero -->
   <section style="padding:4rem 0 3rem;">
@@ -118,6 +291,11 @@ const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths())
         <a href="/contact/" class="btn-primary">Get a free quote →</a>
         <a href="/portfolio/" class="btn-outline">See our work</a>
       </div>
+      {Astro.params.location === 'web-design-cardiff' && (
+        <p data-animate="fade-up" style="margin:1.25rem 0 0;">
+          <a href="https://www.google.com/maps?cid=7723341431959722234" style="color:var(--text-muted); font-size:0.9375rem;">5.0 on Google from 16 reviews</a>
+        </p>
+      )}
     </div>
   </section>
 
@@ -161,6 +339,12 @@ const locationLinks = withoutHidden(loc.data.locationLinks, await hiddenPaths())
           <a href="/free-website-plan/" class="btn-primary" style="width:100%; justify-content:center; display:flex;">
             Get started →
           </a>
+          {Astro.params.location === 'web-design-cardiff' && (
+            <p style="color:var(--text-muted); font-size:0.8125rem; line-height:1.6; margin:1.25rem 0 0; padding-top:1.25rem; border-top:1px solid var(--border);">
+              <span style="display:block; color:var(--white); font-weight:600; margin-bottom:0.25rem;">Opening hours</span>
+              Monday–Sunday, 09:00–17:00
+            </p>
+          )}
         </div>
       </aside>
 

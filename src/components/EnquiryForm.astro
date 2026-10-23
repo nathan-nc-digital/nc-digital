@@ -191,13 +191,13 @@ const messageId = `${id}-message`;
       try {
         var data = new FormData(form);
         var requestKey = submissionKey;
-        data.set('from_page', window.location.pathname);
-        if (form.dataset.websiteOffer) {
-          var params = new URLSearchParams(window.location.search);
-          ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(function (key) {
-            if (params.has(key)) data.set(key, params.get(key).slice(0, 500));
-          });
-        }
+        // Attribution: landing path + query (no fragment), HTTP referrer when the browser sends one, UTMs on every form.
+        data.set('from_page', (window.location.pathname + window.location.search).slice(0, 500));
+        if (document.referrer) data.set('referrer', String(document.referrer).slice(0, 500));
+        var params = new URLSearchParams(window.location.search);
+        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(function (key) {
+          if (params.has(key)) data.set(key, params.get(key).slice(0, 500));
+        });
 
         var configRes = await fetch('/api/enquiries/config', { cache: 'no-store' });
         if (!configRes.ok) throw new Error('Could not check enquiry availability.');
@@ -217,6 +217,15 @@ const messageId = `${id}-message`;
           // Let pages hook into a successful submit (e.g. ad landing pages firing
           // a Meta Pixel Lead event). Other pages simply ignore this event.
           document.dispatchEvent(new CustomEvent('nc-enquiry-success', { detail: { formId: form.id } }));
+          // GA4 key event via GTM. Pages that stay put push now; redirects to
+          // /thank-you/ hand over form_location so the event fires there (GTM
+          // loads lazily, so pushing just before navigating would be lost).
+          if (form.dataset.websiteOffer) {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({ event: 'generate_lead', form_location: window.location.pathname, form_id: form.id });
+          } else {
+            try { sessionStorage.setItem('nc_lead_from', window.location.pathname); } catch (e) {}
+          }
           if (form.dataset.websiteOffer) {
             form.style.display = 'none';
             successEl.style.display = 'block';

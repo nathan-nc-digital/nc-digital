@@ -17,6 +17,7 @@ export default config({
       schema: {
         title: fields.slug({ name: { label: 'Title' } }),
         pubDate: fields.date({ label: 'Published Date' }),
+        updatedDate: fields.date({ label: 'Updated Date' }),
         description: fields.text({ label: 'Excerpt', multiline: true }),
         heroImage: fields.image({
           label: 'Hero Image',
