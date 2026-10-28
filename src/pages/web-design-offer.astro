@@ -8,11 +8,20 @@ import nathan from '../assets/nathan.webp';
 import framing from '../assets/portfolio/3d-framing.jpg';
 import davies from '../assets/portfolio/davies-property-development.png';
 import irEnergy from '../assets/portfolio/ir-energy.jpg';
+import proTech from '../assets/portfolio/Pro Tech Plumbing and Bathrooms/pro-tech-plumbing-bathrooms-merthyr-contact.jpeg';
+import kbTrees from '../assets/portfolio/KB Trees and Grounds/desktop.png';
+import mjRoofing from '../assets/portfolio/M&J Roofing/m-j-profilio-image2.jpeg';
+import ReviewsStrip from '../components/ReviewsStrip.astro';
 
 const projects = [
   { name: '3D Framing', sector: 'Bespoke framing · Merthyr Tydfil', image: framing, slug: '3d-framing' },
   { name: 'Davies Property Development', sector: 'Property development · South Wales', image: davies, slug: 'davies-property-development' },
   { name: 'IR Energy', sector: 'Renewable energy · South Wales', image: irEnergy, slug: 'ir-energy' },
+];
+const moreProjects = [
+  { name: 'Pro Tech Plumbing and Bathrooms', sector: 'Plumbing & bathrooms · South Wales', image: proTech, slug: 'pro-tech-plumbing' },
+  { name: 'KB Trees & Grounds', sector: 'Tree surgery & grounds · Abergavenny', image: kbTrees, slug: 'kb-trees-and-grounds' },
+  { name: 'M&J Roofing', sector: 'Roofing · South Wales', image: mjRoofing, slug: 'mj-roofing' },
 ];
 const included = [
   { number: '01', title: 'Built around your business.', text: 'From a simple starter site to dedicated pages for your services, projects and team, we’ll plan a website that gives customers the information they need.' },
@@ -121,6 +130,16 @@ const faqs = [
     <div class="portrait-wrap"><Image src={nathan} alt="Nathan from NC Digital in Merthyr Tydfil" width={560} height={620} loading="lazy" /><div class="portrait-caption"><strong>Nathan</strong><span>Your designer, from hello to launch.</span></div></div>
     <div class="personal-copy"><p class="eyebrow">A real person behind your website</p><h2>Hi, I’m Nathan.<br />Let’s get your business online.</h2><p>I’m a web designer based in Merthyr Tydfil. I help small businesses across South Wales get a website they’re proud to share — and give their customers an easy way to get in touch.</p><p>You’ll deal directly with me. I’ll help you work out what you need, explain the costs and guide you through the build.</p><ol class="process"><li><span>01</span><div><h3>Tell me about your business</h3><p>A few details are enough to start a conversation.</p></div></li><li><span>02</span><div><h3>We agree the details</h3><p>Your page, content, costs and timescale, all explained before we start.</p></div></li><li><span>03</span><div><h3>I build it. You check it. We launch.</h3><p>Review your new website with me before it goes live.</p></div></li></ol><a class="text-link" href="#quote">Start with a free, no-obligation quote <span aria-hidden="true"><ArrowIcon /></span></a></div>
   </div></section>
+
+  <section id="more-work" class="work-section section-space"><div class="container site-pad">
+    <div class="section-heading"><div><p class="eyebrow">More of my work</p><h2>Built for trades<br />across South Wales.</h2></div><p>A few more websites I’ve designed and built for local businesses. Each one is planned around how that business wins work. <a href="/portfolio/" class="text-link">See the full portfolio</a></p></div>
+    <div class="project-grid">{moreProjects.map((project) => <a class="project" href={`/portfolio/${project.slug}/`} target="_blank" rel="noopener" aria-label={`${project.name} case study (opens in a new tab)`}>
+      <div class="project-image"><div class="browser-bar" aria-hidden="true"><i></i><i></i><i></i><span>{project.name}</span></div><Image src={project.image} alt={`${project.name} website designed by NC Digital`} width={680} height={425} loading="lazy" /></div>
+      <div class="project-caption"><div><h3>{project.name}</h3><p>{project.sector}</p></div><span aria-hidden="true"><ArrowIcon /></span></div>
+    </a>)}</div>
+  </div></section>
+
+  <ReviewsStrip names={['Jamie Williams', 'Sean Hicks', 'Stuart Baker']} />
 
   <section class="faq-section section-space"><div class="container site-pad faq-grid"><div><p class="eyebrow">A few things you might be wondering</p><h2>Before you<br />get in touch.</h2><p class="faq-aside">Not sure if one page is enough?<br />Tell me what you need and I’ll help you work it out.</p><a href="#quote" class="text-link">Ask Nathan <span aria-hidden="true"><ArrowIcon /></span></a></div><div class="faq-list">{faqs.map(({ q, a }) => <details><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div></div></section>
 
